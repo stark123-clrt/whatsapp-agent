@@ -24,6 +24,9 @@ ENV NODE_ENV=production \
     BROWSER_PATH=/usr/bin/chromium \
     NEXT_TELEMETRY_DISABLED=1
 COPY --from=build /app/.next/standalone ./
+# Dépendances complètes (la sélection automatique de Next.js oublie des fichiers chargés
+# dynamiquement, par exemple dans puppeteer) : plus robuste.
+COPY --from=deps /app/node_modules ./node_modules
 COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
 # Données persistantes : base + médias, et session WhatsApp (volumes Coolify).

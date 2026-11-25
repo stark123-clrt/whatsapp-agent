@@ -1,7 +1,7 @@
 import "server-only";
 
 import { existsSync } from "node:fs";
-import puppeteer, { type Browser } from "puppeteer-core";
+import type { Browser } from "puppeteer-core";
 
 /**
  * Navigateur invisible (headless) pour lire les sites « JavaScript » (React, Vue, Wix…),
@@ -36,6 +36,8 @@ const g = globalThis as typeof globalThis & {
 async function getBrowser(): Promise<Browser> {
   const executablePath = browserPath();
   if (!executablePath) throw new Error("Aucun navigateur Chrome ou Edge trouvé sur cet ordinateur (indique BROWSER_PATH dans .env.local).");
+  // Chargé seulement quand on lit un site : un souci ici ne bloque jamais le reste de l'appli.
+  const { default: puppeteer } = await import("puppeteer-core");
   g.__browser ??= puppeteer
     .launch({
       executablePath,

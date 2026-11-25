@@ -1,7 +1,7 @@
 import "server-only";
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { rm } from "node:fs/promises";
+import { readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import makeWASocket, {
   Browsers,
@@ -38,6 +38,15 @@ export type WhatsAppState = {
   expectedPhone?: string | null; // numéro autorisé (contrôlé à chaque connexion)
   pairingCode?: string | null; // code à saisir sur le téléphone (« Lier avec le numéro »)
 };
+
+/**
+ * Efface la session WhatsApp. On vide le CONTENU du dossier sans supprimer le dossier :
+ * en production c'est un volume Docker (point de montage), impossible à supprimer.
+ */
+async function clearSession() {
+  const files = await readdir(AUTH_DIR).catch(() => [] as string[]);
+  await Promise.all(files.map((f) => rm(path.join(AUTH_DIR, f), { recursive: true, force: true }).catch(() => {})));
+}
 
 // ---------- Numéro autorisé (sécurité) ----------
 // Mémorisé dans data/ (volume persistant) : seul ce compte WhatsApp peut se connecter.
@@ -152,7 +161,7 @@ async function connect() {
       if (expected && connected && connected !== expected) {
         store.sock = null;
         await sock.logout().catch(() => sock.end(undefined));
-        await rm(AUTH_DIR, { recursive: true, force: true });
+        await clearSession();
         setState({
           status: "closed",
           qrDataUrl: null,
@@ -189,7 +198,7 @@ async function connect() {
       if (code === DisconnectReason.loggedOut) {
         // Déconnecté depuis le téléphone : on efface la session et on repart
         // sur un nouveau QR code.
-        await rm(AUTH_DIR, { recursive: true, force: true });
+        await clearSession();
         setState({ me: null, lastError: "Session déconnectée depuis le téléphone." });
         scheduleReconnect();
       } else if (code === DisconnectReason.connectionReplaced) {
@@ -251,7 +260,7 @@ export async function logoutWhatsApp() {
   if (sock) {
     await sock.logout().catch(() => sock.end(undefined));
   }
-  await rm(AUTH_DIR, { recursive: true, force: true });
+  await clearSession();
   setState({ status: "idle", qrDataUrl: null, me: null, lastError: null });
   await ensureWhatsApp();
 }

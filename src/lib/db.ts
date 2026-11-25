@@ -81,7 +81,10 @@ export type ChatFile = Pick<Message, "id" | "type" | "text" | "mime" | "ts" | "s
 function open() {
   mkdirSync(MEDIA_DIR, { recursive: true });
   // timeout : si un autre processus utilise la base (construction en parallèle), on attend au lieu d'échouer.
-  const db = new DatabaseSync(path.join(DATA_DIR, "agent.db"), { timeout: 15_000 });
+  // Pendant « next build », plusieurs processus chargent ce module en parallèle : on utilise
+  // une base temporaire en mémoire pour ne jamais verrouiller (ni créer) la vraie base.
+  const building = process.env.NEXT_PHASE === "phase-production-build";
+  const db = new DatabaseSync(building ? ":memory:" : path.join(DATA_DIR, "agent.db"), { timeout: 15_000 });
   db.exec(`
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS chats (

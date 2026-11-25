@@ -467,6 +467,25 @@ export function getStats(jid: string): ChatStats {
   };
 }
 
+/** Messages envoyés par jour (IA + toi) sur un canal, pour le graphique « Volume d'envoi ». */
+export function sentPerDay(channel: string, days = 30): { day: string; count: number }[] {
+  const since = Date.now() - days * 86_400_000;
+  const rows = db
+    .prepare(
+      `SELECT date(m.ts / 1000, 'unixepoch', 'localtime') AS day, COUNT(*) AS count
+       FROM messages m JOIN chats c ON c.jid = m.jid
+       WHERE m.sender != 'contact' AND c.channel = ? AND m.ts >= ?
+       GROUP BY day`,
+    )
+    .all(channel, since) as { day: string; count: number }[];
+  const byDay = new Map(rows.map((r) => [r.day, r.count]));
+  return Array.from({ length: days }, (_, i) => {
+    const d = new Date(Date.now() - (days - 1 - i) * 86_400_000);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    return { day: key, count: byDay.get(key) ?? 0 };
+  });
+}
+
 /** Fichiers partagés dans la discussion (photos, vocaux, vidéos, documents). */
 export function getFiles(jid: string): ChatFile[] {
   return db

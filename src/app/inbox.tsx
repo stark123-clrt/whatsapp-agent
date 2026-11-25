@@ -133,7 +133,7 @@ export function Inbox() {
         </div>
         {list.data && list.data.whatsapp !== "open" && (
           <Link
-            href="/canaux"
+            href="/parametres?section=channels"
             className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-800 hover:underline"
           >
             WhatsApp n&apos;est pas connecté. Connecter →

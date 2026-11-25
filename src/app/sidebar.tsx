@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type Item = { label: string; href?: string; icon: keyof typeof ICONS };
@@ -38,12 +38,16 @@ const SECTIONS: { title?: string; items: Item[] }[] = [
   },
   {
     title: "Réglages",
-    items: [{ label: "Canaux", href: "/canaux", icon: "plug" }],
+    items: [
+      { label: "Canaux", href: "/parametres?section=channels", icon: "plug" },
+      { label: "Paramètres", href: "/parametres", icon: "gear" },
+    ],
   },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const currentSection = useSearchParams().get("section") ?? (pathname === "/parametres" ? "channels" : null);
   const { status, unread } = useLiveCounts();
   const [closed, setClosed] = useState<Set<string>>(new Set());
   const toggle = (title: string) =>
@@ -97,7 +101,13 @@ export function Sidebar() {
                     </li>
                   );
                 }
-                const active = pathname === item.href;
+                // « Canaux » et « Paramètres » partagent la même page : on compare aussi la section.
+                const [itemPath, itemQuery] = item.href.split("?");
+                const active =
+                  pathname === itemPath &&
+                  (itemQuery
+                    ? currentSection === new URLSearchParams(itemQuery).get("section")
+                    : itemPath !== "/parametres" || currentSection !== "channels");
                 return (
                   <li key={item.label}>
                     <Link
@@ -134,7 +144,7 @@ export function Sidebar() {
         ⎋ Se déconnecter
       </button>
       <Link
-        href="/canaux"
+        href="/parametres?section=channels"
         className="m-3 mt-1 flex items-center justify-between rounded-lg border border-zinc-200 px-3 py-2 text-sm hover:bg-zinc-50"
       >
         <span className="text-zinc-600">WhatsApp</span>
@@ -197,4 +207,5 @@ const ICONS = {
   image: svg("M4 5h16v14H4zM4 16l5-5 4 4 2-2 5 5M15 9h.01"),
   code: svg("M9 7l-5 5 5 5M15 7l5 5-5 5"),
   server: svg("M4 5h16v6H4zM4 13h16v6H4zM8 8h.01M8 16h.01"),
+  gear: svg("M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"),
 };

@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# session WhatsApp (donne accès au compte, ne jamais partager)
+/.wa-auth/
+!.env.example
+
+# base de données et médias des conversations
+/data/

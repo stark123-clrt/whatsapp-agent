@@ -1,0 +1,190 @@
+import "server-only";
+
+import { rm } from "node:fs/promises";
+import path from "node:path";
+import makeWASocket, {
+  Browsers,
+  DisconnectReason,
+  fetchLatestBaileysVersion,
+  useMultiFileAuthState as loadAuthState,
+  type WASocket,
+} from "baileys";
+import pino from "pino";
+import QRCode from "qrcode";
+import { handleIncoming, onStatusUpdate } from "./agent";
+
+/**
+ * Connexion WhatsApp (non officielle, via WhatsApp Web) avec Baileys.
+ *
+ * La connexion vit dans le processus du serveur Next.js : elle fonctionne avec
+ * `npm run dev` / `npm start`, pas sur un hébergement serverless.
+ * La session est sauvegardée dans `.wa-auth/` pour ne pas rescanner le QR code
+ * à chaque redémarrage. Ce dossier donne accès au compte : ne le partage jamais.
+ */
+
+export type WhatsAppStatus =
+  | "idle" // pas encore démarré
+  | "connecting" // connexion en cours
+  | "qr" // en attente du scan du QR code
+  | "open" // connecté
+  | "closed"; // déconnecté (voir lastError)
+
+export type WhatsAppState = {
+  status: WhatsAppStatus;
+  qrDataUrl: string | null;
+  me: { id: string; name?: string } | null;
+  lastError: string | null;
+};
+
+const AUTH_DIR = path.join(process.cwd(), ".wa-auth");
+const RECONNECT_DELAY_MS = 3000;
+
+type Store = {
+  sock: WASocket | null;
+  state: WhatsAppState;
+  starting: Promise<void> | null;
+  reconnectTimer: NodeJS.Timeout | null;
+};
+
+// On garde une seule connexion par processus, même quand Next.js recharge les
+// modules en développement.
+const globalForWa = globalThis as typeof globalThis & { __whatsapp?: Store };
+const store: Store = (globalForWa.__whatsapp ??= {
+  sock: null,
+  state: { status: "idle", qrDataUrl: null, me: null, lastError: null },
+  starting: null,
+  reconnectTimer: null,
+});
+
+const logger = pino({ level: process.env.WA_LOG_LEVEL ?? "warn" });
+
+function setState(patch: Partial<WhatsAppState>) {
+  store.state = { ...store.state, ...patch };
+}
+
+export function getWhatsAppState(): WhatsAppState {
+  return store.state;
+}
+
+export function getSocket(): WASocket | null {
+  return store.state.status === "open" ? store.sock : null;
+}
+
+/** Démarre la connexion si elle n'est pas déjà active. */
+export function ensureWhatsApp(): Promise<void> {
+  if (store.sock || store.reconnectTimer) return Promise.resolve();
+  store.starting ??= connect().finally(() => {
+    store.starting = null;
+  });
+  return store.starting;
+}
+
+async function connect() {
+  setState({ status: "connecting", qrDataUrl: null, lastError: null });
+
+  const { state: auth, saveCreds } = await loadAuthState(AUTH_DIR);
+  const { version } = await fetchLatestBaileysVersion().catch(() => ({
+    version: undefined,
+  }));
+
+  const sock = makeWASocket({
+    auth,
+    version,
+    logger,
+    browser: Browsers.appropriate("Chrome"),
+    // Ne pas se marquer "en ligne" en permanence : le téléphone continue de
+    // recevoir les notifications normalement.
+    markOnlineOnConnect: false,
+    syncFullHistory: false,
+  });
+  store.sock = sock;
+
+  sock.ev.on("creds.update", saveCreds);
+
+  // Tous les messages passent par l'agent qui les enregistre. Il ne répond qu'aux
+  // messages reçus en direct ("notify"), pas à ceux rattrapés à la reconnexion ("append").
+  sock.ev.on("messages.upsert", ({ messages, type }) => {
+    for (const msg of messages) handleIncoming(sock, msg, type === "notify");
+  });
+
+  // Accusés de réception des messages envoyés : ✓ envoyé, ✓✓ distribué, ✓✓ lu.
+  sock.ev.on("messages.update", (updates) => {
+    for (const { key, update } of updates) {
+      if (key.id && key.fromMe && typeof update.status === "number") onStatusUpdate(key.id, update.status);
+    }
+  });
+
+  sock.ev.on("connection.update", async (update) => {
+    const { connection, lastDisconnect, qr } = update;
+
+    if (qr) {
+      setState({
+        status: "qr",
+        qrDataUrl: await QRCode.toDataURL(qr, { margin: 1, width: 300 }),
+      });
+    }
+
+    if (connection === "open") {
+      // Tâches de fond (réponses en attente, relances) : chargées ici pour éviter une boucle d'imports.
+      void import("./scheduler").then((m) => m.startScheduler());
+      setState({
+        status: "open",
+        qrDataUrl: null,
+        lastError: null,
+        me: sock.user
+          ? { id: sock.user.id, name: sock.user.name ?? sock.user.verifiedName }
+          : null,
+      });
+    }
+
+    if (connection === "close") {
+      if (store.sock !== sock) return; // ancienne connexion, déjà remplacée
+      store.sock = null;
+
+      const code = (lastDisconnect?.error as { output?: { statusCode?: number } })
+        ?.output?.statusCode;
+
+      if (code === DisconnectReason.loggedOut) {
+        // Déconnecté depuis le téléphone : on efface la session et on repart
+        // sur un nouveau QR code.
+        await rm(AUTH_DIR, { recursive: true, force: true });
+        setState({ me: null, lastError: "Session déconnectée depuis le téléphone." });
+        scheduleReconnect();
+      } else if (code === DisconnectReason.connectionReplaced) {
+        // Le compte a été ouvert ailleurs avec la même session : on n'insiste pas.
+        setState({
+          status: "closed",
+          qrDataUrl: null,
+          lastError: "Connexion ouverte ailleurs. Clique sur « Reconnecter ».",
+        });
+      } else {
+        setState({ status: "connecting", lastError: lastDisconnect?.error?.message ?? null });
+        scheduleReconnect();
+      }
+    }
+  });
+}
+
+function scheduleReconnect() {
+  if (store.reconnectTimer) return;
+  store.reconnectTimer = setTimeout(() => {
+    store.reconnectTimer = null;
+    void ensureWhatsApp();
+  }, RECONNECT_DELAY_MS);
+}
+
+/** Déconnecte le compte, supprime la session et affiche un nouveau QR code. */
+export async function logoutWhatsApp() {
+  const sock = store.sock;
+  store.sock = null;
+  if (store.reconnectTimer) {
+    clearTimeout(store.reconnectTimer);
+    store.reconnectTimer = null;
+  }
+  if (sock) {
+    await sock.logout().catch(() => sock.end(undefined));
+  }
+  await rm(AUTH_DIR, { recursive: true, force: true });
+  setState({ status: "idle", qrDataUrl: null, me: null, lastError: null });
+  await ensureWhatsApp();
+}

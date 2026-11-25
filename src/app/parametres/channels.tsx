@@ -77,10 +77,7 @@ export function ChannelsSection() {
           action={
             !connected && (
               <button
-                onClick={() => {
-                  setConnecting(true);
-                  void fetch("/api/whatsapp/connect", { method: "POST" }).then(load);
-                }}
+                onClick={() => setConnecting(true)}
                 className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
               >
                 🟢 Connecter
@@ -97,7 +94,10 @@ export function ChannelsSection() {
                     {wa?.me?.name ?? "WhatsApp"}
                     <span className="rounded-md bg-green-50 px-2 py-0.5 text-[11px] font-bold text-green-700">● CONNECTÉ</span>
                   </p>
-                  <p className="font-mono text-sm text-zinc-500">+{phone}</p>
+                  <p className="font-mono text-sm text-zinc-500">
+                    +{phone}
+                    {wa?.expectedPhone === phone && <span className="ml-2 font-sans text-xs text-green-700">🔒 numéro autorisé</span>}
+                  </p>
                 </div>
                 <button onClick={disconnect} className="rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50">
                   Déconnecter
@@ -115,6 +115,7 @@ export function ChannelsSection() {
             </>
           ) : (
             <p className="text-sm text-zinc-500">
+              {wa?.lastError && <span className="mb-1 block text-amber-700">⚠️ {wa.lastError}</span>}
               {wa?.status === "connecting" || wa?.status === "idle" || !wa
                 ? "Préparation de la connexion…"
                 : "Aucun numéro WhatsApp Web associé. Clique sur Connecter pour scanner un code QR."}
@@ -159,35 +160,113 @@ export function ChannelsSection() {
         />
       </div>
 
-      {connecting && !connected && <QrModal wa={wa} onClose={() => setConnecting(false)} />}
+      {connecting && <ConnectModal wa={wa} onClose={() => setConnecting(false)} onChanged={load} />}
     </>
   );
 }
 
-function QrModal({ wa, onClose }: { wa: WhatsAppState | null; onClose: () => void }) {
+function ConnectModal({ wa, onClose, onChanged }: { wa: WhatsAppState | null; onClose: () => void; onChanged: () => void }) {
+  const [phone, setPhone] = useState(wa?.expectedPhone ? `+${wa.expectedPhone}` : "");
+  const [step, setStep] = useState<"form" | "qr" | "code">("form");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function start(method: "qr" | "code") {
+    setBusy(true);
+    setError(null);
+    const res = await fetch("/api/whatsapp/pair", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, method }),
+    });
+    const body = await res.json().catch(() => ({}));
+    setBusy(false);
+    if (!res.ok) return setError(body.error ?? "Échec.");
+    setStep(method);
+    onChanged();
+  }
+
+  const code = wa?.pairingCode;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onMouseDown={onClose}>
-      <div className="w-full max-w-md rounded-2xl bg-white p-7 text-center shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
-        <h3 className="text-lg font-semibold">Connecter WhatsApp Web</h3>
-        {wa?.status === "qr" && wa.qrDataUrl ? (
+      <div className="w-full max-w-md rounded-2xl bg-white p-7 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
+        <h3 className="text-center text-lg font-semibold">Connecter WhatsApp Web</h3>
+
+        {wa?.status === "open" ? (
+          <p className="mt-6 text-center font-medium text-green-700">✅ Connecté !</p>
+        ) : step === "form" ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element -- QR code généré (data URL) */}
-            <img src={wa.qrDataUrl} alt="QR code à scanner avec WhatsApp" width={260} height={260} className="mx-auto mt-5 rounded-lg" />
-            <ol className="mt-5 list-decimal space-y-1 pl-6 text-left text-sm text-zinc-600">
-              <li>Ouvre WhatsApp sur ton téléphone.</li>
-              <li>Va dans Réglages → Appareils connectés.</li>
-              <li>Touche « Connecter un appareil » et scanne ce code.</li>
+            <label className="mt-5 block text-sm font-medium text-zinc-700">
+              Numéro du compte WhatsApp
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+33 6 12 34 56 78"
+                inputMode="tel"
+                autoFocus
+                className="mt-1.5 w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 font-mono text-sm outline-none focus:border-zinc-400"
+              />
+            </label>
+            <p className="mt-1.5 text-xs text-zinc-500">
+              🔒 Seul ce numéro pourra se connecter. Si un autre compte scanne, il sera déconnecté immédiatement.
+            </p>
+            <div className="mt-5 grid gap-2">
+              <button
+                onClick={() => start("qr")}
+                disabled={busy || phone.replace(/\D/g, "").length < 8}
+                className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300"
+              >
+                📷 Scanner un QR code
+              </button>
+              <button
+                onClick={() => start("code")}
+                disabled={busy || phone.replace(/\D/g, "").length < 8}
+                className="rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-medium hover:bg-zinc-50 disabled:text-zinc-400"
+              >
+                {busy ? "Préparation…" : "🔢 Recevoir un code de connexion"}
+              </button>
+            </div>
+          </>
+        ) : step === "qr" ? (
+          wa?.status === "qr" && wa.qrDataUrl ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element -- QR code généré (data URL) */}
+              <img src={wa.qrDataUrl} alt="QR code à scanner avec WhatsApp" width={260} height={260} className="mx-auto mt-5 rounded-lg" />
+              <ol className="mt-5 list-decimal space-y-1 pl-6 text-sm text-zinc-600">
+                <li>Sur le téléphone du +{wa.expectedPhone}, ouvre WhatsApp.</li>
+                <li>Réglages → Appareils connectés → Connecter un appareil.</li>
+                <li>Scanne ce code.</li>
+              </ol>
+            </>
+          ) : (
+            <p className="mt-6 text-center text-sm text-zinc-500">Génération du QR code…</p>
+          )
+        ) : code ? (
+          <>
+            <p className="mt-6 text-center font-mono text-4xl font-bold tracking-widest">{code}</p>
+            <ol className="mt-6 list-decimal space-y-1 pl-6 text-sm text-zinc-600">
+              <li>Sur le téléphone du +{wa?.expectedPhone}, ouvre WhatsApp.</li>
+              <li>Réglages → Appareils connectés → Connecter un appareil.</li>
+              <li>Touche « Lier avec le numéro de téléphone à la place ».</li>
+              <li>Saisis ce code.</li>
             </ol>
           </>
-        ) : wa?.status === "open" ? (
-          <p className="mt-6 font-medium text-green-700">✅ Connecté !</p>
         ) : (
-          <p className="mt-6 text-sm text-zinc-500">Génération du QR code…</p>
+          <p className="mt-6 text-center text-sm text-zinc-500">Demande du code…</p>
         )}
-        {wa?.lastError && wa.status !== "open" && <p className="mt-3 text-xs text-zinc-400">{wa.lastError}</p>}
-        <button onClick={onClose} className="mt-6 rounded-xl px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100">
-          Fermer
-        </button>
+
+        {error && <p className="mt-4 text-center text-sm text-red-600">{error}</p>}
+        {wa?.lastError && wa.status !== "open" && <p className="mt-3 text-center text-xs text-amber-700">{wa.lastError}</p>}
+        <div className="mt-6 flex justify-center gap-2">
+          {step !== "form" && wa?.status !== "open" && (
+            <button onClick={() => setStep("form")} className="rounded-xl px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100">
+              ← Changer de méthode
+            </button>
+          )}
+          <button onClick={onClose} className="rounded-xl px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100">
+            Fermer
+          </button>
+        </div>
       </div>
     </div>
   );

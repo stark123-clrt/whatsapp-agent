@@ -1,5 +1,6 @@
 import "server-only";
 
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { rm } from "node:fs/promises";
 import path from "node:path";
 import makeWASocket, {
@@ -34,7 +35,27 @@ export type WhatsAppState = {
   qrDataUrl: string | null;
   me: { id: string; name?: string } | null;
   lastError: string | null;
+  expectedPhone?: string | null; // numéro autorisé (contrôlé à chaque connexion)
+  pairingCode?: string | null; // code à saisir sur le téléphone (« Lier avec le numéro »)
 };
+
+// ---------- Numéro autorisé (sécurité) ----------
+// Mémorisé dans data/ (volume persistant) : seul ce compte WhatsApp peut se connecter.
+const SETTINGS_FILE = path.join(process.cwd(), "data", "whatsapp.json");
+const digits = (v: string | null | undefined) => (v ?? "").split(/[:@]/)[0].replace(/\D/g, "");
+
+function readExpectedPhone(): string | null {
+  try {
+    return (JSON.parse(readFileSync(SETTINGS_FILE, "utf8")) as { expectedPhone?: string }).expectedPhone || null;
+  } catch {
+    return null;
+  }
+}
+
+function writeExpectedPhone(phone: string) {
+  mkdirSync(path.dirname(SETTINGS_FILE), { recursive: true });
+  writeFileSync(SETTINGS_FILE, JSON.stringify({ expectedPhone: phone }, null, 2));
+}
 
 const AUTH_DIR = path.join(process.cwd(), ".wa-auth");
 const RECONNECT_DELAY_MS = 3000;
@@ -63,7 +84,7 @@ function setState(patch: Partial<WhatsAppState>) {
 }
 
 export function getWhatsAppState(): WhatsAppState {
-  return store.state;
+  return { ...store.state, expectedPhone: existsSync(SETTINGS_FILE) ? readExpectedPhone() : null };
 }
 
 export function getSocket(): WASocket | null {
@@ -125,9 +146,28 @@ async function connect() {
     }
 
     if (connection === "open") {
+      // Sécurité : seul le numéro autorisé peut se connecter. Un autre compte est déconnecté aussitôt.
+      const connected = digits(sock.user?.id);
+      const expected = readExpectedPhone();
+      if (expected && connected && connected !== expected) {
+        store.sock = null;
+        await sock.logout().catch(() => sock.end(undefined));
+        await rm(AUTH_DIR, { recursive: true, force: true });
+        setState({
+          status: "closed",
+          qrDataUrl: null,
+          pairingCode: null,
+          me: null,
+          lastError: `Le compte +${connected} n'est pas le numéro autorisé (+${expected}) : il a été déconnecté.`,
+        });
+        scheduleReconnect();
+        return;
+      }
+      if (!expected && connected) writeExpectedPhone(connected); // première connexion : on mémorise le numéro
       // Tâches de fond (réponses en attente, relances) : chargées ici pour éviter une boucle d'imports.
       void import("./scheduler").then((m) => m.startScheduler());
       setState({
+        pairingCode: null,
         status: "open",
         qrDataUrl: null,
         lastError: null,
@@ -171,6 +211,31 @@ function scheduleReconnect() {
     store.reconnectTimer = null;
     void ensureWhatsApp();
   }, RECONNECT_DELAY_MS);
+}
+
+/**
+ * Prépare la connexion d'un numéro précis : il devient le seul autorisé.
+ * method "code" : renvoie un code à saisir sur le téléphone (« Lier avec le numéro de téléphone »).
+ */
+export async function startPairing(phone: string, method: "qr" | "code"): Promise<{ code?: string }> {
+  const number = digits(phone);
+  if (number.length < 8 || number.length > 15) throw new Error("Numéro invalide : indique-le au format international, par exemple +33 6 12 34 56 78.");
+  if (store.state.status === "open") {
+    if (digits(store.state.me?.id) === number) return {};
+    throw new Error("Un autre compte est déjà connecté : déconnecte-le d'abord.");
+  }
+  writeExpectedPhone(number);
+  setState({ pairingCode: null, lastError: null });
+  await ensureWhatsApp();
+  if (method === "qr") return {};
+
+  // Le code de connexion ne peut être demandé qu'une fois la connexion prête (QR disponible).
+  for (let i = 0; i < 40 && store.state.status !== "qr"; i++) await new Promise((r) => setTimeout(r, 500));
+  if (!store.sock || store.state.status !== "qr") throw new Error("WhatsApp n'est pas prêt, réessaie dans quelques secondes.");
+  const raw = await store.sock.requestPairingCode(number);
+  const code = raw.length === 8 ? `${raw.slice(0, 4)}-${raw.slice(4)}` : raw;
+  setState({ pairingCode: code });
+  return { code };
 }
 
 /** Déconnecte le compte, supprime la session et affiche un nouveau QR code. */

@@ -80,7 +80,8 @@ export type ChatFile = Pick<Message, "id" | "type" | "text" | "mime" | "ts" | "s
 
 function open() {
   mkdirSync(MEDIA_DIR, { recursive: true });
-  const db = new DatabaseSync(path.join(DATA_DIR, "agent.db"));
+  // timeout : si un autre processus utilise la base (construction en parallèle), on attend au lieu d'échouer.
+  const db = new DatabaseSync(path.join(DATA_DIR, "agent.db"), { timeout: 15_000 });
   db.exec(`
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS chats (

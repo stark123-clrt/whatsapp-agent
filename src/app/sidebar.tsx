@@ -124,9 +124,18 @@ export function Sidebar() {
         ))}
       </div>
 
+      <button
+        onClick={async () => {
+          await fetch("/api/auth/logout", { method: "POST" });
+          window.location.replace("/login"); // rechargement complet : plus aucune donnée en mémoire
+        }}
+        className="mx-3 mt-2 rounded-lg px-3 py-1.5 text-left text-xs text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"
+      >
+        ⎋ Se déconnecter
+      </button>
       <Link
         href="/canaux"
-        className="m-3 flex items-center justify-between rounded-lg border border-zinc-200 px-3 py-2 text-sm hover:bg-zinc-50"
+        className="m-3 mt-1 flex items-center justify-between rounded-lg border border-zinc-200 px-3 py-2 text-sm hover:bg-zinc-50"
       >
         <span className="text-zinc-600">WhatsApp</span>
         <span className="flex items-center gap-1.5">

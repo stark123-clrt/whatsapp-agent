@@ -160,10 +160,12 @@ async function connect() {
           me: null,
           lastError: `Le compte +${connected} n'est pas le numéro autorisé (+${expected}) : il a été déconnecté.`,
         });
+        console.warn(`[whatsapp] compte non autorisé déconnecté (…${connected.slice(-4)})`);
         scheduleReconnect();
         return;
       }
       if (!expected && connected) writeExpectedPhone(connected); // première connexion : on mémorise le numéro
+      console.log(`[whatsapp] connecté (numéro se terminant par ${connected.slice(-4)})`);
       // Tâches de fond (réponses en attente, relances) : chargées ici pour éviter une boucle d'imports.
       void import("./scheduler").then((m) => m.startScheduler());
       setState({

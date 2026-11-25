@@ -7,7 +7,9 @@
 export const SESSION_COOKIE = "session";
 export const SESSION_DAYS = 30;
 
-export const authEnabled = () => Boolean(process.env.ADMIN_PASSWORD);
+// En production, la connexion est TOUJOURS exigée : sans ADMIN_PASSWORD, l'appli reste verrouillée.
+// Sur ton PC (développement), sans ADMIN_PASSWORD, l'appli reste ouverte.
+export const authEnabled = () => Boolean(process.env.ADMIN_PASSWORD) || process.env.NODE_ENV === "production";
 
 const secret = () => process.env.AUTH_SECRET || `${process.env.ADMIN_PASSWORD ?? ""}::agent-whatsapp`;
 

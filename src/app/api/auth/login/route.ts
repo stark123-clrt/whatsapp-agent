@@ -15,6 +15,12 @@ export async function POST(req: NextRequest) {
 
   const { password } = (await req.json().catch(() => ({}))) as { password?: string };
   const expected = process.env.ADMIN_PASSWORD ?? "";
+  if (!expected) {
+    return Response.json(
+      { error: "Aucun mot de passe administrateur configuré : ajoute ADMIN_PASSWORD dans les variables d'environnement." },
+      { status: 503 },
+    );
+  }
   if (!expected || typeof password !== "string" || !safeEqual(password, expected)) {
     tries.set(ip, [...recent, now]);
     await new Promise((r) => setTimeout(r, 600)); // ralentit les essais en série

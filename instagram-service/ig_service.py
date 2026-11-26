@@ -195,8 +195,23 @@ def message_json(m, me):
             "like": "❤️",
             "animated_media": "GIF",
         }.get(kind, f"[{kind or 'message'}]")
+    # Réponse à une story (ou partage d'une publication) : on garde l'identifiant du contenu visé.
+    media_ref = None
+    for blob in (m.reel_share, m.story_share, m.raw_xma):
+        if not isinstance(blob, dict):
+            continue
+        media = blob.get("media") if isinstance(blob.get("media"), dict) else {}
+        ref = media.get("pk") or media.get("id")
+        if ref:
+            media_ref = str(ref).split("_")[0]
+        if not m.text and isinstance(blob.get("text"), str) and blob.get("text").strip():
+            label = blob["text"].strip()
+        if media_ref:
+            break
+    if not media_ref and m.media_share is not None:
+        media_ref = str(getattr(m.media_share, "pk", "") or "") or None
     ts = m.timestamp.timestamp() if m.timestamp else time.time()
-    return {"id": str(m.id), "userId": str(m.user_id) if m.user_id else None, "fromMe": str(m.user_id) == me, "ts": int(ts * 1000), "type": m.item_type, "text": label}
+    return {"id": str(m.id), "userId": str(m.user_id) if m.user_id else None, "fromMe": str(m.user_id) == me, "ts": int(ts * 1000), "type": m.item_type, "text": label, "mediaRef": media_ref}
 
 
 def inbox(amount):

@@ -5,6 +5,7 @@ import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { onInstagramMessage } from "./agent";
+import { publishedByMediaId } from "./campaign-context";
 import { DATA_DIR, db, getChat, markRead, messageExists, saveMessage, setAiPaused, upsertChat } from "./db";
 
 /**
@@ -27,7 +28,7 @@ type Thread = {
   threadId: string;
   pending: boolean;
   users: { pk: string; username: string; fullName: string | null; picture: string | null }[];
-  messages: { id: string; fromMe: boolean; ts: number; text: string }[];
+  messages: { id: string; fromMe: boolean; ts: number; text: string; type?: string | null; mediaRef?: string | null }[];
 };
 
 const PORT = Number(process.env.IG_PORT ?? 8765);
@@ -177,8 +178,17 @@ function ingest(t: Thread, cutoff: number) {
   for (const m of [...t.messages].sort((a, b) => a.ts - b.ts)) {
     const id = `ig_${m.id}`;
     if (messageExists(id)) continue;
-    saveMessage({ id, jid, sender: m.fromMe ? "human" : "contact", type: "text", text: m.text, mediaFile: null, mime: null, ts: m.ts, status: m.fromMe ? 4 : 0 });
-    if (!m.fromMe && m.ts > cutoff) fresh = m.text;
+    // Réponse à une story ou à une publication de nos campagnes : l'IA sait de quel contenu il s'agit.
+    let text = m.text;
+    if (!m.fromMe && m.mediaRef) {
+      const about = publishedByMediaId(m.mediaRef);
+      if (about) text = `[Réponse à : ${about}]
+${m.text}`;
+      else if (/reel_share|story/i.test(m.type ?? "")) text = `[Réponse à une de tes stories]
+${m.text}`;
+    }
+    saveMessage({ id, jid, sender: m.fromMe ? "human" : "contact", type: "text", text, mediaFile: null, mime: null, ts: m.ts, status: m.fromMe ? 4 : 0 });
+    if (!m.fromMe && m.ts > cutoff) fresh = text;
     else if (!m.fromMe) history = true;
     if (m.fromMe) {
       fresh = null; // déjà répondu depuis le téléphone

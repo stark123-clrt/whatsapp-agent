@@ -41,6 +41,7 @@ export type WidgetSettings = {
     privacyUrl: string;
   };
   emoji: boolean;
+  attachments: boolean; // photos et PDF envoyés par les visiteurs
   actions: ActionButton[];
   allowedDomains: string[];
   agentId: number | null; // null = agent par défaut du compte
@@ -90,6 +91,7 @@ export const DEFAULT_WIDGET: WidgetSettings = {
     privacyUrl: "",
   },
   emoji: true,
+  attachments: true,
   actions: [],
   allowedDomains: [],
   agentId: null,
@@ -140,8 +142,8 @@ export const LAUNCHER_ICONS: Record<LauncherIcon, string> = {
 
 /** Textes de l'interface du widget, selon la langue du visiteur. */
 export const WIDGET_I18N = {
-  fr: { send: "Envoyer", typing: "écrit…", thinking: "L'IA réfléchit…", start: "Commencer la discussion", name: "Prénom", lastName: "Nom", email: "E-mail", phone: "Téléphone", privacy: "J'accepte la politique de confidentialité", poweredBy: "Propulsé par l'IA", close: "Fermer", offline: "Message envoyé. Nous revenons vers vous très vite.", required: "Champ obligatoire" },
-  en: { send: "Send", typing: "is typing…", thinking: "AI is thinking…", start: "Start chatting", name: "First name", lastName: "Last name", email: "Email", phone: "Phone", privacy: "I accept the privacy policy", poweredBy: "Powered by AI", close: "Close", offline: "Message sent. We'll get back to you soon.", required: "Required" },
+  fr: { send: "Envoyer", typing: "écrit…", thinking: "L'IA réfléchit…", start: "Commencer la discussion", name: "Prénom", lastName: "Nom", email: "E-mail", phone: "Téléphone", privacy: "J'accepte la politique de confidentialité", poweredBy: "Propulsé par l'IA", close: "Fermer", offline: "Message envoyé. Nous revenons vers vous très vite.", required: "Champ obligatoire", attach: "Joindre une photo ou un PDF", fileTooBig: "Fichier trop lourd (10 Mo max).", fileType: "Seules les photos et les PDF sont acceptés.", drop: "Déposez votre photo ou votre PDF ici", open: "Ouvrir" },
+  en: { send: "Send", typing: "is typing…", thinking: "AI is thinking…", start: "Start chatting", name: "First name", lastName: "Last name", email: "Email", phone: "Phone", privacy: "I accept the privacy policy", poweredBy: "Powered by AI", close: "Close", offline: "Message sent. We'll get back to you soon.", required: "Required", attach: "Attach a photo or a PDF", fileTooBig: "File too large (10 MB max).", fileType: "Only photos and PDFs are accepted.", drop: "Drop your photo or PDF here", open: "Open" },
 } as const;
 export type WidgetLabels = { [K in keyof (typeof WIDGET_I18N)["fr"]]: string };
 

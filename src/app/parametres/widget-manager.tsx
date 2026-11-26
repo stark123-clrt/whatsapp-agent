@@ -455,7 +455,7 @@ export function WidgetManager({
 
             <Section id="fonctions" title="Fonctions" text="Ce que le visiteur peut faire dans le chat.">
               <SwitchLine title="Sélecteur d'émojis" checked={s.emoji} onChange={(v) => set({ emoji: v })} />
-              <Soon>Envoi de pièces jointes (photos, PDF)</Soon>
+              <SwitchLine title="Envoi de photos et de PDF" text="Un trombone à côté des émojis. Le visiteur peut aussi coller ou glisser une photo. 10 Mo max ; l'IA voit les photos." checked={s.attachments} onChange={(v) => set({ attachments: v })} />
               <Labeled label="Boutons d'action" hint="Jusqu'à 3 raccourcis dans l'en-tête : appeler, écrire, itinéraire ou lien.">
                 <ActionsEditor values={s.actions} onChange={(v) => set({ actions: v })} />
               </Labeled>

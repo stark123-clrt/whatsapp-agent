@@ -201,6 +201,16 @@ export function saveWebVisitorMessage(jid: string, text: string) {
   return id;
 }
 
+/** Photo ou PDF envoyé par un visiteur du site (l'IA voit les photos). */
+export async function saveWebVisitorFile(jid: string, file: { data: Uint8Array; mime: string; name: string; ext: string }) {
+  const id = webMessageId();
+  const mediaFile = await saveMedia(id, file.data, file.ext);
+  const type = file.mime.startsWith("image/") ? "image" : "document";
+  saveMessage({ id, jid, sender: "contact", type, text: type === "document" ? file.name : null, mediaFile, mime: file.mime, ts: Date.now() });
+  setFollowupStage(jid, 0);
+  return { id, type };
+}
+
 /** Réponse manuelle depuis Discussions vers un visiteur du site : l'IA se met en pause. */
 export function sendWebManualMessage(jid: string, text: string) {
   setAiPaused(jid, true);

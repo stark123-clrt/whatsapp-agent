@@ -9,7 +9,21 @@ import { FONTS, RADIUS, labelsFor, type ActionButton, type WidgetSettings } from
  *  - mode "preview" : aperçu en direct dans les réglages (aucun appel réseau, réponses simulées).
  */
 
-export type ChatMessage = { id: string; from: "visitor" | "agent"; text: string; ts: number; pending?: boolean; failed?: boolean };
+export type ChatMessage = {
+  id: string;
+  from: "visitor" | "agent";
+  text: string;
+  ts: number;
+  pending?: boolean;
+  failed?: boolean;
+  kind?: "text" | "image" | "file"; // absent = texte
+  name?: string; // nom du document
+  url?: string; // lien de la photo ou du document
+  file?: File; // gardé pour « Réessayer »
+};
+
+const MAX_FILE = 10 * 1024 * 1024;
+const okType = (f: File) => /^image\/(jpeg|png|webp|gif)$/.test(f.type) || f.type === "application/pdf";
 
 type Props = {
   settings: WidgetSettings;
@@ -52,7 +66,9 @@ function mergeMessages(prev: ChatMessage[], incoming: ChatMessage[]) {
   const ids = new Set(prev.map((m) => m.id));
   for (const m of incoming) {
     if (ids.has(m.id)) continue;
-    const pending = m.from === "visitor" ? next.findIndex((p) => p.pending && p.text === m.text) : -1;
+    const kind = m.kind ?? "text";
+    const pending =
+      m.from === "visitor" ? next.findIndex((p) => p.pending && (p.kind ?? "text") === kind && (kind !== "text" || p.text === m.text)) : -1;
     if (pending >= 0) next[pending] = m;
     else next.push(m);
   }
@@ -109,6 +125,8 @@ export function WidgetChat(props: Props) {
   const atBottom = useRef(true);
   const scroller = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
+  const picker = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
 
   const api = `/api/public/widget/${widgetKey}/messages`;
   const hasVisitorMsg = messages.some((m) => m.from === "visitor");
@@ -265,9 +283,48 @@ export function WidgetChat(props: Props) {
     }
   }
 
+  async function sendFile(file: File) {
+    if (blocked || !s.attachments) return;
+    setNotice(null);
+    if (!okType(file)) return setNotice(t.fileType);
+    if (file.size > MAX_FILE) return setNotice(t.fileTooBig);
+    const kind = file.type.startsWith("image/") ? "image" : "file";
+    const temp: ChatMessage = { id: `tmp_${clock()}`, from: "visitor", text: "", ts: clock(), pending: true, kind, name: file.name, url: URL.createObjectURL(file), file };
+    atBottom.current = true;
+    setMessages((p) => [...p, temp]);
+
+    if (!live) {
+      // Aperçu : réponse simulée.
+      setTimeout(() => setMessages((p) => p.map((m) => (m.id === temp.id ? { ...m, pending: false } : m))), 600);
+      setTimeout(() => setTyping(true), 900);
+      setTimeout(() => {
+        setTyping(false);
+        const reply = kind === "image" ? "Merci pour la photo ! (Aperçu : votre agent IA la verra et y répondra.)" : "Bien reçu, merci pour le document ! (Aperçu)";
+        setMessages((p) => [...p, { id: `a_${clock()}`, from: "agent", text: reply, ts: 0 }]);
+      }, 2400);
+      return;
+    }
+
+    fastUntil.current = clock() + 45_000;
+    try {
+      const form = new FormData();
+      form.append("vid", vid ?? "");
+      form.append("file", file);
+      const r = await fetch(`/api/public/widget/${widgetKey}/files`, { method: "POST", headers: { "x-widget-host": host || location.hostname }, body: form });
+      const d = (await r.json().catch(() => ({}))) as { id?: string; error?: string };
+      if (!r.ok) throw new Error(d.error ?? "Envoi impossible.");
+      setMessages((p) => p.map((m) => (m.id === temp.id ? { ...m, id: d.id ?? m.id, pending: false, file: undefined } : m)));
+      if (embedded) storage.set(`aw_chatted_${widgetKey}`, "1");
+    } catch (e) {
+      setMessages((p) => p.map((m) => (m.id === temp.id ? { ...m, pending: false, failed: true } : m)));
+      setNotice(e instanceof Error ? e.message : "Envoi impossible.");
+    }
+  }
+
   function retry(m: ChatMessage) {
     setMessages((p) => p.filter((x) => x.id !== m.id));
-    void send(m.text);
+    if (m.file) void sendFile(m.file);
+    else void send(m.text);
   }
 
   function close() {
@@ -291,6 +348,21 @@ export function WidgetChat(props: Props) {
   return (
     <div
       className="aw relative flex h-full w-full flex-col overflow-hidden"
+      onDragOver={(e) => {
+        if (!s.attachments || needLead || !e.dataTransfer.types.includes("Files")) return;
+        e.preventDefault();
+        if (!dragging) setDragging(true);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragging(false);
+      }}
+      onDrop={(e) => {
+        if (!s.attachments || needLead) return;
+        e.preventDefault();
+        setDragging(false);
+        const f = e.dataTransfer.files?.[0];
+        if (f) void sendFile(f);
+      }}
       style={{ fontFamily: FONTS[s.font], background: bodyBg, color: ink, borderRadius: embedded ? 0 : radius.panel }}
     >
       <style>{`
@@ -302,6 +374,18 @@ export function WidgetChat(props: Props) {
         .aw-up{animation:aw-up .4s cubic-bezier(.22,1,.36,1) both}
         .aw-dot{animation:aw-dot 1.2s infinite}
       `}</style>
+
+      {dragging && (
+        <div
+          className="pointer-events-none absolute inset-2 z-20 flex flex-col items-center justify-center gap-2 border-2 border-dashed text-sm font-medium"
+          style={{ borderRadius: radius.panel, borderColor: s.colors.brand, background: `color-mix(in srgb, ${s.colors.panel} 88%, ${s.colors.brand})`, color: ink }}
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 16V4M7 9l5-5 5 5M5 20h14" />
+          </svg>
+          {t.drop}
+        </div>
+      )}
 
       {/* En-tête */}
       <header className="relative flex shrink-0 items-center gap-3 px-4 py-3.5" style={{ background: headerBg, color: s.colors.brandText }}>
@@ -342,7 +426,14 @@ export function WidgetChat(props: Props) {
       )}
 
       {/* Conversation */}
-      <div ref={scroller} onScroll={onScroll} className="relative min-h-0 flex-1 space-y-1.5 overflow-y-auto px-4 py-4">
+      <div
+        ref={scroller}
+        onScroll={onScroll}
+        // Une photo qui finit de charger agrandit la conversation : on reste en bas.
+        onLoadCapture={() => {
+          if (atBottom.current) scroller.current?.scrollTo({ top: scroller.current.scrollHeight });
+        }}
+        className="relative min-h-0 flex-1 space-y-1.5 overflow-y-auto px-4 py-4">
         {blocked ? (
           <p className="mt-10 text-center text-sm" style={{ color: muted }}>
             Ce site n&apos;est pas autorisé à utiliser ce chat.
@@ -360,7 +451,7 @@ export function WidgetChat(props: Props) {
               const last = !next || next.from !== m.from;
               return (
                 <div key={m.id} className={last ? "pb-2" : ""}>
-                  <Bubble from={m.from} text={m.text} s={s} radius={radius.bubble} pending={m.pending} />
+                  <Bubble from={m.from} text={m.text} s={s} radius={radius.bubble} pending={m.pending} media={m.kind && m.kind !== "text" ? m : undefined} openLabel={t.open} />
                   {m.failed ? (
                     <button onClick={() => retry(m)} className="mt-1 ml-auto block text-[11px] font-medium text-red-500 hover:underline">
                       Non envoyé · Réessayer
@@ -462,8 +553,41 @@ export function WidgetChat(props: Props) {
                   </svg>
                 </button>
               )}
+              {s.attachments && (
+                <>
+                  <button
+                    onClick={() => picker.current?.click()}
+                    aria-label={t.attach}
+                    title={t.attach}
+                    className="-ml-1 shrink-0 rounded-full p-1.5 transition hover:scale-110"
+                    style={{ color: muted }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l7.9-7.9" />
+                    </svg>
+                  </button>
+                  <input
+                    ref={picker}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) void sendFile(f);
+                      e.target.value = "";
+                    }}
+                  />
+                </>
+              )}
               <textarea
                 ref={input}
+                onPaste={(e) => {
+                  const f = Array.from(e.clipboardData.files).find((x) => x.type.startsWith("image/"));
+                  if (f && s.attachments) {
+                    e.preventDefault();
+                    void sendFile(f);
+                  }
+                }}
                 value={draft}
                 rows={1}
                 maxLength={2000}
@@ -528,9 +652,66 @@ export function WidgetChat(props: Props) {
   );
 }
 
-function Bubble({ from, text, s, radius, pending }: { from: "visitor" | "agent"; text: string; s: WidgetSettings; radius: number; pending?: boolean }) {
+function Bubble({
+  from,
+  text,
+  s,
+  radius,
+  pending,
+  media,
+  openLabel = "Ouvrir",
+}: {
+  from: "visitor" | "agent";
+  text: string;
+  s: WidgetSettings;
+  radius: number;
+  pending?: boolean;
+  media?: ChatMessage;
+  openLabel?: string;
+}) {
   const mine = from === "visitor";
   const small = Math.min(radius, 5);
+  const shape = mine ? `${radius}px ${radius}px ${small}px ${radius}px` : `${radius}px ${radius}px ${radius}px ${small}px`;
+
+  // Photo : vignette cliquable.
+  if (media?.kind === "image" && media.url) {
+    return (
+      <div className={`aw-in flex ${mine ? "justify-end" : "justify-start"}`}>
+        <a href={media.url} target="_blank" rel="noopener noreferrer" className="relative block overflow-hidden" style={{ borderRadius: shape }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={media.url} alt={media.name ?? "Photo"} className="block max-h-56 max-w-[220px] object-cover transition-opacity" style={{ opacity: pending ? 0.55 : 1 }} />
+          {pending && <Spinner />}
+        </a>
+      </div>
+    );
+  }
+
+  // Document PDF : carte avec le nom du fichier.
+  if (media?.kind === "file") {
+    return (
+      <div className={`aw-in flex ${mine ? "justify-end" : "justify-start"}`}>
+        <a
+          href={pending ? undefined : media.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block max-w-[82%] transition hover:brightness-105"
+          style={{ background: mine ? s.colors.brand : s.colors.botBubble, color: mine ? s.colors.brandText : s.colors.botText, borderRadius: shape }}
+        >
+          <span className="flex items-center gap-3 px-3 py-2.5">
+            <span className="relative flex h-10 w-9 shrink-0 items-center justify-center rounded-md bg-red-500 text-[10px] font-bold text-white">
+              PDF
+              {pending && <Spinner />}
+            </span>
+            <span className="min-w-0">
+              <span className="block max-w-[170px] truncate text-[13.5px] font-medium">{media.name ?? "Document"}</span>
+              <span className="block text-[11px] opacity-70">{pending ? "Envoi…" : `${openLabel} ↗`}</span>
+            </span>
+          </span>
+        </a>
+      </div>
+    );
+  }
+
   return (
     <div className={`aw-in flex ${mine ? "justify-end" : "justify-start"}`}>
       <div
@@ -538,7 +719,7 @@ function Bubble({ from, text, s, radius, pending }: { from: "visitor" | "agent";
         style={{
           background: mine ? s.colors.brand : s.colors.botBubble,
           color: mine ? s.colors.brandText : s.colors.botText,
-          borderRadius: mine ? `${radius}px ${radius}px ${small}px ${radius}px` : `${radius}px ${radius}px ${radius}px ${small}px`,
+          borderRadius: shape,
           opacity: pending ? 0.65 : 1,
           border: s.theme === "mono" && !mine ? "1px solid rgba(0,0,0,.08)" : undefined,
         }}
@@ -546,6 +727,14 @@ function Bubble({ from, text, s, radius, pending }: { from: "visitor" | "agent";
         <RichText text={text} />
       </div>
     </div>
+  );
+}
+
+function Spinner() {
+  return (
+    <span className="absolute inset-0 flex items-center justify-center">
+      <span className="h-6 w-6 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+    </span>
   );
 }
 

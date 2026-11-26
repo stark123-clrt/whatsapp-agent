@@ -21,7 +21,7 @@ type Item =
 
 export function ConversationMenu({ chat, knownTags, onChanged, onClose, notify }: Props) {
   const [open, setOpen] = useState(false);
-  const [modal, setModal] = useState<"contact" | "tags" | "agent" | null>(null);
+  const [modal, setModal] = useState<"contact" | "tags" | "agent" | "delete" | null>(null);
   const url = `/api/chats/${enc(chat.jid)}`;
 
   async function patch(body: object, message?: string, close = false) {
@@ -53,12 +53,16 @@ export function ConversationMenu({ chat, knownTags, onChanged, onClose, notify }
     window.location.assign(`mailto:${chat.email ?? ""}?subject=${enc(subject)}&body=${enc(body)}`);
   }
 
-  async function remove() {
-    const ok = window.confirm(
-      `Supprimer ${displayName(chat)} ?\n\nLa discussion, ses messages et ses fichiers seront effacés de l'appli. ` +
-        `C'est définitif (rien n'est supprimé sur WhatsApp).`,
-    );
-    if (!ok) return;
+  async function remove(exportFirst: boolean) {
+    setModal(null);
+    if (exportFirst) {
+      // Copie de sauvegarde de la conversation avant de l'effacer (RGPD, archives).
+      const a = document.createElement("a");
+      a.href = `${url}/transcript`;
+      a.download = "";
+      a.click();
+      await new Promise((r) => setTimeout(r, 1200));
+    }
     const res = await fetch(url, { method: "DELETE" });
     if (!res.ok) return notify("Échec de la suppression.");
     notify("Contact supprimé.");
@@ -136,7 +140,7 @@ export function ConversationMenu({ chat, knownTags, onChanged, onClose, notify }
             ? patch({ spam: false }, "Retirée des spams.")
             : patch({ spam: true }, "Marquée comme spam : l'IA ne répondra plus.", true),
       },
-      { kind: "action", label: "Supprimer le contact", icon: "trash", color: "text-red-600", danger: true, run: remove },
+      { kind: "action", label: "Supprimer le contact", icon: "trash", color: "text-red-600", danger: true, run: () => setModal("delete") },
     ],
   ];
 
@@ -203,6 +207,25 @@ export function ConversationMenu({ chat, knownTags, onChanged, onClose, notify }
           onClose={() => setModal(null)}
           onSave={(v) => patch(v, "Contact mis à jour.").then(() => setModal(null))}
         />
+      )}
+      {modal === "delete" && (
+        <Modal title={`Supprimer ${displayName(chat)} ?`} onClose={() => setModal(null)}>
+          <p className="mt-2 text-sm text-zinc-600">
+            La discussion, ses messages et ses fichiers seront <strong>effacés définitivement</strong> de l&apos;appli. Rien n&apos;est supprimé sur WhatsApp.
+          </p>
+          <p className="mt-2 text-sm text-zinc-600">Conseil : télécharge d&apos;abord la transcription pour garder une trace.</p>
+          <div className="mt-5 flex flex-col gap-2">
+            <button onClick={() => remove(true)} className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
+              ⬇️ Exporter la transcription puis supprimer
+            </button>
+            <button onClick={() => remove(false)} className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
+              Supprimer sans exporter
+            </button>
+            <button onClick={() => setModal(null)} className="rounded-lg px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100">
+              Annuler
+            </button>
+          </div>
+        </Modal>
       )}
       {modal === "agent" && (
         <AgentModal

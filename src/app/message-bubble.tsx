@@ -55,7 +55,9 @@ export function Bubble({ m, quoted, contactName, onReply, onChanged, notify }: P
         <div className={`rounded-xl px-3 py-2 text-sm shadow-sm ${mine ? "bg-[#D9FDD3]" : "bg-white"}`}>
           {mine && (
             <p className={`mb-0.5 text-xs font-medium ${m.sender === "ai" ? "text-green-700" : "text-zinc-500"}`}>
-              {m.sender === "ai" ? "IA" : "Vous"}
+              {m.sender === "ai"
+                ? `IA${m.agentName ? ` · ${m.agentName}` : ""}${m.agentDeleted ? " (agent supprimé)" : ""}`
+                : "Vous"}
             </p>
           )}
 

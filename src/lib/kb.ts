@@ -1,7 +1,7 @@
 import "server-only";
 
 import { withDefaults, instructionsText, type AgentSettings } from "./agent-settings";
-import { db } from "./db";
+import { db, reassignAgentChats } from "./db";
 
 /**
  * Agents IA et base de connaissances (sites importés, pages, FAQ).
@@ -71,6 +71,11 @@ db.exec(`
 {
   const cols = new Set((db.prepare(`PRAGMA table_info(messages)`).all() as { name: string }[]).map((c) => c.name));
   if (!cols.has("agent_id")) db.exec(`ALTER TABLE messages ADD COLUMN agent_id INTEGER`);
+  // Nom de l'agent auteur, gardé sur le message même si l'agent est supprimé (rempli pour l'existant).
+  if (cols.has("agent_name") || db.prepare(`PRAGMA table_info(messages)`).all().some((c) => (c as { name: string }).name === "agent_name")) {
+    db.exec(`UPDATE messages SET agent_name = (SELECT name FROM agents WHERE agents.id = messages.agent_id)
+             WHERE agent_name IS NULL AND agent_id IS NOT NULL`);
+  }
   const agentCols = new Set((db.prepare(`PRAGMA table_info(agents)`).all() as { name: string }[]).map((c) => c.name));
   if (!agentCols.has("settings")) db.exec(`ALTER TABLE agents ADD COLUMN settings TEXT NOT NULL DEFAULT '{}'`);
   if (!agentCols.has("prep_phase")) db.exec(`ALTER TABLE agents ADD COLUMN prep_phase TEXT`);
@@ -334,13 +339,20 @@ export function updateAgent(
   db.prepare(`UPDATE agents SET ${set.join(", ")} WHERE id = ?`).run(...values, id);
 }
 
-export function deleteAgent(id: number) {
-  const wasDefault = getAgent(id)?.isDefault;
+export function deleteAgent(id: number, reassignTo: number | null = null) {
+  const wasDefault = Boolean(getAgent(id)?.isDefault);
+  // Les discussions restent : elles sont confiées à un autre agent, ou l'IA y est mise en pause.
+  reassignAgentChats(id, wasDefault, reassignTo && getAgent(reassignTo) ? reassignTo : null);
   const sources = db.prepare(`SELECT id FROM kb_sources WHERE agent_id = ?`).all(id) as { id: number }[];
   for (const s of sources) deleteSource(s.id);
   db.prepare(`DELETE FROM faqs WHERE agent_id = ?`).run(id);
   db.prepare(`DELETE FROM agents WHERE id = ?`).run(id);
-  if (wasDefault) db.prepare(`UPDATE agents SET is_default = 1 WHERE id = (SELECT id FROM agents ORDER BY created_at LIMIT 1)`).run();
+  if (wasDefault) {
+    // L'agent qui reprend ses discussions devient l'agent par défaut (sinon le plus ancien).
+    const next = reassignTo && getAgent(reassignTo) ? reassignTo : null;
+    if (next) db.prepare(`UPDATE agents SET is_default = 1 WHERE id = ?`).run(next);
+    else db.prepare(`UPDATE agents SET is_default = 1 WHERE id = (SELECT id FROM agents ORDER BY created_at LIMIT 1)`).run();
+  }
 }
 
 // ---------- Sources et pages ----------
@@ -515,7 +527,11 @@ export function faqsForAgent(agentId: number): Faq[] {
 
 /** Note quel agent a écrit un message (statistiques de la page Agents). */
 export function setMessageAgent(messageId: string, agentId: number) {
-  db.prepare(`UPDATE messages SET agent_id = ? WHERE id = ?`).run(agentId, messageId);
+  db.prepare(`UPDATE messages SET agent_id = ?, agent_name = (SELECT name FROM agents WHERE id = ?) WHERE id = ?`).run(
+    agentId,
+    agentId,
+    messageId,
+  );
 }
 
 export function markFaqsUsed(ids: number[]) {

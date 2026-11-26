@@ -46,11 +46,8 @@ export function AgentsClient() {
     void load();
   }
 
-  async function remove(a: AgentWithStats) {
-    if (!window.confirm(`Supprimer l'agent « ${a.name} » ?\n\nSes sources et ses ${a.faqCount} FAQ seront supprimées. C'est définitif.`)) return;
-    await fetch(`/api/agents/${a.id}`, { method: "DELETE" });
-    void load();
-  }
+  const [deleting, setDeleting] = useState<AgentWithStats | null>(null);
+  const remove = (a: AgentWithStats) => setDeleting(a);
 
   const list = (agents ?? []).filter(
     (a) => (filter === "all" || a.status === filter) && a.name.toLowerCase().includes(search.trim().toLowerCase()),
@@ -193,6 +190,17 @@ export function AgentsClient() {
         </table>
       </div>
 
+      {deleting && (
+        <DeleteAgentModal
+          agent={deleting}
+          others={(agents ?? []).filter((x) => x.id !== deleting.id)}
+          onClose={() => setDeleting(null)}
+          onDone={() => {
+            setDeleting(null);
+            void load();
+          }}
+        />
+      )}
       {creating && (
         <NewAgentModal
           onClose={() => setCreating(false)}
@@ -207,6 +215,78 @@ export function AgentsClient() {
         />
       )}
     </main>
+  );
+}
+
+/** Supprimer un agent sans jamais perdre ses discussions : désactiver, ou choisir qui les reprend. */
+function DeleteAgentModal({
+  agent,
+  others,
+  onClose,
+  onDone,
+}: {
+  agent: AgentWithStats;
+  others: AgentWithStats[];
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [chatCount, setChatCount] = useState<number | null>(null);
+  const [target, setTarget] = useState(others[0] ? String(others[0].id) : "");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    void fetch(`/api/agents/${agent.id}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setChatCount(d.chatCount ?? 0));
+  }, [agent.id]);
+
+  async function deactivate() {
+    setBusy(true);
+    await fetch(`/api/agents/${agent.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "paused" }) });
+    onDone();
+  }
+
+  async function remove() {
+    setBusy(true);
+    await fetch(`/api/agents/${agent.id}?reassignTo=${target || "none"}`, { method: "DELETE" });
+    onDone();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onMouseDown={onClose}>
+      <div className="w-full max-w-lg rounded-2xl bg-white p-7 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
+        <h2 className="text-lg font-semibold">Supprimer l&apos;agent « {agent.name} » ?</h2>
+        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+          💡 <strong>Tu peux plutôt le désactiver</strong> : il ne répond plus, mais tu gardes ses instructions et ses connaissances pour le réactiver plus tard.
+          <button onClick={deactivate} disabled={busy} className="mt-2 block rounded-lg bg-white px-3 py-1.5 font-medium ring-1 ring-green-300 hover:bg-green-100">
+            Désactiver plutôt
+          </button>
+        </div>
+        <p className="mt-5 text-sm text-zinc-600">
+          Si tu le supprimes : ses instructions, ses sources et ses {agent.faqCount} FAQ sont effacées. <strong>Ses discussions sont conservées</strong>, et les
+          messages qu&apos;il a écrits restent signés « {agent.name} (agent supprimé) ».
+        </p>
+        <label className="mt-4 block text-sm font-medium text-zinc-700">
+          Qui reprend ses {chatCount ?? "…"} discussion{chatCount === 1 ? "" : "s"} ?
+          <select value={target} onChange={(e) => setTarget(e.target.value)} className="mt-1.5 w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm">
+            {others.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.name}
+              </option>
+            ))}
+            <option value="">Personne : l&apos;IA reste en pause dans ces discussions</option>
+          </select>
+        </label>
+        <div className="mt-6 flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-xl px-4 py-2.5 text-sm text-zinc-600 hover:bg-zinc-100">
+            Annuler
+          </button>
+          <button onClick={remove} disabled={busy} className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:bg-red-300">
+            Supprimer l&apos;agent
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

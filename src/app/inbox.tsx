@@ -330,6 +330,7 @@ function Conversation({
 
   if (!data) return <div className="flex-1" />;
   const { chat, messages, aiInactive, aiTyping, knownTags } = data;
+  const readOnly = (data as { readOnly?: string | null }).readOnly ?? null;
   const otherReason = aiInactive && !chat.aiPaused ? aiInactive : null;
   const byId = new Map(messages.map((x) => [x.id, x]));
   const changed = () => {
@@ -443,7 +444,7 @@ function Conversation({
           </div>
         </div>
 
-        {chat.draft && (
+        {chat.draft && !readOnly && (
           <div className="border-t border-green-200 bg-green-50 px-5 py-3">
             <p className="text-xs font-semibold text-green-800">✍️ Brouillon proposé par l&apos;IA</p>
             <p className="mt-1 text-sm whitespace-pre-wrap text-zinc-800">{chat.draft}</p>
@@ -477,27 +478,37 @@ function Conversation({
           </div>
         )}
 
-        <footer className="border-t border-zinc-200 bg-white p-3">
-          {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
-          <Composer
-            text={text}
-            setText={setText}
-            busy={busy !== null}
-            drafting={busy === "draft"}
-            onSendText={send}
-            onSendFile={sendFile}
-            onDraft={draft}
-            reply={
-              replyTo
-                ? {
-                    who: replyTo.sender === "contact" ? displayName(chat) : replyTo.sender === "ai" ? "IA" : "Vous",
-                    text: messagePreview(replyTo),
-                    cancel: () => setReplyTo(null),
-                  }
-                : null
-            }
-          />
-        </footer>
+        {readOnly ? (
+          <footer className="flex items-center gap-3 border-t border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+            <span aria-hidden>🔒</span>
+            <span className="flex-1">{readOnly}</span>
+            <Link href="/parametres?section=channels" className="shrink-0 font-medium underline">
+              Paramètres → Canaux
+            </Link>
+          </footer>
+        ) : (
+          <footer className="border-t border-zinc-200 bg-white p-3">
+            {error && <p className="mb-2 text-sm text-red-600">{error}</p>}
+            <Composer
+              text={text}
+              setText={setText}
+              busy={busy !== null}
+              drafting={busy === "draft"}
+              onSendText={send}
+              onSendFile={sendFile}
+              onDraft={draft}
+              reply={
+                replyTo
+                  ? {
+                      who: replyTo.sender === "contact" ? displayName(chat) : replyTo.sender === "ai" ? "IA" : "Vous",
+                      text: messagePreview(replyTo),
+                      cancel: () => setReplyTo(null),
+                    }
+                  : null
+              }
+            />
+          </footer>
+        )}
       </section>
 
       {/* Fiche contact */}

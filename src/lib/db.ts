@@ -40,6 +40,7 @@ export type Chat = {
   draft: string | null; // brouillon préparé par l'IA (mode « brouillons uniquement »)
   pendingReply: boolean; // réponse en attente (hors heures d'activité)
   followupStage: number; // relances déjà envoyées
+  account: string | null; // numéro du canal qui a reçu la discussion
   unread: number;
   lastAt: number;
   createdAt: number;
@@ -64,6 +65,9 @@ export type Message = {
   theirReaction?: string | null;
   starred?: boolean;
   deleted?: boolean;
+  agentId?: number | null; // agent IA auteur (messages de l'IA)
+  agentName?: string | null;
+  agentDeleted?: boolean; // calculé par l'API : l'agent auteur n'existe plus
 };
 
 export type ChatStats = {
@@ -136,6 +140,7 @@ function open() {
     ["draft", "TEXT"],
     ["pending_reply", "INTEGER NOT NULL DEFAULT 0"],
     ["followup_stage", "INTEGER NOT NULL DEFAULT 0"],
+    ["account", "TEXT"], // numéro (compte du canal) qui a reçu la discussion
   ];
   for (const [name, def] of added) {
     if (!cols.has(name)) db.exec(`ALTER TABLE chats ADD COLUMN ${name} ${def}`);
@@ -148,6 +153,7 @@ function open() {
     ["their_reaction", "TEXT"],
     ["starred", "INTEGER NOT NULL DEFAULT 0"],
     ["deleted", "INTEGER NOT NULL DEFAULT 0"],
+    ["agent_name", "TEXT"], // nom de l'agent IA qui a écrit le message (gardé s'il est supprimé)
   ];
   for (const [name, def] of msgAdded) {
     if (!msgCols.has(name)) db.exec(`ALTER TABLE messages ADD COLUMN ${name} ${def}`);
@@ -183,6 +189,7 @@ type ChatRow = {
   draft: string | null;
   pending_reply: number;
   followup_stage: number;
+  account: string | null;
   unread: number;
   last_at: number;
   created_at: number;
@@ -214,6 +221,7 @@ const toChat = (r: ChatRow): Chat => ({
   draft: r.draft,
   pendingReply: r.pending_reply === 1,
   followupStage: r.followup_stage,
+  account: r.account,
   unread: r.unread,
   lastAt: r.last_at,
   createdAt: r.created_at,
@@ -246,6 +254,8 @@ type MessageRow = {
   their_reaction: string | null;
   starred: number;
   deleted: number;
+  agent_id?: number | null;
+  agent_name?: string | null;
 };
 
 const toMessage = (r: MessageRow): Message => ({
@@ -263,6 +273,8 @@ const toMessage = (r: MessageRow): Message => ({
   theirReaction: r.their_reaction,
   starred: r.starred === 1,
   deleted: r.deleted === 1,
+  agentId: r.agent_id ?? null,
+  agentName: r.agent_name ?? null,
 });
 
 const CHAT_SELECT = `
@@ -277,14 +289,35 @@ export function upsertChat(chat: {
   channel: Channel;
   phone: string | null;
   name?: string | null;
+  account?: string | null; // numéro du canal qui reçoit ce message
 }) {
   const now = Date.now();
   db.prepare(
-    `INSERT INTO chats (jid, channel, phone, name, last_at, created_at) VALUES (?, ?, ?, ?, ?, ?)
+    `INSERT INTO chats (jid, channel, phone, name, account, last_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(jid) DO UPDATE SET
        phone = COALESCE(excluded.phone, chats.phone),
-       name = COALESCE(excluded.name, chats.name)`,
-  ).run(chat.jid, chat.channel, chat.phone, chat.name ?? null, now, now);
+       name = COALESCE(excluded.name, chats.name),
+       account = COALESCE(excluded.account, chats.account)`,
+  ).run(chat.jid, chat.channel, chat.phone, chat.name ?? null, chat.account ?? null, now, now);
+}
+
+/** Nombre de discussions gérées par un agent (attribuées, ou sans agent quand il est l'agent par défaut). */
+export function countAgentChats(agentId: number, isDefault: boolean): number {
+  return (
+    db.prepare(`SELECT COUNT(*) AS n FROM chats WHERE agent_id = ? OR (? = 1 AND agent_id IS NULL)`).get(agentId, isDefault ? 1 : 0) as {
+      n: number;
+    }
+  ).n;
+}
+
+/**
+ * Réattribue les discussions d'un agent supprimé : à un autre agent, ou à personne
+ * (l'IA est alors mise en pause dans ces discussions). Les messages ne sont jamais supprimés.
+ */
+export function reassignAgentChats(agentId: number, isDefault: boolean, target: number | null) {
+  const where = `agent_id = ? OR (? = 1 AND agent_id IS NULL)`;
+  if (target) db.prepare(`UPDATE chats SET agent_id = ? WHERE ${where}`).run(target, agentId, isDefault ? 1 : 0);
+  else db.prepare(`UPDATE chats SET agent_id = NULL, ai_paused = 1 WHERE ${where}`).run(agentId, isDefault ? 1 : 0);
 }
 
 /** Enregistre un message. Renvoie false s'il était déjà enregistré. */

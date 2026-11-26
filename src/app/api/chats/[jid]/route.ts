@@ -1,5 +1,6 @@
 import { connection, type NextRequest } from "next/server";
-import { isAiTyping, whyAiInactive } from "@/lib/agent";
+import { chatReadOnly, isAiTyping, whyAiInactive } from "@/lib/agent";
+import { listAgents } from "@/lib/kb";
 import {
   allTags,
   deleteChat,
@@ -29,7 +30,12 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/chats/[jid]
   if (!chat) return Response.json({ error: "Discussion introuvable" }, { status: 404 });
   return Response.json({
     chat,
-    messages: getMessages(jid),
+    readOnly: chatReadOnly(jid),
+    // Messages de l'IA : on signale si l'agent auteur a été supprimé depuis.
+    messages: (() => {
+      const alive = new Set(listAgents().map((a) => a.id));
+      return getMessages(jid).map((m) => ({ ...m, agentDeleted: Boolean(m.agentId && !alive.has(m.agentId)) }));
+    })(),
     stats: getStats(jid),
     aiInactive: whyAiInactive(jid, chat.phone),
     aiTyping: isAiTyping(jid),

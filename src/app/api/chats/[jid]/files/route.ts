@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { sendManualFile } from "@/lib/agent";
+import { chatReadOnly, sendManualFile } from "@/lib/agent";
 import { getChat } from "@/lib/db";
 import { webmToOgg } from "@/lib/webm-to-ogg";
 import { getSocket } from "@/lib/whatsapp";
@@ -10,6 +10,8 @@ const MAX_BYTES = 64 * 1024 * 1024; // WhatsApp limite les médias à 64 Mo envi
 export async function POST(req: NextRequest, ctx: RouteContext<"/api/chats/[jid]/files">) {
   const jid = decodeURIComponent((await ctx.params).jid);
   if (!getChat(jid)) return Response.json({ error: "Discussion introuvable" }, { status: 404 });
+  const readOnly = chatReadOnly(jid);
+  if (readOnly) return Response.json({ error: readOnly }, { status: 409 });
   const sock = getSocket();
   if (!sock) return Response.json({ error: "WhatsApp n'est pas connecté" }, { status: 503 });
 

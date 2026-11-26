@@ -19,6 +19,26 @@ import { isOpenNow } from "./agent-settings";
 import { addTask, incAiCount, setChatAgent, setDraft, setFollowupStage, setPendingReply, updateChat } from "./db";
 import { getAgent, getAgentMedia, getDefaultAgent, listAgents, setMessageAgent, type Agent } from "./kb";
 import { buildAgentPrompt, modelOptions, parseAgentReply, type AgentAction } from "./knowledge";
+import { getWhatsAppState } from "./whatsapp";
+
+const accountOf = (id: string | null | undefined) => (id ?? "").split(/[:@]/)[0].replace(/\D/g, "") || null;
+
+/**
+ * Discussion en lecture seule ? (null = on peut répondre)
+ * - le canal est déconnecté ;
+ * - la discussion a été reçue sur un autre numéro que celui connecté maintenant.
+ */
+export function chatReadOnly(jid: string): string | null {
+  const chat = getChat(jid);
+  if (!chat || chat.channel !== "whatsapp") return null;
+  const wa = getWhatsAppState();
+  if (wa.status !== "open") return "Canal déconnecté : reconnecte WhatsApp dans Paramètres → Canaux pour répondre.";
+  const current = accountOf(wa.me?.id);
+  if (chat.account && current && chat.account !== current) {
+    return `Discussion reçue sur le numéro +${chat.account}, qui n'est plus connecté : lecture seule.`;
+  }
+  return null;
+}
 import {
   getChat,
   getMessage,
@@ -145,6 +165,8 @@ export function getAgentSettings() {
 export function whyAiInactive(jid: string, phone: string | null): string | null {
   const s = settings();
   if (!s.enabled) return "Agent coupé (AGENT_ENABLED=false)";
+  const readOnly = chatReadOnly(jid);
+  if (readOnly) return readOnly;
   const chat = getChat(jid);
   if (chat?.spam) return "Discussion marquée comme spam";
   if (chat?.dnd) return "« Ne pas déranger » est activé";
@@ -339,7 +361,7 @@ export function handleIncoming(sock: WASocket, msg: WAMessage, live: boolean) {
     void sleep(OWN_ECHO_DELAY_MS).then(() =>
       enqueue(jid, async () => {
         if (store.appSent.has(id) || messageExists(id)) return;
-        upsertChat({ jid, channel: "whatsapp", phone });
+        upsertChat({ jid, channel: "whatsapp", phone, account: accountOf(sock.user?.id) });
         const saved = await ingest(sock, msg, "human", false);
         // Seulement pour un message récent (pas pour l'historique rattrapé).
         if (saveMessage(saved) && Date.now() - saved.ts < 120_000) setAiPaused(jid, true);
@@ -349,7 +371,7 @@ export function handleIncoming(sock: WASocket, msg: WAMessage, live: boolean) {
   }
 
   const who = msg.pushName ? `${msg.pushName} (+${phone ?? "?"})` : `+${phone ?? "?"}`;
-  upsertChat({ jid, channel: "whatsapp", phone, name: msg.pushName || null });
+  upsertChat({ jid, channel: "whatsapp", phone, name: msg.pushName || null, account: accountOf(sock.user?.id) });
 
   enqueue(jid, async () => {
     const inactive = whyAiInactive(jid, phone);

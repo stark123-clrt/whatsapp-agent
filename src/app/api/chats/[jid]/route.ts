@@ -44,6 +44,7 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/chats/[jid]
       const a = agentOf(jid);
       return a ? { id: a.id, name: a.name, status: a.status, assigned: Boolean(chat.agentId) } : null;
     })(),
+    agents: listAgents().map((a) => ({ id: a.id, name: a.name, status: a.status })),
     aiTyping: isAiTyping(jid),
     knownTags: allTags(),
     files: getFiles(jid),

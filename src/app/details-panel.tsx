@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { CHANNELS } from "@/lib/channels";
 import { countryOf } from "@/lib/country";
@@ -12,6 +13,7 @@ export type Details = {
   stats: ChatStats;
   aiInactive: string | null;
   agent?: { id: number; name: string; status: "active" | "paused"; assigned: boolean } | null;
+  agents?: { id: number; name: string; status: "active" | "paused" }[];
   knownTags: string[];
   files: ChatFile[];
   tasks: Task[];
@@ -33,7 +35,7 @@ export function DetailsPanel({
   onHide: () => void;
   notify: (message: string) => void;
 }) {
-  const { chat, stats, aiInactive, knownTags, files, tasks, activity, agent } = data;
+  const { chat, stats, aiInactive, knownTags, files, tasks, activity, agent, agents = [] } = data;
   const [modal, setModal] = useState<"contact" | "tags" | null>(null);
   const [summarizing, setSummarizing] = useState(false);
   const url = `/api/chats/${enc(chat.jid)}`;
@@ -136,15 +138,43 @@ export function DetailsPanel({
       </Section>
 
       <Section title="Agent">
-        <div className="flex items-center gap-2 rounded-lg bg-zinc-50 px-3 py-2 text-sm">
-          <span className={`h-2 w-2 rounded-full ${chat.aiPaused ? "bg-amber-500" : aiInactive ? "bg-zinc-400" : "bg-green-600"}`} />
-          <span className="min-w-0 flex-1">
-            <span className="block truncate font-medium">{agent?.name ?? "Aucun agent"}</span>
-            <span className="block text-[11px] text-zinc-500">{agent?.assigned ? "Attribué à cette discussion" : "Agent du canal (Agents IA → Qui répond)"}</span>
-          </span>
-          <span className={`text-xs font-medium uppercase ${agentStatus.className}`}>{agentStatus.label}</span>
+        <div className="rounded-lg bg-zinc-50 px-3 py-2.5 text-sm">
+          <div className="flex items-center gap-2">
+            <span className={`h-2 w-2 shrink-0 rounded-full ${chat.aiPaused ? "bg-amber-500" : aiInactive ? "bg-zinc-400" : "bg-green-600"}`} />
+            <span className="min-w-0 flex-1 truncate font-medium">{agent?.name ?? "Aucun agent"}</span>
+            <span className={`text-xs font-medium uppercase ${agentStatus.className}`}>{agentStatus.label}</span>
+          </div>
+          <select
+            value={chat.agentId ?? ""}
+            onChange={(e) =>
+              patch(
+                { agentId: e.target.value ? Number(e.target.value) : null },
+                e.target.value ? "Agent attribué à cette discussion." : "La discussion suit l'agent de son canal.",
+              )
+            }
+            className="mt-2 w-full rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs outline-none focus:border-zinc-400"
+            aria-label="Agent de cette discussion"
+          >
+            <option value="">Agent du canal{!chat.agentId ? ` (${agent?.name ?? "aucun"})` : ""}</option>
+            {agents.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name}
+                {a.status === "paused" ? " (en pause)" : ""}
+              </option>
+            ))}
+          </select>
         </div>
-        {aiInactive && !chat.aiPaused && <p className="mt-1.5 text-xs text-zinc-500">{aiInactive}.</p>}
+        {aiInactive && !chat.aiPaused && <p className="mt-1.5 text-xs leading-relaxed text-zinc-500">{aiInactive}.</p>}
+        <div className="mt-1 flex flex-wrap gap-x-3 text-xs font-medium">
+          {agent && (
+            <Link href={`/agents/${agent.id}`} className="text-green-700 hover:underline">
+              Ouvrir l&apos;agent →
+            </Link>
+          )}
+          <Link href="/agents" className="text-green-700 hover:underline">
+            Qui répond sur chaque canal →
+          </Link>
+        </div>
       </Section>
 
       <Section title="Étiquettes" action={{ label: "Gérer", run: () => setModal("tags") }}>

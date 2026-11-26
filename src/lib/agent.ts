@@ -18,7 +18,7 @@ import { generateReply, transcribeAudio, type ChatMessage, type ContentPart } fr
 import { isOpenNow } from "./agent-settings";
 import { addTask, incAiCount, resetAiCounter, setChatAgent, setDraft, setFollowupStage, setPendingReply, updateChat } from "./db";
 import { dealsFromTags } from "./deals";
-import { channelAgent, routeAgent } from "./routing";
+import { channelAgent, noAgentReason, routeAgent } from "./routing";
 import { getAgent, getAgentMedia, setMessageAgent, type Agent } from "./kb";
 import { buildAgentPrompt, modelOptions, parseAgentReply, type AgentAction } from "./knowledge";
 import { getWhatsAppState } from "./whatsapp";
@@ -177,11 +177,7 @@ export function whyAiInactive(jid: string, phone: string | null): string | null 
   // Widget de site web : le mode test ne s'applique pas (le widget est installé pour répondre aux visiteurs).
   const isWeb = chat?.channel === "web";
   const agent = agentOf(jid);
-  if (!agent) {
-    // Pas encore d'agent créé : ancien fonctionnement (liste de test du fichier .env).
-    if (!isWeb && !s.replyAll && !isTest) return "Ce n'est pas un contact de test";
-    return null;
-  }
+  if (!agent) return noAgentReason(chat?.channel ?? "whatsapp");
   if (agent.status === "paused") return `L'agent « ${agent.name} » est en pause`;
   if (agent.settings.testMode && !isTest && !isWeb) return "Mode test : l'IA ne répond qu'aux contacts de test";
   const max = agent.settings.maxAiPerChat;

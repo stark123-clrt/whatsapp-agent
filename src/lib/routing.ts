@@ -66,3 +66,13 @@ export function routeAgent(channel: Channel, firstText = ""): Agent | null {
   );
   return byKeyword ?? channelAgent(channel);
 }
+
+const LABEL: Partial<Record<Channel, string>> = { whatsapp: "WhatsApp", web: "le site web" };
+
+/** Pourquoi aucun agent ne répond sur ce canal (texte affiché dans la discussion). */
+export function noAgentReason(channel: Channel): string {
+  const label = LABEL[channel] ?? channel;
+  if (!listAgents().length) return "Aucun agent IA : crée ton premier agent dans Agents IA";
+  if (getRouting()[channel] === NOBODY) return `Personne ne répond sur ${label} (Agents IA → Qui répond). Choisis un agent pour cette discussion ci-contre`;
+  return `Aucun agent n'est choisi pour ${label} : choisis-en un dans Agents IA → Qui répond, ou pour cette discussion ci-contre`;
+}

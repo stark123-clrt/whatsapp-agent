@@ -241,8 +241,8 @@ function replyVia(jid: string, speed: number, send: ((text: string) => Promise<s
     const who = chat?.customName ?? chat?.name ?? "Visiteur du site";
     store.typing.add(jid);
     try {
-      // Instagram : délai humain (4 à 10 s) pour ne pas ressembler à un robot.
-      await sleep(send ? randomBetween(4_000, 10_000) : Math.max(300, (100 - Math.min(100, Math.max(0, speed))) * 30));
+      // Instagram : délai humain (3 à 6 s) pour ne pas ressembler à un robot.
+      await sleep(send ? randomBetween(3_000, 6_000) : Math.max(300, (100 - Math.min(100, Math.max(0, speed))) * 30));
       const reply = await generateReply(
         [{ role: "system", content: systemPromptFor(jid, agent) }, ...(await buildHistory(jid))],
         agent ? modelOptions(agent) : {},
@@ -255,7 +255,7 @@ function replyVia(jid: string, speed: number, send: ((text: string) => Promise<s
         return addLog({ kind: "skip", who, text: `Brouillon prêt : ${bubbles.join(" ")}` });
       }
       for (const [i, bubble] of bubbles.entries()) {
-        if (i > 0) await sleep(send ? randomBetween(1_500, 4_000) : Math.min(2500, 400 + bubble.length * 15));
+        if (i > 0) await sleep(send ? randomBetween(1_200, 3_000) : Math.min(2500, 400 + bubble.length * 15));
         const id = send ? await send(bubble) : webMessageId();
         saveMessage({ id, jid, sender: "ai", type: "text", text: bubble, mediaFile: null, mime: null, ts: Date.now(), status: 4 });
         if (agent) setMessageAgent(id, agent.id);

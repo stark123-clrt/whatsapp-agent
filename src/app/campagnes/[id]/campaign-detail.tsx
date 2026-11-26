@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { OBJECTIVES, POST_STATUS, VISUALS, type Campaign, type CampaignPost } from "@/lib/campaign-types";
 import { CampaignWizard, type AgentLite } from "../campaign-wizard";
 import { CAMPAIGN_STATUS } from "../campaigns-client";
+import { CampaignComments } from "./campaign-comments";
 
 type Data = { campaign: Campaign; posts: CampaignPost[]; agents: AgentLite[]; instagram: { connected: boolean; username: string | null } };
 
@@ -214,6 +215,8 @@ export function CampaignDetail({ id }: { id: number }) {
           </div>
         </section>
       )}
+
+      <CampaignComments campaignId={c.id} enabled={c.settings.interactions.replyComments || c.settings.interactions.dmCommenters} approval={c.settings.approval} />
 
       <section className="mt-10 flex items-center justify-between gap-4 rounded-2xl border border-red-200 bg-white px-5 py-4">
         <div>

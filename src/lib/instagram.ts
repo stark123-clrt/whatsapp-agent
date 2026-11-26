@@ -34,7 +34,9 @@ type Thread = {
 const PORT = Number(process.env.IG_PORT ?? 8765);
 const IG_DIR = path.join(DATA_DIR, "instagram");
 const SINCE_FILE = path.join(IG_DIR, "since.txt");
-const POLL_MS = 45_000;
+const POLL_MS = 45_000; // rythme calme
+const FAST_MS = 15_000; // conversation en cours : relève rapprochée pendant 10 minutes
+const ACTIVE_FOR = 10 * 60_000;
 
 type Store = {
   proc: ChildProcess | null;
@@ -45,7 +47,7 @@ type Store = {
   watch: NodeJS.Timeout | null;
   restarts: number;
 };
-const g = globalThis as typeof globalThis & { __instagram?: Store };
+const g = globalThis as typeof globalThis & { __instagram?: Store; __igActiveUntil?: number };
 const store: Store = (g.__instagram ??= {
   proc: null,
   token: randomBytes(24).toString("hex"),
@@ -156,7 +158,9 @@ function startPolling() {
       console.error(`[instagram] relève : ${err instanceof Error ? err.message : err}`);
     }
     // Rythme irrégulier, plus naturel pour Instagram.
-    store.poll = setTimeout(() => void tick(), POLL_MS + Math.random() * 15_000);
+    // Rythme adaptatif : rapide quand quelqu'un écrit, calme sinon (moins de requêtes vers Instagram).
+    const fast = Date.now() < (g.__igActiveUntil ?? 0);
+    store.poll = setTimeout(() => void tick(), fast ? FAST_MS + Math.random() * 5_000 : POLL_MS + Math.random() * 15_000);
   };
   store.poll = setTimeout(() => void tick(), 1_000);
 }
@@ -196,7 +200,10 @@ ${m.text}`;
       if (Date.now() - m.ts < 5 * 60_000) setAiPaused(jid, true);
     }
   }
-  if (fresh !== null) onInstagramMessage(jid, fresh, isNew);
+  if (fresh !== null) {
+    g.__igActiveUntil = Date.now() + ACTIVE_FOR;
+    onInstagramMessage(jid, fresh, isNew);
+  }
   else if (history) markRead(jid); // l'historique importé ne compte pas comme « non lu »
 }
 
@@ -206,6 +213,30 @@ export async function sendInstagram(jid: string, text: string): Promise<string> 
   const { id } = await ig<{ id: string }>("/send", { threadId: thread.threadId, text, pending: thread.pending });
   store.threads.set(jid, { ...thread, pending: false });
   return `ig_${id}`;
+}
+
+export type IgComment = { id: string; text: string; userId: string; username: string; fullName: string | null; ts: number; repliedTo: string | null };
+
+/** Commentaires d'une publication (campagnes). */
+export async function fetchComments(mediaId: string): Promise<IgComment[]> {
+  return (await ig<{ comments: IgComment[] }>("/comments", { mediaId, amount: 40 })).comments;
+}
+
+/** Réponse publique sous un commentaire, et/ou « j'aime » sur le commentaire. */
+export async function replyToComment(mediaId: string, commentId: string, text: string, like: boolean) {
+  return ig<{ id: string | null }>("/comment-reply", { mediaId, commentId, text, like });
+}
+
+/** Message privé à quelqu'un qui a commenté : la conversation rejoint Discussions. */
+export async function dmUser(userId: string, text: string, name: string): Promise<string | null> {
+  const res = await ig<{ id: string; threadId: string | null }>("/dm-user", { userId, text });
+  if (!res.threadId) return null;
+  const jid = `ig_${res.threadId}`;
+  store.threads.set(jid, { threadId: res.threadId, pending: false });
+  upsertChat({ jid, channel: "instagram", phone: null, name, account: store.state.username });
+  saveMessage({ id: `ig_${res.id}`, jid, sender: "ai", type: "text", text, mediaFile: null, mime: null, ts: Date.now(), status: 4 });
+  g.__igActiveUntil = Date.now() + ACTIVE_FOR; // la personne va sûrement répondre : relève rapprochée
+  return jid;
 }
 
 /** Convertit une image (WebP, AVIF…) en JPEG via le service Python (Pillow). */

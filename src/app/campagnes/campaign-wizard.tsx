@@ -364,7 +364,7 @@ export function CampaignWizard({
             {step === 2 && (
               <>
                 <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-900">
-                  💬 Ces réglages s&apos;appliquent aux commentaires de tes publications. Le traitement automatique des commentaires arrive dans la prochaine étape : tes choix sont déjà enregistrés.
+                  💬 L&apos;IA lit les commentaires sous tes publications (toutes les 3 minutes), répond en public et écrit en privé avec le lien. Avec « Je valide chaque contenu », chaque réponse attend aussi ta validation.
                 </div>
                 <Line title="Répondre aux commentaires" text="L'IA répond publiquement, avec le contexte de l'entreprise." checked={s.interactions.replyComments} onChange={(v) => set({ interactions: { ...s.interactions, replyComments: v } })} />
                 <Line title="Écrire en privé aux personnes qui commentent" text="Un message privé avec la réponse détaillée et le lien du site." checked={s.interactions.dmCommenters} onChange={(v) => set({ interactions: { ...s.interactions, dmCommenters: v } })} />

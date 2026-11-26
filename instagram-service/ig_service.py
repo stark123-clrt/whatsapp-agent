@@ -272,6 +272,31 @@ def publish(kind, path, caption, link):
             pass
 
 
+def comments(media_pk, amount):
+    """Commentaires d'une publication (les plus récents), sans ceux du compte lui-même."""
+    me = state["userId"]
+    with api_lock:
+        media_id = client.media_id(str(media_pk))
+        items = client.media_comments(media_id, amount=amount)
+    out = []
+    for c in items:
+        if not c.user or str(c.user.pk) == me:
+            continue
+        ts = c.created_at_utc.timestamp() if c.created_at_utc else time.time()
+        out.append(
+            {
+                "id": str(c.pk),
+                "text": c.text or "",
+                "userId": str(c.user.pk),
+                "username": c.user.username,
+                "fullName": c.user.full_name or None,
+                "ts": int(ts * 1000),
+                "repliedTo": str(c.replied_to_comment_id) if c.replied_to_comment_id else None,
+            }
+        )
+    return out
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):  # pas de journal bruyant
         pass
@@ -381,6 +406,45 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(400, {"error": "Contenu invalide."})
             try:
                 return self.reply(200, publish(b["kind"], b["path"], (b.get("caption") or "")[:2200], (b.get("link") or "").strip()))
+            except Exception as err:  # noqa: BLE001
+                if isinstance(err, (LoginRequired, ChallengeRequired)):
+                    set_state(status="error", error=friendly(err))
+                return self.reply(502, {"error": friendly(err)})
+        if self.path == "/comments":
+            if not client:
+                return self.reply(409, {"error": "Instagram n'est pas connecté."})
+            try:
+                return self.reply(200, {"comments": comments(b["mediaId"], int(b.get("amount") or 40))})
+            except Exception as err:  # noqa: BLE001
+                if isinstance(err, (LoginRequired, ChallengeRequired)):
+                    set_state(status="error", error=friendly(err))
+                return self.reply(502, {"error": friendly(err)})
+        if self.path == "/comment-reply":
+            # Réponse publique sous le commentaire (+ « j'aime » sur le commentaire si demandé).
+            if not client:
+                return self.reply(409, {"error": "Instagram n'est pas connecté."})
+            try:
+                with api_lock:
+                    media_id = client.media_id(str(b["mediaId"]))
+                    reply_pk = None
+                    if (b.get("text") or "").strip():
+                        reply = client.media_comment(media_id, b["text"].strip()[:2000], replied_to_comment_id=int(b["commentId"]))
+                        reply_pk = str(reply.pk)
+                    if b.get("like"):
+                        client.comment_like(int(b["commentId"]))
+                return self.reply(200, {"id": reply_pk})
+            except Exception as err:  # noqa: BLE001
+                if isinstance(err, (LoginRequired, ChallengeRequired)):
+                    set_state(status="error", error=friendly(err))
+                return self.reply(502, {"error": friendly(err)})
+        if self.path == "/dm-user":
+            # Message privé à une personne (qui vient de commenter) : renvoie la conversation créée.
+            if not client:
+                return self.reply(409, {"error": "Instagram n'est pas connecté."})
+            try:
+                with api_lock:
+                    msg = client.direct_send((b.get("text") or "").strip()[:1000], user_ids=[int(b["userId"])])
+                return self.reply(200, {"id": str(msg.id), "threadId": str(msg.thread_id) if msg.thread_id else None})
             except Exception as err:  # noqa: BLE001
                 if isinstance(err, (LoginRequired, ChallengeRequired)):
                     set_state(status="error", error=friendly(err))

@@ -16,4 +16,7 @@ export async function register() {
   // Campagnes Instagram : calendrier, préparation des contenus et publication (toutes les minutes).
   const { startCampaignScheduler } = await import("./lib/campaigns");
   startCampaignScheduler();
+  // Commentaires des publications de campagne : relève, réponses, messages privés.
+  const { startCommentsScheduler } = await import("./lib/campaign-comments");
+  startCommentsScheduler();
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DAYS, instructionsText, type AgentSettings } from "@/lib/agent-settings";
 import type { AgentMedia } from "@/lib/kb";
 import type { Overview, Prep, TabId, TabProps } from "./editor";
@@ -561,39 +561,104 @@ export function MediaTab({ agent, notify }: TabProps) {
 
 function AddMediaModal({ agentId, onClose, onAdded }: { agentId: number; onClose: () => void; onAdded: () => void }) {
   const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [when, setWhen] = useState("");
   const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const picker = useRef<HTMLInputElement>(null);
+
+  function pick(f: File | undefined) {
+    setError(null);
+    if (!f) return;
+    if (!/^(image|video|audio)\//.test(f.type) && f.type !== "application/pdf") return setError("Image, vidéo, audio ou PDF uniquement.");
+    if (f.size > 32 * 1024 * 1024) return setError("Fichier trop lourd (32 Mo max).");
+    if (preview) URL.revokeObjectURL(preview);
+    setFile(f);
+    setPreview(f.type.startsWith("image/") ? URL.createObjectURL(f) : null);
+  }
 
   async function add() {
-    if (!file) return;
+    if (!file) return setError("Choisis d'abord le fichier à envoyer (étape 1).");
     setBusy(true);
+    setError(null);
     const form = new FormData();
     form.append("file", file);
     form.append("when", when);
     const res = await fetch(`/api/agents/${agentId}/media`, { method: "POST", body: form });
     const body = await res.json().catch(() => ({}));
     setBusy(false);
-    if (!res.ok) return setError(body.error ?? "Échec.");
+    if (!res.ok) return setError(body.error ?? "Échec de l'envoi.");
     onAdded();
   }
+
+  const kind = file ? (file.type.startsWith("image/") ? "Image" : file.type.startsWith("video/") ? "Vidéo" : file.type.startsWith("audio/") ? "Audio" : "PDF") : "";
+  const size = file ? (file.size > 1024 * 1024 ? `${(file.size / 1024 / 1024).toFixed(1)} Mo` : `${Math.max(1, Math.round(file.size / 1024))} Ko`) : "";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onMouseDown={onClose}>
       <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold">Ajouter un média</h2>
-        <div className="mt-4 space-y-4">
-          <input type="file" accept="image/*,video/*,audio/*,application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="block w-full text-sm" />
-          <Field label="Quand l'envoyer ?" hint="L'IA lit cette consigne pour savoir quand envoyer le fichier.">
-            <textarea value={when} onChange={(e) => setWhen(e.target.value)} rows={3} placeholder="Ex. : quand le contact demande les tarifs ou le catalogue" className={inputClass} />
+        <p className="mt-0.5 text-sm text-zinc-500">Un fichier que l&apos;agent enverra tout seul au bon moment.</p>
+
+        <div className="mt-5 space-y-5">
+          <div>
+            <p className="mb-1.5 text-xs font-semibold tracking-wide text-zinc-500 uppercase">1. Le fichier</p>
+            <input ref={picker} type="file" accept="image/*,video/*,audio/*,application/pdf" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
+            {file ? (
+              <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50/60 p-3">
+                {preview ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- aperçu local du fichier choisi
+                  <img src={preview} alt="" className="h-14 w-14 rounded-lg object-cover" />
+                ) : (
+                  <span className="flex h-14 w-14 items-center justify-center rounded-lg bg-white text-xs font-bold text-zinc-500">{kind}</span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{file.name}</p>
+                  <p className="text-xs text-zinc-500">
+                    {kind} · {size}
+                  </p>
+                </div>
+                <button onClick={() => picker.current?.click()} className="rounded-lg px-3 py-1.5 text-sm font-medium text-green-700 hover:bg-green-100">
+                  Changer
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => picker.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragging(true);
+                }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragging(false);
+                  pick(e.dataTransfer.files?.[0]);
+                }}
+                className={`flex w-full flex-col items-center gap-1.5 rounded-xl border-2 border-dashed px-4 py-7 text-center transition ${
+                  dragging ? "border-green-500 bg-green-50" : "border-zinc-300 hover:border-green-500 hover:bg-green-50/40"
+                }`}
+              >
+                <span className="text-2xl">📎</span>
+                <span className="text-sm font-semibold text-zinc-800">Clique pour choisir un fichier</span>
+                <span className="text-xs text-zinc-500">ou glisse-le ici · image, vidéo, audio ou PDF · 32 Mo max</span>
+              </button>
+            )}
+          </div>
+
+          <Field label="2. Quand l'envoyer ?" hint="L'IA lit cette consigne pour savoir quand envoyer le fichier.">
+            <textarea value={when} onChange={(e) => setWhen(e.target.value)} rows={3} placeholder="Ex. : quand le contact demande une photo du produit, les tarifs ou le catalogue" className={inputClass} />
           </Field>
         </div>
+
         <div className="mt-5 flex items-center justify-end gap-2">
           {error && <p className="mr-auto text-sm text-red-600">{error}</p>}
           <button onClick={onClose} className="rounded-xl px-4 py-2.5 text-sm text-zinc-600 hover:bg-zinc-100">
             Annuler
           </button>
-          <button onClick={add} disabled={!file || busy} className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300">
+          <button onClick={add} disabled={busy} className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300">
             {busy ? "Envoi…" : "Ajouter"}
           </button>
         </div>

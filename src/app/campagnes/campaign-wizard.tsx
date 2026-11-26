@@ -488,7 +488,13 @@ function Preview({ brand, settings: s, productId }: { brand: string; settings: C
           badge: s.offer.enabled && s.offer.code ? `Code ${s.offer.code}` : "",
           logo: s.brand.logo,
           productId,
-          footer: s.link ? "Lien en bio" : "",
+          footer: (() => {
+            try {
+              return s.link ? new URL(withScheme(s.link)).hostname.replace(/^www[.]/, "") : "";
+            } catch {
+              return "";
+            }
+          })(),
         }),
       }).catch(() => null);
       if (!r?.ok || !alive) return;

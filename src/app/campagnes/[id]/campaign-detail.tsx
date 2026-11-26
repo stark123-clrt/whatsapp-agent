@@ -28,6 +28,7 @@ export function CampaignDetail({ id }: { id: number }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; error?: boolean } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [rhythm, setRhythm] = useState<{ maxPerDay: number; minGapHours: number } | null>(null);
   const router = useRouter();
 
   const load = useCallback(async () => {
@@ -35,6 +36,14 @@ export function CampaignDetail({ id }: { id: number }) {
     if (r?.status === 404) return setMissing(true);
     if (r?.ok) setData(await r.json());
   }, [id]);
+
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      const r = await fetch("/api/instagram/limits", { cache: "no-store" }).catch(() => null);
+      if (r?.ok) setRhythm(((await r.json()) as { limits: { maxPerDay: number; minGapHours: number } }).limits);
+    }, 0);
+    return () => clearTimeout(t);
+  }, []);
 
   const working = data?.posts.some((p) => p.status === "generating" || p.status === "publishing");
   useEffect(() => {
@@ -153,7 +162,18 @@ export function CampaignDetail({ id }: { id: number }) {
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">Calendrier des contenus</h2>
+        <div>
+          <h2 className="text-lg font-semibold">Calendrier des contenus</h2>
+          {rhythm && (
+            <p className="text-xs text-zinc-500">
+              Rythme du compte Instagram (toutes campagnes) : {rhythm.maxPerDay} contenu{rhythm.maxPerDay > 1 ? "s" : ""} par jour maximum
+              {rhythm.minGapHours ? `, ${String(rhythm.minGapHours).replace(".", ",")} h d'écart minimum` : ""}.{" "}
+              <Link href="/parametres?section=channels" className="font-medium text-violet-700 hover:underline">
+                Modifier
+              </Link>
+            </p>
+          )}
+        </div>
         <div className="flex gap-2">
           {c.settings.formats.post && (
             <button onClick={() => prepareNow("post")} disabled={Boolean(busy)} className="rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-sm font-medium hover:bg-zinc-50 disabled:opacity-50">

@@ -17,7 +17,7 @@ import pino from "pino";
 import { generateReply, transcribeAudio, type ChatMessage, type ContentPart } from "./ai";
 import { isOpenNow } from "./agent-settings";
 import { addTask, incAiCount, resetAiCounter, setChatAgent, setDraft, setFollowupStage, setPendingReply, updateChat } from "./db";
-import { recentPublishedContext } from "./campaign-context";
+import { agentMarketingContext } from "./campaign-context";
 import { dealsFromTags } from "./deals";
 import { channelAgent, noAgentReason, routeAgent } from "./routing";
 import { getAgent, getAgentMedia, setMessageAgent, type Agent } from "./kb";
@@ -710,11 +710,9 @@ function systemPromptFor(jid: string, agent: Agent | null): string {
     .join(" ");
   const chat = getChat(jid);
   const prompt = buildAgentPrompt(agent, recent, chat);
-  // Instagram : l'IA connaît ses propres publications et stories récentes (campagnes).
-  const published = chat?.channel === "instagram" ? recentPublishedContext() : "";
-  return published ? `${prompt}
-
-${published}` : prompt;
+  // Sur tous les canaux : les campagnes de CET agent (offre, contenus publiés) et son catalogue produits.
+  const marketing = agentMarketingContext(agent.id, recent);
+  return marketing ? [prompt, marketing].join("\n\n") : prompt;
 }
 
 async function sendText(sock: WASocket, jid: string, text: string, sender: Sender, replyTo?: string | null) {

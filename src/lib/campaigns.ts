@@ -20,6 +20,7 @@ import { formatPrice, freshCatalog, getProduct, listProducts, type Product } fro
 import { db, MEDIA_DIR } from "./db";
 import { instagramConnected, publishInstagram } from "./instagram";
 import { getAgent } from "./kb";
+import { canPublish } from "./publish-limits";
 
 /**
  * Campagnes Instagram : l'IA prépare 1 à 3 contenus par jour (publications et stories) aux heures choisies,
@@ -348,11 +349,22 @@ async function writeDraft(c: Campaign, kind: PostKind, product: Product | null):
   throw last instanceof Error ? last : new Error("Rédaction impossible.");
 }
 
+/** « https://www.ubfparis.com/boutique » → « ubfparis.com » (affiché sur les visuels et dans les légendes). */
+export function siteName(link: string | null | undefined): string {
+  try {
+    return link ? new URL(link).hostname.replace(/^www[.]/, "") : "";
+  } catch {
+    return "";
+  }
+}
+
 function fullCaption(c: Campaign, kind: PostKind, d: Draft) {
   if (kind === "story") return d.caption;
   const tags = [...c.settings.hashtags, ...(c.settings.autoHashtags ? d.hashtags : [])];
   const unique = [...new Set(tags.map((t) => t.toLowerCase()))].slice(0, 15);
-  return [d.caption, c.settings.link ? "🔗 Lien en bio" : "", unique.length ? unique.map((t) => `#${t}`).join(" ") : ""].filter(Boolean).join("\n\n");
+  // Le lien n'est pas cliquable dans une légende Instagram : le nom du site reste lisible et facile à taper.
+  const site = siteName(c.settings.link);
+  return [d.caption, site ? `👉 ${site} · lien en bio` : "", unique.length ? unique.map((t) => `#${t}`).join(" ") : ""].filter(Boolean).join("\n\n");
 }
 
 async function dataUrl(file: string | null | undefined) {
@@ -387,7 +399,7 @@ async function makeVisual(c: Campaign, kind: PostKind, headline: string, product
         color: c.settings.brand.color,
         textColor: c.settings.brand.textColor,
         badge,
-        footer: kind === "post" ? "Lien en bio" : null,
+        footer: kind === "post" ? siteName(product.url || c.settings.link) || "Lien en bio" : null,
       }),
     };
   }
@@ -401,7 +413,7 @@ async function makeVisual(c: Campaign, kind: PostKind, headline: string, product
       color: c.settings.brand.color,
       textColor: c.settings.brand.textColor,
       badge,
-      footer: kind === "post" && c.settings.link ? "Lien en bio" : null,
+      footer: kind === "post" ? siteName(c.settings.link) || null : null,
     }),
   };
 }
@@ -507,6 +519,8 @@ export async function publishNow(postId: number) {
   const p = getPost(postId);
   if (!p || !["pending", "scheduled", "failed"].includes(p.status)) throw new Error("Ce contenu ne peut pas être publié.");
   if (!instagramConnected()) throw new Error("Instagram n'est pas connecté.");
+  const verdict = canPublish(p.kind);
+  if (!verdict.ok) throw new Error(`${verdict.reason} Tu peux le valider : il partira dès que possible.`);
   await publish(p);
   const after = getPost(postId);
   if (after?.status === "failed") throw new Error(after.error ?? "Publication impossible.");
@@ -538,7 +552,17 @@ async function tick() {
            WHERE p.status = 'scheduled' AND p.scheduled_at <= ? AND c.status = 'active' ORDER BY p.scheduled_at LIMIT 1`,
         )
         .get(Date.now()) as PostRow | undefined;
-      if (due) await publish(toPost(due));
+      if (due) {
+        // Rythme du compte (toutes campagnes) : quota du jour et écart minimum entre deux publications.
+        const verdict = canPublish(due.kind);
+        if (verdict.ok) await publish(toPost(due));
+        else if (verdict.nextDay) {
+          // Quota atteint : décalé au lendemain, à la même heure.
+          const moved = due.scheduled_at + Math.ceil((verdict.retryAt - due.scheduled_at) / 86_400_000) * 86_400_000;
+          db.prepare(`UPDATE campaign_posts SET scheduled_at = ?, error = ? WHERE id = ?`).run(moved, `Décalé : ${verdict.reason}`, due.id);
+        }
+        // Écart minimum pas encore atteint : le contenu attend la prochaine minute utile.
+      }
     }
   } catch (err) {
     console.error(`[campagnes] ${err instanceof Error ? err.message : err}`);

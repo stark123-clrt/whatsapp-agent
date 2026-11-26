@@ -1,3 +1,4 @@
+import { agentMarketingContext } from "./campaign-context";
 import "server-only";
 
 import { generateReply, type ChatMessage } from "./ai";
@@ -389,7 +390,10 @@ export async function tryAgent(agentId: number, history: ChatMessage[]) {
   const agent = getAgent(agentId);
   if (!agent) throw new Error("Agent introuvable");
   const query = history.filter((m) => m.role === "user").slice(-3).map((m) => String(m.content)).join(" ");
-  const reply = await generateReply([{ role: "system", content: buildAgentPrompt(agent, query, null) }, ...history], modelOptions(agent));
+  // Comme en vrai : l'agent connaît aussi ses campagnes et son catalogue produits.
+  const marketing = agentMarketingContext(agent.id, query);
+  const system = [buildAgentPrompt(agent, query, null), marketing].filter(Boolean).join("\n\n");
+  const reply = await generateReply([{ role: "system", content: system }, ...history], modelOptions(agent));
   return parseAgentReply(reply, agent.settings);
 }
 

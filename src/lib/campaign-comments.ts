@@ -4,6 +4,7 @@ import { generateReply } from "./ai";
 import { agentMarketingContext } from "./campaign-context";
 import { getCampaign, listCampaigns } from "./campaigns";
 import { db, setChatAgent } from "./db";
+import { noteInteraction } from "./followers";
 import { dmUser, fetchComments, instagramConnected, replyToComment } from "./instagram";
 import { getAgent } from "./kb";
 import { buildAgentPrompt } from "./knowledge";
@@ -271,9 +272,12 @@ async function tick() {
           const list = await fetchComments(p.media_id).catch(() => []);
           for (const cm of list) {
             if (cm.ts < Date.now() - 2 * DAY) continue; // on ne répond jamais à de vieux commentaires
-            db.prepare(
-              `INSERT OR IGNORE INTO campaign_comments (comment_id, campaign_id, post_id, media_id, user_id, username, full_name, text, ts, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?)`,
-            ).run(cm.id, c.id, p.id, p.media_id, cm.userId, cm.username, cm.fullName, cm.text, cm.ts, Date.now());
+            const added = db
+              .prepare(
+                `INSERT OR IGNORE INTO campaign_comments (comment_id, campaign_id, post_id, media_id, user_id, username, full_name, text, ts, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?)`,
+              )
+              .run(cm.id, c.id, p.id, p.media_id, cm.userId, cm.username, cm.fullName, cm.text, cm.ts, Date.now());
+            if (added.changes) noteInteraction({ userId: cm.userId, username: cm.username, fullName: cm.fullName, picture: null }, "comment");
           }
           await new Promise((r) => setTimeout(r, 1500 + Math.random() * 1500)); // pas de rafale de requêtes
         }

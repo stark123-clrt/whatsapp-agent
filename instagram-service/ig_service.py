@@ -326,6 +326,38 @@ def poll_results(story_pk):
     return {"question": None, "results": []}
 
 
+def followers(amount):
+    """Derniers abonnés du compte (les plus récents d'abord)."""
+    with api_lock:
+        users = client.user_followers_v1(state["userId"], amount=amount, order="date_followed_latest")
+    out = []
+    for u in users:
+        fs = u.friendship_status
+        out.append(
+            {
+                **short_user(u),
+                "private": bool(u.is_private),
+                "noPicture": bool(getattr(u, "has_anonymous_profile_picture", False)),
+                "following": bool(getattr(fs, "following", False)) if fs else None,
+            }
+        )
+    return out
+
+
+def user_info(user_id):
+    """Profil public d'une personne (pour écarter les faux comptes avant de la suivre)."""
+    with api_lock:
+        u = client.user_info_v1(str(user_id))
+    return {
+        **short_user(u),
+        "private": bool(u.is_private),
+        "posts": int(u.media_count or 0),
+        "followers": int(u.follower_count or 0),
+        "following": int(u.following_count or 0),
+        "business": bool(u.is_business),
+    }
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):  # pas de journal bruyant
         pass
@@ -481,6 +513,23 @@ class Handler(BaseHTTPRequestHandler):
                 with api_lock:
                     msg = client.direct_send((b.get("text") or "").strip()[:1000], user_ids=[int(b["userId"])])
                 return self.reply(200, {"id": str(msg.id), "threadId": str(msg.thread_id) if msg.thread_id else None})
+            except Exception as err:  # noqa: BLE001
+                if isinstance(err, (LoginRequired, ChallengeRequired)):
+                    set_state(status="error", error=friendly(err))
+                return self.reply(502, {"error": friendly(err)})
+        if self.path in ("/followers", "/user-info", "/follow", "/me"):
+            if not client:
+                return self.reply(409, {"error": "Instagram n'est pas connecté."})
+            try:
+                if self.path == "/followers":
+                    return self.reply(200, {"users": followers(min(200, int(b.get("amount") or 50)))})
+                if self.path == "/user-info":
+                    return self.reply(200, user_info(b["userId"]))
+                if self.path == "/me":
+                    return self.reply(200, user_info(state["userId"]))
+                with api_lock:
+                    ok = client.user_follow(str(b["userId"]))
+                return self.reply(200, {"ok": bool(ok)})
             except Exception as err:  # noqa: BLE001
                 if isinstance(err, (LoginRequired, ChallengeRequired)):
                     set_state(status="error", error=friendly(err))

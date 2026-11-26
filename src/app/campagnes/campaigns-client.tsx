@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { OBJECTIVES, type Campaign, type CampaignStatus, type PostStatus } from "@/lib/campaign-types";
 import { CampaignWizard, type AgentLite } from "./campaign-wizard";
+import { InstagramDashboard } from "./instagram-dashboard";
 
 export const CAMPAIGN_STATUS: Record<CampaignStatus, { label: string; cls: string }> = {
   draft: { label: "Brouillon", cls: "bg-zinc-100 text-zinc-600" },
@@ -55,6 +56,8 @@ export function CampaignsClient() {
           </Link>
         </div>
       )}
+
+      {data?.instagram.connected && <InstagramDashboard />}
 
       {data && data.campaigns.length === 0 ? (
         <div className="mt-6 flex flex-col items-center rounded-2xl border border-zinc-200 bg-white px-6 py-16 text-center shadow-sm">

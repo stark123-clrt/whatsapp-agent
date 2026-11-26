@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { InstagramState } from "@/lib/instagram";
+import { InstagramGrowth } from "./instagram-growth";
 import { InstagramRhythm } from "./instagram-rhythm";
 
 type State = InstagramState & { disabled?: boolean };
@@ -78,6 +79,7 @@ export function InstagramCard() {
             </button>
           </div>
           <InstagramRhythm />
+          <InstagramGrowth />
           </>
         ) : (
           <div className="flex items-center gap-4">

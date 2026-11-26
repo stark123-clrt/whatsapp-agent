@@ -19,4 +19,7 @@ export async function register() {
   // Commentaires des publications de campagne : relève, réponses, messages privés.
   const { startCommentsScheduler } = await import("./lib/campaign-comments");
   startCommentsScheduler();
+  // Croissance Instagram : nouveaux abonnés, suivi en retour, message de bienvenue, relevé quotidien.
+  const { startGrowthScheduler } = await import("./lib/followers");
+  startGrowthScheduler();
 }

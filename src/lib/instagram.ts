@@ -7,6 +7,7 @@ import path from "node:path";
 import { onInstagramMessage } from "./agent";
 import { publishedByMediaId } from "./campaign-context";
 import { DATA_DIR, db, getChat, markRead, messageExists, saveMessage, setAiPaused, upsertChat } from "./db";
+import { noteInteraction } from "./followers";
 
 /**
  * Instagram (compte personnel, non officiel) : l'appli lance le petit service Python
@@ -201,6 +202,8 @@ ${m.text}`;
     }
   }
   if (fresh !== null) {
+    // Quelqu'un qui écrit est un contact engagé : l'agent peut le suivre (si activé dans Croissance).
+    noteInteraction({ userId: other.pk, username: other.username, fullName: other.fullName, picture: other.picture }, "dm");
     g.__igActiveUntil = Date.now() + ACTIVE_FOR;
     onInstagramMessage(jid, fresh, isNew);
   }
@@ -237,6 +240,31 @@ export async function dmUser(userId: string, text: string, name: string): Promis
   saveMessage({ id: `ig_${res.id}`, jid, sender: "ai", type: "text", text, mediaFile: null, mime: null, ts: Date.now(), status: 4 });
   g.__igActiveUntil = Date.now() + ACTIVE_FOR; // la personne va sûrement répondre : relève rapprochée
   return jid;
+}
+
+// ---------- Abonnés (croissance) ----------
+
+export type IgFollower = { pk: string; username: string; fullName: string | null; picture: string | null; private: boolean; noPicture: boolean; following: boolean | null };
+export type IgProfile = { pk: string; username: string; fullName: string | null; picture: string | null; private: boolean; posts: number; followers: number; following: number; business: boolean };
+
+/** Derniers abonnés du compte (les plus récents d'abord). */
+export async function fetchFollowers(amount = 50): Promise<IgFollower[]> {
+  return (await ig<{ users: IgFollower[] }>("/followers", { amount })).users;
+}
+
+/** Profil d'une personne (nombre de publications, d'abonnés, d'abonnements). */
+export async function fetchProfile(userId: string): Promise<IgProfile> {
+  return ig<IgProfile>("/user-info", { userId });
+}
+
+/** Chiffres du compte connecté. */
+export async function fetchMyProfile(): Promise<IgProfile> {
+  return ig<IgProfile>("/me", {});
+}
+
+/** S'abonner à une personne. */
+export async function followUser(userId: string): Promise<boolean> {
+  return (await ig<{ ok: boolean }>("/follow", { userId })).ok;
 }
 
 /** Convertit une image (WebP, AVIF…) en JPEG via le service Python (Pillow). */

@@ -25,7 +25,8 @@ export type AgentSettings = {
   draftsOnly: boolean; // l'IA prépare un brouillon au lieu d'envoyer
   delayMin: number; // secondes
   delayMax: number;
-  maxAiPerChat: number; // au-delà : passage à un humain
+  maxAiPerChat: number; // au-delà : passage à un humain (0 = sans limite)
+  limitResetHours: number; // compteur remis à zéro si le contact revient après ce silence (0 = jamais)
   maxBubbles: number; // réponse découpée en N messages maximum
   forbiddenChars: string;
   speed: "human" | "balanced" | "fast" | "very_fast";
@@ -48,6 +49,7 @@ export const DEFAULT_SETTINGS: AgentSettings = {
   delayMin: 4,
   delayMax: 12,
   maxAiPerChat: 20,
+  limitResetHours: 24,
   maxBubbles: 1,
   forbiddenChars: "—",
   speed: "balanced",

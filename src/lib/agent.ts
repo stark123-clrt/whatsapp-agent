@@ -16,7 +16,7 @@ import {
 import pino from "pino";
 import { generateReply, transcribeAudio, type ChatMessage, type ContentPart } from "./ai";
 import { isOpenNow } from "./agent-settings";
-import { addTask, incAiCount, setChatAgent, setDraft, setFollowupStage, setPendingReply, updateChat } from "./db";
+import { addTask, incAiCount, resetAiCounter, setChatAgent, setDraft, setFollowupStage, setPendingReply, updateChat } from "./db";
 import { getAgent, getAgentMedia, getDefaultAgent, listAgents, setMessageAgent, type Agent } from "./kb";
 import { buildAgentPrompt, modelOptions, parseAgentReply, type AgentAction } from "./knowledge";
 import { getWhatsAppState } from "./whatsapp";
@@ -180,8 +180,9 @@ export function whyAiInactive(jid: string, phone: string | null): string | null 
   }
   if (agent.status === "paused") return `L'agent « ${agent.name} » est en pause`;
   if (agent.settings.testMode && !isTest) return "Mode test : l'IA ne répond qu'aux contacts de test";
-  if (chat && chat.aiCount >= agent.settings.maxAiPerChat) {
-    return `Limite de ${agent.settings.maxAiPerChat} réponses IA atteinte pour cette discussion`;
+  const max = agent.settings.maxAiPerChat;
+  if (chat && max > 0 && chat.aiCount >= max) {
+    return `Limite de ${max} réponses IA atteinte dans cette conversation : prends le relais, ou réinitialise le compteur (ⓘ → Compteur de messages IA)`;
   }
   return null;
 }
@@ -380,6 +381,10 @@ export function handleIncoming(sock: WASocket, msg: WAMessage, live: boolean) {
       if (!saveMessage(saved)) return; // déjà enregistré
       routeChat(jid, saved.text ?? "");
       setFollowupStage(jid, 0); // le contact a répondu : les relances repartent de zéro
+      // Le contact revient après un long silence : nouvelle conversation, le compteur de l'IA repart à zéro.
+      const resetHours = agentOf(jid)?.settings.limitResetHours ?? 24;
+      const previous = getMessages(jid, 2).at(-2);
+      if (resetHours > 0 && previous && saved.ts - previous.ts >= resetHours * 3_600_000) resetAiCounter(jid);
       addLog({ kind: "in", who, text: describe(saved.type, saved.text) });
     } catch (err) {
       return addLog({ kind: "error", who, text: `Média illisible : ${err instanceof Error ? err.message : err}` });

@@ -542,8 +542,9 @@ export function setSummary(jid: string, summary: string) {
   db.prepare(`UPDATE chats SET summary = ?, summary_at = ? WHERE jid = ?`).run(summary, Date.now(), jid);
 }
 
+/** Remet à zéro le compteur de réponses IA de la discussion (limite et affichage). */
 export function resetAiCounter(jid: string) {
-  db.prepare(`UPDATE chats SET ai_counter_reset_at = ? WHERE jid = ?`).run(Date.now(), jid);
+  db.prepare(`UPDATE chats SET ai_counter_reset_at = ?, ai_count = 0 WHERE jid = ?`).run(Date.now(), jid);
 }
 
 type TaskRow = { id: number; jid: string; text: string; done: number; created_at: number };

@@ -352,8 +352,11 @@ export function InstructionsTab({ agent, settings: s, update, reload, notify }: 
 
       <Card title="Limites de réponse" description="Nombre de messages que l'IA peut envoyer avant de passer la main à un humain.">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Max de messages IA par discussion" hint="Au-delà, l'IA s'arrête dans cette discussion.">
-            <input type="number" min={1} max={500} value={s.maxAiPerChat} onChange={(e) => set("maxAiPerChat", clamp(e.target.value, 1, 500))} className={inputClass} />
+          <Field label="Max de messages IA par conversation" hint="Au-delà, l'IA laisse la main à un humain. 0 = sans limite.">
+            <input type="number" min={0} max={500} value={s.maxAiPerChat} onChange={(e) => set("maxAiPerChat", clamp(e.target.value, 0, 500))} className={inputClass} />
+          </Field>
+          <Field label="Nouvelle conversation après (heures)" hint="Si le contact revient après ce silence, le compteur repart à zéro. 0 = jamais.">
+            <input type="number" min={0} max={720} value={s.limitResetHours} onChange={(e) => set("limitResetHours", clamp(e.target.value, 0, 720))} className={inputClass} />
           </Field>
           <Field label="Nombre max de messages par réponse" hint="1 = un seul message. Plus = réponse découpée en bulles.">
             <input type="number" min={1} max={6} value={s.maxBubbles} onChange={(e) => set("maxBubbles", clamp(e.target.value, 1, 6))} className={inputClass} />

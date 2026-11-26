@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Agent WhatsApp",
+  title: "Stark Marketing",
   description: "Agent IA connecté à WhatsApp",
 };
 

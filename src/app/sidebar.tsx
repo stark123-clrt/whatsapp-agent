@@ -66,7 +66,7 @@ function AdminSidebar({ pathname }: { pathname: string }) {
 
   return (
     <nav className="flex w-60 shrink-0 flex-col border-r border-zinc-200 bg-white">
-      <p className="px-6 pt-6 pb-4 text-base font-semibold">Agent WhatsApp</p>
+      <p className="px-6 pt-6 pb-4 text-base font-semibold">Stark Marketing</p>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {SECTIONS.map((section, i) => (

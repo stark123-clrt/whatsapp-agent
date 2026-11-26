@@ -28,7 +28,7 @@ export function LoginForm() {
 
   return (
     <form onSubmit={submit} className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-      <h1 className="text-xl font-semibold">Agent WhatsApp</h1>
+      <h1 className="text-xl font-semibold">Stark Marketing</h1>
       <p className="mt-1 text-sm text-zinc-500">Connecte-toi pour accéder à tes discussions.</p>
       <label className="mt-6 block text-sm font-medium text-zinc-700">
         Mot de passe

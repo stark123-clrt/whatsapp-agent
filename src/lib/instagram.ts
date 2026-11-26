@@ -5,7 +5,7 @@ import { randomBytes } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { onInstagramMessage } from "./agent";
-import { DATA_DIR, getChat, messageExists, saveMessage, setAiPaused, upsertChat } from "./db";
+import { DATA_DIR, db, getChat, markRead, messageExists, saveMessage, setAiPaused, upsertChat } from "./db";
 
 /**
  * Instagram (compte personnel, non officiel) : l'appli lance le petit service Python
@@ -137,6 +137,12 @@ function since(): number {
 
 function startPolling() {
   if (store.poll) return;
+  // Une seule fois : l'historique importé avant ce correctif est marqué comme lu.
+  const flag = path.join(IG_DIR, "history-read-v1");
+  if (!existsSync(flag) && existsSync(IG_DIR)) {
+    db.prepare(`UPDATE chats SET unread = 0 WHERE channel = 'instagram'`).run();
+    writeFileSync(flag, String(Date.now()));
+  }
   let cutoff = since();
   const tick = async () => {
     try {
@@ -167,11 +173,13 @@ function ingest(t: Thread, cutoff: number) {
   const isNew = !getChat(jid);
   upsertChat({ jid, channel: "instagram", phone: null, name: other.fullName || `@${other.username}`, account: store.state.username });
   let fresh: string | null = null;
+  let history = false; // anciens messages importés (avant la connexion)
   for (const m of [...t.messages].sort((a, b) => a.ts - b.ts)) {
     const id = `ig_${m.id}`;
     if (messageExists(id)) continue;
     saveMessage({ id, jid, sender: m.fromMe ? "human" : "contact", type: "text", text: m.text, mediaFile: null, mime: null, ts: m.ts, status: m.fromMe ? 4 : 0 });
     if (!m.fromMe && m.ts > cutoff) fresh = m.text;
+    else if (!m.fromMe) history = true;
     if (m.fromMe) {
       fresh = null; // déjà répondu depuis le téléphone
       // Comme sur WhatsApp : si tu réponds toi-même depuis Instagram, l'IA se met en pause ici.
@@ -179,6 +187,7 @@ function ingest(t: Thread, cutoff: number) {
     }
   }
   if (fresh !== null) onInstagramMessage(jid, fresh, isNew);
+  else if (history) markRead(jid); // l'historique importé ne compte pas comme « non lu »
 }
 
 /** Envoie un message dans une conversation Instagram ; renvoie l'identifiant du message enregistré. */
@@ -187,6 +196,11 @@ export async function sendInstagram(jid: string, text: string): Promise<string> 
   const { id } = await ig<{ id: string }>("/send", { threadId: thread.threadId, text, pending: thread.pending });
   store.threads.set(jid, { ...thread, pending: false });
   return `ig_${id}`;
+}
+
+/** Publie une photo ou une story (campagnes). */
+export async function publishInstagram(kind: "post" | "story", file: string, caption: string, link: string) {
+  return ig<{ id: string; code: string | null }>("/publish", { kind, path: file, caption, link });
 }
 
 export async function loginInstagram(username: string, password: string) {

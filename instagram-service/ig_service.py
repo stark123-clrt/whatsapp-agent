@@ -225,6 +225,30 @@ def send(thread_id, text, pending_thread):
         return str(msg.id)
 
 
+def publish(kind, path, caption, link):
+    """Publie une photo (publication) ou une story, avec un autocollant lien pour les stories."""
+    from PIL import Image
+    from instagrapi.types import StoryLink
+
+    src = Path(path)
+    jpg = src.with_suffix(".upload.jpg")
+    with Image.open(src) as im:
+        im.convert("RGB").save(jpg, "JPEG", quality=92)
+    try:
+        with api_lock:
+            if kind == "story":
+                links = [StoryLink(webUri=link, x=0.5, y=0.82, width=0.6, height=0.08)] if link else []
+                story = client.photo_upload_to_story(jpg, caption="", links=links)
+                return {"id": str(story.pk), "code": None}
+            media = client.photo_upload(jpg, caption)
+            return {"id": str(media.pk), "code": media.code}
+    finally:
+        try:
+            jpg.unlink()
+        except FileNotFoundError:
+            pass
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):  # pas de journal bruyant
         pass
@@ -313,6 +337,17 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(400, {"error": "Message vide."})
             try:
                 return self.reply(200, {"id": send(b["threadId"], text[:1000], bool(b.get("pending")))})
+            except Exception as err:  # noqa: BLE001
+                if isinstance(err, (LoginRequired, ChallengeRequired)):
+                    set_state(status="error", error=friendly(err))
+                return self.reply(502, {"error": friendly(err)})
+        if self.path == "/publish":
+            if not client:
+                return self.reply(409, {"error": "Instagram n'est pas connecté."})
+            if b.get("kind") not in ("post", "story") or not b.get("path"):
+                return self.reply(400, {"error": "Contenu invalide."})
+            try:
+                return self.reply(200, publish(b["kind"], b["path"], (b.get("caption") or "")[:2200], (b.get("link") or "").strip()))
             except Exception as err:  # noqa: BLE001
                 if isinstance(err, (LoginRequired, ChallengeRequired)):
                     set_state(status="error", error=friendly(err))

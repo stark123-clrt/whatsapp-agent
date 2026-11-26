@@ -13,6 +13,7 @@ const SECTIONS: { title?: string; items: Item[] }[] = [
     title: "Interagir",
     items: [
       { label: "Discussions", href: "/", icon: "chat" },
+      { label: "Campagnes", href: "/campagnes", icon: "sparkles" },
       { label: "Diffusions", icon: "megaphone" },
       { label: "Rendez-vous", icon: "calendar" },
     ],
@@ -187,6 +188,7 @@ const ICONS = {
   grid: svg("M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"),
   chat: svg("M4 5h16v11H8l-4 3V5z"),
   megaphone: svg("M4 10v4h3l7 4V6l-7 4H4zM18 9a4 4 0 0 1 0 6"),
+  sparkles: svg("M12 3l1.8 4.7L18.5 9l-4.7 1.8L12 15.5l-1.8-4.7L5.5 9l4.7-1.3zM19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z"),
   calendar: svg("M4 6h16v14H4zM4 10h16M9 3v4M15 3v4"),
   users: svg("M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20a6 6 0 0 1 12 0M16 5a3 3 0 0 1 0 6M21 20a6 6 0 0 0-4-5.6"),
   briefcase: svg("M4 8h16v11H4zM9 8V5h6v3M4 13h16"),

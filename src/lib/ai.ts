@@ -93,3 +93,13 @@ export async function transcribeAudio(audio: Buffer): Promise<string | null> {
   if (!text || WHISPER_HALLUCINATIONS.some((re) => re.test(text))) return null;
   return text;
 }
+
+const IMAGE_MODEL = "@cf/black-forest-labs/flux-1-schnell";
+
+/** Crée une image (JPEG) à partir d'une description en anglais (campagnes Instagram). */
+export async function generateImage(prompt: string): Promise<Buffer> {
+  const { baseUrl, headers } = config();
+  const data = await post<{ result?: { image?: string } }>(`${baseUrl}/run/${IMAGE_MODEL}`, headers, { prompt: prompt.slice(0, 2000), steps: 8 });
+  if (!data.result?.image) throw new Error("Cloudflare n'a pas renvoyé d'image.");
+  return Buffer.from(data.result.image, "base64");
+}

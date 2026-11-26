@@ -13,4 +13,7 @@ export async function register() {
   // Instagram : relance le service et reprend la session enregistrée (si un compte est connecté).
   const { ensureInstagram } = await import("./lib/instagram");
   ensureInstagram();
+  // Campagnes Instagram : calendrier, préparation des contenus et publication (toutes les minutes).
+  const { startCampaignScheduler } = await import("./lib/campaigns");
+  startCampaignScheduler();
 }

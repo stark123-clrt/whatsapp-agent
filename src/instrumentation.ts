@@ -10,4 +10,7 @@ export async function register() {
   // Opportunités : règle « après N jours sans activité, déplacer vers… ».
   const { startDealsScheduler } = await import("./lib/deals");
   startDealsScheduler();
+  // Instagram : relance le service et reprend la session enregistrée (si un compte est connecté).
+  const { ensureInstagram } = await import("./lib/instagram");
+  ensureInstagram();
 }

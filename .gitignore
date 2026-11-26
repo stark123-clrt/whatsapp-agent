@@ -46,3 +46,7 @@ next-env.d.ts
 
 # base de données et médias des conversations
 /data/
+
+# Instagram (service Python)
+/.venv-ig/
+__pycache__/

@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { chatReadOnly, sendManualMessage, sendWebManualMessage } from "@/lib/agent";
+import { chatReadOnly, sendInstagramManual, sendManualMessage, sendWebManualMessage } from "@/lib/agent";
 import { getChat } from "@/lib/db";
 import { getSocket } from "@/lib/whatsapp";
 
@@ -14,6 +14,14 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/chats/[jid]
   if (getChat(jid)?.channel === "web") {
     sendWebManualMessage(jid, text.trim());
     return Response.json({ ok: true });
+  }
+  if (getChat(jid)?.channel === "instagram") {
+    try {
+      await sendInstagramManual(jid, text.trim());
+      return Response.json({ ok: true });
+    } catch (err) {
+      return Response.json({ error: err instanceof Error ? err.message : "Échec de l'envoi sur Instagram" }, { status: 502 });
+    }
   }
   const sock = getSocket();
   if (!sock) return Response.json({ error: "WhatsApp n'est pas connecté" }, { status: 503 });

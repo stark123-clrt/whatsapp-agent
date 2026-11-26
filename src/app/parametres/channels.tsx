@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { WhatsAppState } from "@/lib/whatsapp";
 import { AgentActivity } from "../agent-activity";
+import { InstagramCard } from "./instagram-card";
 import { Sparkline, WidgetCard } from "./widget-card";
 
 /** Section « Canaux » des paramètres : chaque canal de messagerie et sa connexion. */
@@ -56,8 +57,10 @@ export function ChannelsSection() {
       <p className="mt-1 text-zinc-600">WhatsApp, SMS, Instagram, Messenger et le widget de site web.</p>
 
       <div className="mt-6 space-y-5">
+        <InstagramCard />
+
         <Card
-          title="Instagram et Messenger"
+          title="Instagram et Messenger (officiel)"
           description="La connexion officielle Meta, via Facebook : messages privés, réponses aux commentaires par message privé et réponses aux Stories."
           action={<SoonButton label="Connecter" />}
         >

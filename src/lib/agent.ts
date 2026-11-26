@@ -21,6 +21,7 @@ import { dealsFromTags } from "./deals";
 import { channelAgent, noAgentReason, routeAgent } from "./routing";
 import { getAgent, getAgentMedia, setMessageAgent, type Agent } from "./kb";
 import { buildAgentPrompt, modelOptions, parseAgentReply, type AgentAction } from "./knowledge";
+import { instagramConnected, sendInstagram } from "./instagram";
 import { getWhatsAppState } from "./whatsapp";
 
 const accountOf = (id: string | null | undefined) => (id ?? "").split(/[:@]/)[0].replace(/\D/g, "") || null;
@@ -32,6 +33,9 @@ const accountOf = (id: string | null | undefined) => (id ?? "").split(/[:@]/)[0]
  */
 export function chatReadOnly(jid: string): string | null {
   const chat = getChat(jid);
+  if (chat?.channel === "instagram") {
+    return instagramConnected() ? null : "Instagram déconnecté : reconnecte le compte dans Paramètres → Canaux pour répondre.";
+  }
   if (!chat || chat.channel !== "whatsapp") return null;
   const wa = getWhatsAppState();
   if (wa.status !== "open") return "Canal déconnecté : reconnecte WhatsApp dans Paramètres → Canaux pour répondre.";
@@ -220,6 +224,14 @@ export function sendWebManualMessage(jid: string, text: string) {
  * speed : 0 = plus lent et naturel, 100 = vitesse maximale.
  */
 export function replyWeb(jid: string, speed: number) {
+  replyVia(jid, speed, null);
+}
+
+/**
+ * Réponse de l'IA sur un canal sans WhatsApp : site web (rien à envoyer, le widget relit la discussion)
+ * ou Instagram (chaque bulle est envoyée par le service Instagram).
+ */
+function replyVia(jid: string, speed: number, send: ((text: string) => Promise<string>) | null) {
   enqueue(jid, async () => {
     if (whyAiInactive(jid, null)) return;
     if (getMessages(jid, 1).at(-1)?.sender !== "contact") return; // déjà répondu (messages regroupés)
@@ -228,7 +240,8 @@ export function replyWeb(jid: string, speed: number) {
     const who = chat?.customName ?? chat?.name ?? "Visiteur du site";
     store.typing.add(jid);
     try {
-      await sleep(Math.max(300, (100 - Math.min(100, Math.max(0, speed))) * 30));
+      // Instagram : délai humain (4 à 10 s) pour ne pas ressembler à un robot.
+      await sleep(send ? randomBetween(4_000, 10_000) : Math.max(300, (100 - Math.min(100, Math.max(0, speed))) * 30));
       const reply = await generateReply(
         [{ role: "system", content: systemPromptFor(jid, agent) }, ...(await buildHistory(jid))],
         agent ? modelOptions(agent) : {},
@@ -238,16 +251,16 @@ export function replyWeb(jid: string, speed: number) {
       if (whyAiInactive(jid, null)) return;
       if (agent?.settings.draftsOnly) {
         setDraft(jid, bubbles.join("\n\n"));
-        return addLog({ kind: "skip", who, text: `Brouillon prêt (site web) : ${bubbles.join(" ")}` });
+        return addLog({ kind: "skip", who, text: `Brouillon prêt : ${bubbles.join(" ")}` });
       }
       for (const [i, bubble] of bubbles.entries()) {
-        if (i > 0) await sleep(Math.min(2500, 400 + bubble.length * 15));
-        const id = webMessageId();
+        if (i > 0) await sleep(send ? randomBetween(1_500, 4_000) : Math.min(2500, 400 + bubble.length * 15));
+        const id = send ? await send(bubble) : webMessageId();
         saveMessage({ id, jid, sender: "ai", type: "text", text: bubble, mediaFile: null, mime: null, ts: Date.now(), status: 4 });
         if (agent) setMessageAgent(id, agent.id);
         incAiCount(jid);
       }
-      addLog({ kind: "out", who, text: `🌐 ${bubbles.join(" / ")}` });
+      addLog({ kind: "out", who, text: `${send ? "📸" : "🌐"} ${bubbles.join(" / ")}` });
       if (agent) await applyActions(null, jid, agent, actions, who);
     } catch (err) {
       addLog({ kind: "error", who, text: err instanceof Error ? err.message : String(err) });
@@ -255,6 +268,23 @@ export function replyWeb(jid: string, speed: number) {
       store.typing.delete(jid);
     }
   });
+}
+
+// ---------- Instagram ----------
+
+/** Nouveau message Instagram (relevé par src/lib/instagram.ts) : attribution de l'agent puis réponse. */
+export function onInstagramMessage(jid: string, text: string, isNew: boolean) {
+  if (isNew) routeChat(jid, text);
+  else if (!getChat(jid)?.agentId) routeChat(jid, text);
+  setFollowupStage(jid, 0);
+  replyVia(jid, 30, (bubble) => sendInstagram(jid, bubble));
+}
+
+/** Réponse écrite à la main depuis Discussions vers Instagram : l'IA se met en pause. */
+export async function sendInstagramManual(jid: string, text: string) {
+  const id = await sendInstagram(jid, text);
+  setAiPaused(jid, true);
+  saveMessage({ id, jid, sender: "human", type: "text", text, mediaFile: null, mime: null, ts: Date.now(), status: 4 });
 }
 
 /** Agent qui gère une discussion : celui qui lui est attribué, sinon l'agent par défaut. */

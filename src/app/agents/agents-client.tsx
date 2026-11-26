@@ -320,6 +320,7 @@ function IconBtn({ label, onClick, danger, children }: { label: string; onClick:
 type Effective = { id: number; name: string; status: "active" | "paused" } | null;
 const CHANNEL_ROWS = [
   { id: "whatsapp", label: "WhatsApp", color: "#25D366" },
+  { id: "instagram", label: "Instagram", color: "#E1306C" },
   { id: "web", label: "Site web (widget)", color: "#a855f7" },
 ] as const;
 

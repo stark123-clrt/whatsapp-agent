@@ -4,7 +4,7 @@ import type { Channel } from "./db";
 export const CHANNELS: Record<Channel, { label: string; color: string; available: boolean }> = {
   whatsapp: { label: "WhatsApp", color: "#25D366", available: true },
   web: { label: "Site web", color: "#a855f7", available: true },
-  instagram: { label: "Instagram", color: "#E1306C", available: false },
+  instagram: { label: "Instagram", color: "#E1306C", available: true },
   messenger: { label: "Messenger", color: "#0084FF", available: false },
   telegram: { label: "Telegram", color: "#229ED9", available: false },
   sms: { label: "SMS", color: "#52525B", available: false },

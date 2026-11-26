@@ -13,7 +13,7 @@ import { getAgent, listAgents, type Agent } from "./kb";
 
 db.exec(`CREATE TABLE IF NOT EXISTS channel_routing (channel TEXT PRIMARY KEY, agent_id INTEGER)`);
 
-export const ROUTED_CHANNELS: Channel[] = ["whatsapp", "web"];
+export const ROUTED_CHANNELS: Channel[] = ["whatsapp", "instagram", "web"];
 export const NOBODY = 0;
 
 /** null = automatique, 0 = personne, sinon l'id de l'agent. */
@@ -67,7 +67,7 @@ export function routeAgent(channel: Channel, firstText = ""): Agent | null {
   return byKeyword ?? channelAgent(channel);
 }
 
-const LABEL: Partial<Record<Channel, string>> = { whatsapp: "WhatsApp", web: "le site web" };
+const LABEL: Partial<Record<Channel, string>> = { whatsapp: "WhatsApp", instagram: "Instagram", web: "le site web" };
 
 /** Pourquoi aucun agent ne répond sur ce canal (texte affiché dans la discussion). */
 export function noAgentReason(channel: Channel): string {

@@ -235,17 +235,40 @@ export function CampaignWizard({
                     </div>
                   </div>
                   <div>
-                    <span className={label}>Contenus par jour</span>
-                    <div className="grid grid-cols-3 gap-1 rounded-xl bg-zinc-100 p-1">
-                      {[1, 2, 3].map((n) => (
-                        <button key={n} type="button" onClick={() => set({ perDay: n })} className={`rounded-lg py-1.5 text-sm ${s.perDay === n ? "bg-white font-semibold shadow-sm" : "text-zinc-500"}`}>
-                          {n}
+                    <span className={label}>Rythme</span>
+                    <div className="grid grid-cols-2 gap-1 rounded-xl bg-zinc-100 p-1">
+                      {(
+                        [
+                          ["auto", "Automatique"],
+                          ["manual", "Manuel"],
+                        ] as const
+                      ).map(([k, t]) => (
+                        <button key={k} type="button" onClick={() => set({ rhythm: k })} className={`rounded-lg py-1.5 text-sm ${s.rhythm === k ? "bg-white font-semibold shadow-sm" : "text-zinc-500"}`}>
+                          {t}
                         </button>
                       ))}
                     </div>
-                    <p className="mt-1 text-xs text-zinc-500">La première semaine : 1 par jour, pour habituer Instagram.</p>
                   </div>
                 </div>
+                {s.rhythm === "auto" ? (
+                  <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm leading-relaxed text-violet-900">
+                    🤖 <strong>L&apos;agent décide</strong> combien publier chaque jour, sous les plafonds du compte (par défaut jusqu&apos;à 3 publications et 10 stories) : il
+                    démarre doucement les 2 premières semaines, publie plus quand l&apos;engagement est bon, ralentit quand l&apos;audience décroche. Publications aux heures de forte
+                    audience, stories réparties de 9 h à 21 h 30.
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <span className={label}>Contenus par jour</span>
+                      <div className="grid w-48 grid-cols-3 gap-1 rounded-xl bg-zinc-100 p-1">
+                        {[1, 2, 3].map((n) => (
+                          <button key={n} type="button" onClick={() => set({ perDay: n })} className={`rounded-lg py-1.5 text-sm ${s.perDay === n ? "bg-white font-semibold shadow-sm" : "text-zinc-500"}`}>
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="mt-1 text-xs text-zinc-500">La première semaine : 1 par jour, pour habituer Instagram.</p>
+                    </div>
                 <div>
                   <span className={label}>Heures de publication (heure de Paris)</span>
                   <div className="flex gap-2">
@@ -265,6 +288,8 @@ export function CampaignWizard({
                   </div>
                   <p className="mt-1 text-xs text-zinc-500">Avec quelques minutes de décalage au hasard, pour un rythme naturel.</p>
                 </div>
+                  </>
+                )}
                 {s.objective === "sales" ? (
                   <div>
                     <span className={label}>Produits à mettre en avant</span>
@@ -417,7 +442,9 @@ export function CampaignWizard({
                     « {f.name || "Sans nom"} » avec l&apos;agent <strong>{agent?.name ?? "?"}</strong>, du {f.startsOn} au {f.endsOn}. Objectif : {OBJECTIVES[s.objective].toLowerCase()}.
                   </p>
                   <p>
-                    {s.perDay} contenu{s.perDay > 1 ? "s" : ""} par jour ({[s.formats.post && "publications", s.formats.story && "stories"].filter(Boolean).join(" et ")}), 1 par jour la première semaine.
+                    {s.rhythm === "auto"
+                      ? `Rythme automatique : l'agent décide chaque jour combien de ${[s.formats.post && "publications", s.formats.story && "stories"].filter(Boolean).join(" et ")} publier, selon l'engagement.`
+                      : `${s.perDay} contenu${s.perDay > 1 ? "s" : ""} par jour (${[s.formats.post && "publications", s.formats.story && "stories"].filter(Boolean).join(" et ")}), 1 par jour la première semaine.`}
                   </p>
                   <p>La campagne est créée en brouillon : tu l&apos;actives quand tu veux, depuis sa page.</p>
                 </div>

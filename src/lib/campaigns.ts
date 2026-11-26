@@ -20,7 +20,7 @@ import { formatPrice, freshCatalog, getProduct, listProducts, type Product } fro
 import { db, MEDIA_DIR } from "./db";
 import { instagramConnected, publishInstagram } from "./instagram";
 import { getAgent } from "./kb";
-import { canPublish } from "./publish-limits";
+import { canPublish, getLimits, parisDayStart } from "./publish-limits";
 
 /**
  * Campagnes Instagram : l'IA prépare 1 à 3 contenus par jour (publications et stories) aux heures choisies,
@@ -207,32 +207,122 @@ function parisTime(date: string, hhmm: string) {
 
 // ---------- Calendrier ----------
 
+// ---------- Rythme automatique : l'agent décide combien publier ----------
+
+export type DayPlan = { posts: number; stories: number; reason: string };
+
+/**
+ * Nombre de publications et de stories prévues pour cette campagne un jour donné, sous les plafonds du compte.
+ * - Montée en douceur les 2 premières semaines du compte (Instagram se méfie des comptes qui démarrent fort).
+ * - Engagement des 3 derniers jours (commentaires + messages reçus par contenu publié) : on accélère quand
+ *   ça marche, on ralentit quand l'audience décroche plutôt que de la lasser.
+ * - Les plafonds sont partagés entre les campagnes actives du compte.
+ */
+export function autoPlan(c: Campaign, day: string): DayPlan {
+  const limits = getLimits();
+  const dayStart = parisDayStart(parisTime(day, "12:00"));
+  const first = (db.prepare(`SELECT MIN(published_at) AS t FROM campaign_posts WHERE status = 'published'`).get() as { t: number | null }).t;
+  const accountDays = first ? Math.max(0, Math.floor((dayStart - parisDayStart(first)) / 86_400_000)) : 0;
+
+  let maxPosts = limits.maxPosts;
+  let maxStories = limits.maxStories;
+  let reason: string;
+  if (accountDays < 7) {
+    maxPosts = Math.min(maxPosts, 1);
+    maxStories = Math.min(maxStories, 2 + Math.floor(accountDays / 2));
+    reason = `Montée en douceur (jour ${accountDays + 1} sur 14)`;
+  } else if (accountDays < 14) {
+    maxPosts = Math.min(maxPosts, 2);
+    maxStories = Math.min(maxStories, 6);
+    reason = `Montée en douceur (jour ${accountDays + 1} sur 14)`;
+  } else {
+    reason = "Rythme de croisière";
+  }
+
+  // Engagement des 3 derniers jours.
+  const since = Date.now() - 3 * 86_400_000;
+  const published = (db.prepare(`SELECT COUNT(*) AS n FROM campaign_posts WHERE status = 'published' AND published_at > ?`).get(since) as { n: number }).n;
+  let comments = 0;
+  try {
+    comments = (db.prepare(`SELECT COUNT(*) AS n FROM campaign_comments WHERE ts > ?`).get(since) as { n: number }).n;
+  } catch {
+    comments = 0; // table pas encore créée
+  }
+  const messages = (
+    db.prepare(`SELECT COUNT(*) AS n FROM messages m JOIN chats ch ON ch.jid = m.jid WHERE ch.channel = 'instagram' AND m.sender = 'contact' AND m.ts > ?`).get(since) as { n: number }
+  ).n;
+  let factor: number;
+  if (published < 3) {
+    factor = accountDays < 14 ? 1 : 0.75;
+    if (accountDays >= 14) reason += " · pas encore assez de recul sur l'engagement";
+  } else {
+    const ratio = (comments + messages) / published;
+    if (ratio >= 1.5) {
+      factor = 1;
+      reason += ` · très bon engagement (${(comments + messages)} réactions pour ${published} contenus) : on publie au maximum`;
+    } else if (ratio >= 0.5) {
+      factor = 0.8;
+      reason += ` · engagement correct (${(comments + messages)} réactions pour ${published} contenus)`;
+    } else {
+      factor = 0.6;
+      reason += ` · engagement faible (${(comments + messages)} réactions pour ${published} contenus) : on ralentit pour ne pas lasser`;
+    }
+  }
+
+  // Plafonds partagés entre les campagnes actives qui publient le même jour.
+  const active = listCampaigns().filter((x) => x.status === "active" && x.startsOn <= day && x.endsOn >= day && x.settings.rhythm !== "manual").length || 1;
+  if (active > 1) reason += ` · partagé entre ${active} campagnes`;
+  const share = (n: number) => Math.max(1, Math.round((n * factor) / active));
+  return {
+    posts: c.settings.formats.post && maxPosts > 0 ? share(maxPosts) : 0,
+    stories: c.settings.formats.story && maxStories > 0 ? share(maxStories) : 0,
+    reason,
+  };
+}
+
+/** Heures du jour : publications aux heures de forte audience, stories réparties de 9 h à 21 h 30. */
+function autoSlots(plan: DayPlan): { key: string; kind: PostKind; hhmm: string }[] {
+  const out: { key: string; kind: PostKind; hhmm: string }[] = [];
+  const postTimes = ["12:30", "19:00", "09:30", "16:00", "21:00"].slice(0, plan.posts).sort();
+  postTimes.forEach((t, i) => out.push({ key: `p${i}`, kind: "post", hhmm: t }));
+  for (let i = 0; i < plan.stories; i++) {
+    const minutes = 9 * 60 + Math.round(((i + 0.5) * (12.5 * 60)) / plan.stories);
+    out.push({ key: `s${i}`, kind: "story", hhmm: `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}` });
+  }
+  return out;
+}
+
 /** Crée les contenus des prochaines 36 h (sans doublon) pour une campagne active. */
 export function planCampaign(c: Campaign): number {
   if (c.status !== "active") return 0;
   const now = Date.now();
   let created = 0;
+  const insert = (day: string, key: string, kind: PostKind, hhmm: string) => {
+    const at = parisTime(day, hhmm) + Math.floor(Math.random() * 12) * 60_000; // quelques minutes de hasard
+    if (at < now + 10 * 60_000 || at > now + 36 * 3_600_000) return;
+    if (db.prepare(`SELECT 1 FROM campaign_posts WHERE campaign_id = ? AND slot_key = ?`).get(c.id, `${day}#${key}`)) return;
+    const product = c.settings.objective === "sales" ? pickProduct(c) : null;
+    const res = db
+      .prepare(`INSERT OR IGNORE INTO campaign_posts (campaign_id, slot_key, kind, status, scheduled_at, visual, product_id, product_title, created_at) VALUES (?, ?, ?, 'generating', ?, ?, ?, ?, ?)`)
+      .run(c.id, `${day}#${key}`, kind, at, product ? "product" : "card", product?.id ?? null, product?.title ?? null, now);
+    created += Number(res.changes);
+  };
   for (const offset of [0, 1]) {
     const day = addDays(parisDate(now), offset);
     if (day < c.startsOn || day > c.endsOn) continue;
-    // Montée en douceur : 1 contenu par jour la première semaine.
+    if (c.settings.rhythm !== "manual") {
+      // Rythme automatique : l'agent décide.
+      for (const slot of autoSlots(autoPlan(c, day))) insert(day, slot.key, slot.kind, slot.hhmm);
+      continue;
+    }
+    // Rythme manuel : nombre et heures choisis dans la campagne (1 par jour la première semaine).
     const warm = day < addDays(c.startsOn, 7);
     const perDay = warm ? 1 : c.settings.perDay;
     const slots = (c.settings.slots.length ? c.settings.slots : ["09:30", "13:00", "19:00"]).slice(0, perDay);
     const dayIndex = Math.round((Date.parse(day) - Date.parse(c.startsOn)) / 86_400_000);
-    slots.forEach((hhmm, i) => {
-      const at = parisTime(day, hhmm) + Math.floor(Math.random() * 12) * 60_000; // quelques minutes de hasard
-      if (at < now + 10 * 60_000 || at > now + 36 * 3_600_000) return;
-      const kinds: PostKind[] = [c.settings.formats.post ? "post" : null, c.settings.formats.story ? "story" : null].filter(Boolean) as PostKind[];
-      if (!kinds.length) return;
-      const kind = kinds[(dayIndex + i) % kinds.length];
-      if (db.prepare(`SELECT 1 FROM campaign_posts WHERE campaign_id = ? AND slot_key = ?`).get(c.id, `${day}#${i}`)) return;
-      const product = c.settings.objective === "sales" ? pickProduct(c) : null;
-      const res = db
-        .prepare(`INSERT OR IGNORE INTO campaign_posts (campaign_id, slot_key, kind, status, scheduled_at, visual, product_id, product_title, created_at) VALUES (?, ?, ?, 'generating', ?, ?, ?, ?, ?)`)
-        .run(c.id, `${day}#${i}`, kind, at, product ? "product" : "card", product?.id ?? null, product?.title ?? null, now);
-      created += Number(res.changes);
-    });
+    const kinds: PostKind[] = [c.settings.formats.post ? "post" : null, c.settings.formats.story ? "story" : null].filter(Boolean) as PostKind[];
+    if (!kinds.length) continue;
+    slots.forEach((hhmm, i) => insert(day, String(i), kinds[(dayIndex + i) % kinds.length], hhmm));
   }
   return created;
 }

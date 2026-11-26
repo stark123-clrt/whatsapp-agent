@@ -8,7 +8,13 @@ import { CampaignWizard, type AgentLite } from "../campaign-wizard";
 import { CAMPAIGN_STATUS } from "../campaigns-client";
 import { CampaignComments } from "./campaign-comments";
 
-type Data = { campaign: Campaign; posts: CampaignPost[]; agents: AgentLite[]; instagram: { connected: boolean; username: string | null } };
+type Data = {
+  campaign: Campaign;
+  posts: CampaignPost[];
+  agents: AgentLite[];
+  instagram: { connected: boolean; username: string | null };
+  plan: { posts: number; stories: number; reason: string } | null;
+};
 
 const dayLabel = (ts: number) => {
   const d = new Date(ts);
@@ -29,7 +35,7 @@ export function CampaignDetail({ id }: { id: number }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; error?: boolean } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [rhythm, setRhythm] = useState<{ maxPerDay: number; minGapHours: number } | null>(null);
+  const [rhythm, setRhythm] = useState<{ maxPosts: number; maxStories: number } | null>(null);
   const router = useRouter();
 
   const load = useCallback(async () => {
@@ -41,7 +47,7 @@ export function CampaignDetail({ id }: { id: number }) {
   useEffect(() => {
     const t = setTimeout(async () => {
       const r = await fetch("/api/instagram/limits", { cache: "no-store" }).catch(() => null);
-      if (r?.ok) setRhythm(((await r.json()) as { limits: { maxPerDay: number; minGapHours: number } }).limits);
+      if (r?.ok) setRhythm(((await r.json()) as { limits: { maxPosts: number; maxStories: number } }).limits);
     }, 0);
     return () => clearTimeout(t);
   }, []);
@@ -165,10 +171,17 @@ export function CampaignDetail({ id }: { id: number }) {
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">Calendrier des contenus</h2>
+          {data.plan ? (
+            <p className="text-xs text-zinc-600">
+              🤖 Aujourd&apos;hui, l&apos;agent prévoit <strong>{data.plan.posts} publication{data.plan.posts > 1 ? "s" : ""}</strong> et{" "}
+              <strong>{data.plan.stories} stor{data.plan.stories > 1 ? "ies" : "y"}</strong> — {data.plan.reason}.
+            </p>
+          ) : (
+            <p className="text-xs text-zinc-500">Rythme manuel : {c.settings.perDay} contenu{c.settings.perDay > 1 ? "s" : ""} par jour.</p>
+          )}
           {rhythm && (
             <p className="text-xs text-zinc-500">
-              Rythme du compte Instagram (toutes campagnes) : {rhythm.maxPerDay} contenu{rhythm.maxPerDay > 1 ? "s" : ""} par jour maximum
-              {rhythm.minGapHours ? `, ${String(rhythm.minGapHours).replace(".", ",")} h d'écart minimum` : ""}.{" "}
+              Plafonds du compte (toutes campagnes) : {rhythm.maxPosts} publications et {rhythm.maxStories} stories par jour.{" "}
               <Link href="/parametres?section=channels" className="font-medium text-violet-700 hover:underline">
                 Modifier
               </Link>

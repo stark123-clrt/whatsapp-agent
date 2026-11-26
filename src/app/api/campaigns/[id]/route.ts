@@ -1,5 +1,5 @@
 import { connection, type NextRequest } from "next/server";
-import { deleteCampaign, getCampaign, listPosts, planCampaign, runCampaignTick, updateCampaign, type CampaignInput } from "@/lib/campaigns";
+import { autoPlan, deleteCampaign, getCampaign, listPosts, planCampaign, runCampaignTick, updateCampaign, type CampaignInput } from "@/lib/campaigns";
 import { getInstagramState } from "@/lib/instagram";
 import { listAgents } from "@/lib/kb";
 
@@ -15,6 +15,8 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
     posts: listPosts(c.id),
     agents: listAgents().map((a) => ({ id: a.id, name: a.name, status: a.status, website: a.website })),
     instagram: { connected: ig.status === "connected", username: ig.username },
+    // Rythme automatique : ce que l'agent prévoit aujourd'hui, et pourquoi.
+    plan: c.settings.rhythm === "manual" ? null : autoPlan(c, new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Paris" }).format(Date.now())),
   });
 }
 

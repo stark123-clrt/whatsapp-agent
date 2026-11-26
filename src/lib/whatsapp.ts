@@ -74,6 +74,7 @@ type Store = {
   state: WhatsAppState;
   starting: Promise<void> | null;
   reconnectTimer: NodeJS.Timeout | null;
+  replacedRetries?: number; // tentatives après « connexion ouverte ailleurs »
 };
 
 // On garde une seule connexion par processus, même quand Next.js recharge les
@@ -160,6 +161,7 @@ async function connect() {
     }
 
     if (connection === "open") {
+      store.replacedRetries = 0;
       // Sécurité : seul le numéro autorisé peut se connecter. Un autre compte est déconnecté aussitôt.
       const connected = digits(sock.user?.id);
       const expected = readExpectedPhone();
@@ -207,12 +209,15 @@ async function connect() {
         setState({ me: null, lastError: "Session déconnectée depuis le téléphone." });
         scheduleReconnect();
       } else if (code === DisconnectReason.connectionReplaced) {
-        // Le compte a été ouvert ailleurs avec la même session : on n'insiste pas.
-        setState({
-          status: "closed",
-          qrDataUrl: null,
-          lastError: "Connexion ouverte ailleurs. Clique sur « Reconnecter ».",
-        });
+        // Session ouverte ailleurs. Cas courant : pendant une mise à jour, l'ancienne version de l'appli
+        // tourne encore quelques secondes. On réessaie donc 4 fois (30 s, 1 min, 2 min, 4 min) avant d'abandonner.
+        const attempt = (store.replacedRetries = (store.replacedRetries ?? 0) + 1);
+        if (attempt <= 4) {
+          setState({ status: "connecting", qrDataUrl: null, lastError: "Connexion ouverte ailleurs : nouvelle tentative…" });
+          setTimeout(() => void ensureWhatsApp(), 30_000 * 2 ** (attempt - 1));
+        } else {
+          setState({ status: "closed", qrDataUrl: null, lastError: "Connexion ouverte ailleurs. Clique sur « Reconnecter »." });
+        }
       } else {
         setState({ status: "connecting", lastError: lastDisconnect?.error?.message ?? null });
         scheduleReconnect();

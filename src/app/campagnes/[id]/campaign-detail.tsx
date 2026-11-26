@@ -283,9 +283,10 @@ function PostCard({ post: p, busy, onAct, onEdit }: { post: CampaignPost; busy: 
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className={`rounded-md px-2 py-0.5 font-bold ${POST_STATUS[p.status].cls}`}>{POST_STATUS[p.status].label}</span>
           <span className="text-zinc-500">{p.status === "published" && p.publishedAt ? `publié à ${hour(p.publishedAt)}` : `prévu à ${hour(p.scheduledAt)}`}</span>
-          <span className="text-zinc-400">· {VISUALS[p.visual].label.split(" ")[0]}</span>
+          <span className="text-zinc-400">· {VISUALS[p.visual]?.label ?? "Visuel"}</span>
         </div>
-        <p className="mt-1.5 font-semibold leading-snug">{p.headline ?? "L'IA rédige…"}</p>
+        {p.productTitle && <p className="mt-1.5 truncate text-xs font-medium text-violet-700">🛍️ {p.productTitle}</p>}
+        <p className="mt-1 font-semibold leading-snug">{p.headline ?? "L'IA rédige…"}</p>
         {p.caption && (
           <div className="mt-1">
             <p className={`text-xs leading-relaxed whitespace-pre-line text-zinc-600 ${open ? "" : "line-clamp-3"}`}>{p.caption}</p>

@@ -189,8 +189,8 @@ function ConnectInstagram({ state, onClose, onChanged }: { state: State | null; 
             {method === "password" ? (
               <>
             <label className="block text-sm font-medium text-zinc-700">
-              Nom d&apos;utilisateur Instagram
-              <input autoFocus value={username} onChange={(e) => setUsername(e.target.value)} placeholder="ton_compte (pas l'e-mail)" autoComplete="off" className={input} />
+              Nom d&apos;utilisateur ou e-mail Instagram
+              <input autoFocus value={username} onChange={(e) => setUsername(e.target.value)} placeholder="ton_compte ou ton@email.com" autoComplete="off" className={input} />
             </label>
             <label className="block text-sm font-medium text-zinc-700">
               Mot de passe
@@ -219,11 +219,6 @@ function ConnectInstagram({ state, onClose, onChanged }: { state: State | null; 
                 </button>
               </span>
             </label>
-                {username.includes("@") && username.includes(".") && (
-                  <p className="-mt-2 text-xs text-amber-700">
-                    ⚠️ Mets ton <strong>nom d&apos;utilisateur</strong> (ex. : ata_elroi), pas ton e-mail : Instagram refuse plus souvent la connexion par e-mail.
-                  </p>
-                )}
               </>
             ) : (
               <div className="space-y-3">

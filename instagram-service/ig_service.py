@@ -46,7 +46,14 @@ pending = {"kind": None, "code": None, "event": threading.Event(), "username": N
 
 def set_state(**kw):
     with state_lock:
+        before = state["status"]
         state.update(kw)
+        after = state["status"]
+        err = state.get("error")
+    # Journal lisible de chaque étape de connexion (jamais le mot de passe ni les codes).
+    if after != before or (kw.get("error") and err):
+        detail = f" — {err}" if err and after == "error" else ""
+        print(f"[instagram] état : {before} → {after}{detail}", flush=True)
 
 
 def new_client():
@@ -103,8 +110,8 @@ def friendly(err):
     text = str(err) or err.__class__.__name__
     if "obsol" in text.lower() or "upgrade" in text.lower() or err.__class__.__name__ == "ClientNeedsUpgradeError":
         return (
-            "Instagram a refusé cette méthode de connexion pour ce compte (fréquent avec un compte tout neuf ou une "
-            "connexion avec l'e-mail). Essaie avec le nom d'utilisateur, ou utilise « Connexion avec la session du navigateur »."
+            "Instagram a refusé cette connexion pour le moment (fréquent avec un compte tout neuf ou après plusieurs essais "
+            "rapprochés). Attends quelques heures avant de réessayer, une seule fois."
         )
     return text[:300]
 
@@ -129,6 +136,7 @@ def do_login(username, password):
             save_account(cl)
         except Exception as err:  # noqa: BLE001 — on renvoie un message lisible
             client = None
+            print(f"[instagram] connexion refusée : {err.__class__.__name__}: {str(err)[:200]}", flush=True)
             set_state(status="error", error=friendly(err))
         finally:
             pending.update(kind=None, code=None, username=None, password=None)
@@ -341,6 +349,16 @@ class Handler(BaseHTTPRequestHandler):
                 if isinstance(err, (LoginRequired, ChallengeRequired)):
                     set_state(status="error", error=friendly(err))
                 return self.reply(502, {"error": friendly(err)})
+        if self.path == "/convert":
+            # Conversion d'image (WebP, AVIF…) en JPEG pour les visuels : n'a pas besoin d'Instagram.
+            try:
+                from PIL import Image
+
+                with Image.open(b["src"]) as im:
+                    im.convert("RGB").save(b["dest"], "JPEG", quality=92)
+                return self.reply(200, {"ok": True})
+            except Exception as err:  # noqa: BLE001
+                return self.reply(400, {"error": f"Conversion impossible : {err}"[:200]})
         if self.path == "/publish":
             if not client:
                 return self.reply(409, {"error": "Instagram n'est pas connecté."})

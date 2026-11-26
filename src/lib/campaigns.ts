@@ -4,7 +4,7 @@ import { existsSync } from "node:fs";
 import { readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { instructionsText } from "./agent-settings";
-import { generateImage, generateReply } from "./ai";
+import { generateReply } from "./ai";
 import {
   campaignWithDefaults,
   type Campaign,
@@ -15,10 +15,11 @@ import {
   type PostStatus,
   type VisualSource,
 } from "./campaign-types";
-import { renderVisual } from "./campaign-visuals";
+import { renderProductVisual, renderVisual } from "./campaign-visuals";
+import { formatPrice, freshCatalog, getProduct, listProducts, type Product } from "./catalog";
 import { db, MEDIA_DIR } from "./db";
 import { instagramConnected, publishInstagram } from "./instagram";
-import { getAgent, listAgentMedia } from "./kb";
+import { getAgent } from "./kb";
 
 /**
  * Campagnes Instagram : l'IA prépare 1 à 3 contenus par jour (publications et stories) aux heures choisies,
@@ -57,6 +58,12 @@ db.exec(`
   );
   CREATE UNIQUE INDEX IF NOT EXISTS campaign_posts_slot ON campaign_posts(campaign_id, slot_key);
 `);
+{
+  const cols = new Set((db.prepare(`PRAGMA table_info(campaign_posts)`).all() as { name: string }[]).map((c) => c.name));
+  if (!cols.has("product_id")) db.exec(`ALTER TABLE campaign_posts ADD COLUMN product_id INTEGER`);
+  if (!cols.has("product_title")) db.exec(`ALTER TABLE campaign_posts ADD COLUMN product_title TEXT`);
+  if (!cols.has("price_cents")) db.exec(`ALTER TABLE campaign_posts ADD COLUMN price_cents INTEGER`);
+}
 
 type CampaignRow = { id: number; name: string; agent_id: number | null; status: CampaignStatus; starts_on: string; ends_on: string; settings: string; created_at: number; updated_at: number };
 type PostRow = {
@@ -75,6 +82,9 @@ type PostRow = {
   error: string | null;
   created_at: number;
   published_at: number | null;
+  product_id: number | null;
+  product_title: string | null;
+  price_cents: number | null;
 };
 
 const toCampaign = (r: CampaignRow): Campaign => {
@@ -101,6 +111,8 @@ const toPost = (r: PostRow): CampaignPost => ({
   error: r.error,
   createdAt: r.created_at,
   publishedAt: r.published_at,
+  productId: r.product_id,
+  productTitle: r.product_title,
 });
 
 export function listCampaigns(): Campaign[] {
@@ -213,19 +225,48 @@ export function planCampaign(c: Campaign): number {
       const kinds: PostKind[] = [c.settings.formats.post ? "post" : null, c.settings.formats.story ? "story" : null].filter(Boolean) as PostKind[];
       if (!kinds.length) return;
       const kind = kinds[(dayIndex + i) % kinds.length];
-      const visual = c.settings.visuals[(dayIndex * 3 + i) % c.settings.visuals.length];
+      if (db.prepare(`SELECT 1 FROM campaign_posts WHERE campaign_id = ? AND slot_key = ?`).get(c.id, `${day}#${i}`)) return;
+      const product = c.settings.objective === "sales" ? pickProduct(c) : null;
       const res = db
-        .prepare(`INSERT OR IGNORE INTO campaign_posts (campaign_id, slot_key, kind, status, scheduled_at, visual, created_at) VALUES (?, ?, ?, 'generating', ?, ?, ?)`)
-        .run(c.id, `${day}#${i}`, kind, at, visual, now);
+        .prepare(`INSERT OR IGNORE INTO campaign_posts (campaign_id, slot_key, kind, status, scheduled_at, visual, product_id, product_title, created_at) VALUES (?, ?, ?, 'generating', ?, ?, ?, ?, ?)`)
+        .run(c.id, `${day}#${i}`, kind, at, product ? "product" : "card", product?.id ?? null, product?.title ?? null, now);
       created += Number(res.changes);
     });
   }
   return created;
 }
 
+// ---------- Produits (campagnes de vente) ----------
+
+/** Produits utilisables : sélection de la campagne (ou tout le catalogue), disponibles, avec photo et prix. */
+export function campaignProducts(c: Campaign): Product[] {
+  if (!c.agentId) return [];
+  const all = listProducts(c.agentId).filter((p) => p.available && p.imageFile && p.priceCents);
+  const picked = c.settings.productIds.length ? all.filter((p) => c.settings.productIds.includes(p.id)) : all;
+  return picked;
+}
+
+/** Rotation : le produit le moins mis en avant dans cette campagne (jamais le même deux fois de suite). */
+function pickProduct(c: Campaign): Product | null {
+  const products = campaignProducts(c);
+  if (!products.length) return null;
+  const uses = new Map(
+    (db.prepare(`SELECT product_id, COUNT(*) AS n, MAX(created_at) AS last FROM campaign_posts WHERE campaign_id = ? AND product_id IS NOT NULL GROUP BY product_id`).all(c.id) as {
+      product_id: number;
+      n: number;
+      last: number;
+    }[]).map((r) => [r.product_id, r]),
+  );
+  return [...products].sort((x, y) => {
+    const ux = uses.get(x.id);
+    const uy = uses.get(y.id);
+    return (ux?.n ?? 0) - (uy?.n ?? 0) || (ux?.last ?? 0) - (uy?.last ?? 0) || Math.random() - 0.5;
+  })[0];
+}
+
 // ---------- Rédaction et visuel ----------
 
-type Draft = { headline: string; caption: string; hashtags: string[]; imagePrompt: string };
+type Draft = { headline: string; caption: string; hashtags: string[] };
 
 function parseDraft(text: string): Draft {
   const json = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
@@ -235,12 +276,12 @@ function parseDraft(text: string): Draft {
     headline: String(d.headline).slice(0, 110),
     caption: String(d.caption).slice(0, 1800),
     hashtags: (Array.isArray(d.hashtags) ? d.hashtags : []).map((h) => String(h).replace(/^#/, "").replace(/\s+/g, "")).filter(Boolean).slice(0, 12),
-    imagePrompt: String(d.imagePrompt ?? d.headline).slice(0, 600),
   };
 }
 
-function trackedLink(c: Campaign) {
-  const link = c.settings.link.trim();
+/** Lien suivi (pour mesurer les visites venues d'Instagram) : fiche produit, sinon le site. */
+function trackedLink(c: Campaign, url?: string | null) {
+  const link = (url || c.settings.link).trim();
   if (!/^https?:\/\//.test(link)) return "";
   try {
     const u = new URL(link);
@@ -255,7 +296,7 @@ function trackedLink(c: Campaign) {
   }
 }
 
-async function writeDraft(c: Campaign, kind: PostKind): Promise<Draft> {
+async function writeDraft(c: Campaign, kind: PostKind, product: Product | null): Promise<Draft> {
   const agent = c.agentId ? getAgent(c.agentId) : null;
   const s = c.settings;
   const recent = (db.prepare(`SELECT headline FROM campaign_posts WHERE campaign_id = ? AND headline IS NOT NULL ORDER BY id DESC LIMIT 12`).all(c.id) as { headline: string }[]).map((r) => `- ${r.headline}`);
@@ -267,6 +308,14 @@ async function writeDraft(c: Campaign, kind: PostKind): Promise<Draft> {
     s.offer.enabled && s.offer.text && `Offre à mettre en avant : ${s.offer.text}${s.offer.code ? ` (code ${s.offer.code})` : ""}${s.offer.until ? `, valable jusqu'au ${s.offer.until}` : ""}.`,
     s.mentions && `À mentionner quand c'est pertinent : ${s.mentions}.`,
     s.forbidden && `Sujets INTERDITS : ${s.forbidden}.`,
+    product &&
+      [
+        `PRODUIT MIS EN AVANT : « ${product.title} ».`,
+        product.description && `Description du site : ${product.description}`,
+        "Le prix est affiché sur l'image : ne l'écris PAS dans le titre ni dans la légende (il peut changer).",
+      ]
+        .filter(Boolean)
+        .join("\n"),
   ].filter(Boolean);
 
   const system = [
@@ -275,12 +324,15 @@ async function writeDraft(c: Campaign, kind: PostKind): Promise<Draft> {
     agent ? instructionsText(agent.settings).slice(0, 6000) : "(aucune)",
   ].join("\n\n");
 
+  const headlineSpec = product
+    ? "phrase d'accroche affichée au-dessus du nom du produit, 4 à 8 mots, sans le nom ni le prix"
+    : `titre accrocheur affiché sur l'image, ${kind === "story" ? "6 à 10" : "4 à 9"} mots`;
   const user = [
     `Crée ${kind === "story" ? "une STORY Instagram (le texte est uniquement sur l'image, très court)" : "une PUBLICATION Instagram (image + légende)"}.`,
     ...brief,
-    recent.length ? `Titres déjà utilisés (ne les répète pas, change d'angle) :\n${recent.join("\n")}` : "",
+    recent.length ? `Accroches déjà utilisées (ne les répète pas, change d'angle) :\n${recent.join("\n")}` : "",
     "Réponds UNIQUEMENT avec un objet JSON :",
-    `{"headline": "titre accrocheur affiché sur l'image, ${kind === "story" ? "6 à 10" : "4 à 9"} mots", "caption": "${kind === "story" ? "une phrase" : "légende de 3 à 6 courtes lignes, avec 1 ou 2 émojis et un appel à l'action (écrire en message privé ou commenter)"}", "hashtags": ["5 à 8 hashtags pertinents, sans #"], "imagePrompt": "description EN ANGLAIS d'une photo publicitaire réaliste pour illustrer ce contenu, sans texte dans l'image"}`,
+    `{"headline": "${headlineSpec}", "caption": "${kind === "story" ? "une phrase" : "légende de 3 à 6 courtes lignes, avec 1 ou 2 émojis et un appel à l'action (écrire en message privé ou commenter)"}", "hashtags": ["5 à 8 hashtags pertinents, sans #"]}`,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -303,20 +355,55 @@ function fullCaption(c: Campaign, kind: PostKind, d: Draft) {
   return [d.caption, c.settings.link ? "🔗 Lien en bio" : "", unique.length ? unique.map((t) => `#${t}`).join(" ") : ""].filter(Boolean).join("\n\n");
 }
 
-async function backgroundFor(c: Campaign, visual: VisualSource, prompt: string, postId: number): Promise<string | null> {
-  if (visual === "media" && c.agentId) {
-    const images = listAgentMedia(c.agentId).filter((m) => m.mime.startsWith("image/") && !m.mime.includes("svg"));
-    if (images.length) {
-      const pick = images[postId % images.length];
-      const data = await readFile(path.join(MEDIA_DIR, path.basename(pick.file))).catch(() => null);
-      if (data) return `data:${pick.mime};base64,${data.toString("base64")}`;
-    }
+async function dataUrl(file: string | null | undefined) {
+  if (!file) return null;
+  const data = await readFile(path.join(MEDIA_DIR, path.basename(file))).catch(() => null);
+  if (!data) return null;
+  const type = file.endsWith(".png") ? "image/png" : file.endsWith(".svg") ? "image/svg+xml" : "image/jpeg";
+  return `data:${type};base64,${data.toString("base64")}`;
+}
+
+/** Crée le visuel (fiche produit ou carte de marque) ; renvoie le PNG et le prix affiché. */
+async function makeVisual(c: Campaign, kind: PostKind, headline: string, product: Product | null): Promise<{ png: Buffer; priceCents: number | null }> {
+  const agent = c.agentId ? getAgent(c.agentId) : null;
+  const logo = await dataUrl(c.settings.brand.logo);
+  const brandName = agent?.name ?? c.name;
+  const badge = c.settings.offer.enabled && c.settings.offer.code ? `Code ${c.settings.offer.code}` : null;
+  const image = product ? await dataUrl(product.imageFile) : null;
+  if (product && image && product.priceCents) {
+    const promo = product.compareCents && product.compareCents > product.priceCents;
+    return {
+      priceCents: product.priceCents,
+      png: await renderProductVisual({
+        kind,
+        hook: headline,
+        title: product.title,
+        price: formatPrice(product.priceCents, product.currency),
+        compareAt: promo ? formatPrice(product.compareCents, product.currency) : null,
+        discount: promo ? `-${Math.round((1 - product.priceCents / product.compareCents!) * 100)} %` : null,
+        image,
+        brandName,
+        logo,
+        color: c.settings.brand.color,
+        textColor: c.settings.brand.textColor,
+        badge,
+        footer: kind === "post" ? "Lien en bio" : null,
+      }),
+    };
   }
-  if (visual === "ai") {
-    const jpeg = await generateImage(`${prompt}. Professional advertising photography, high quality, natural light, no text, no letters, no watermark.`);
-    return `data:image/jpeg;base64,${jpeg.toString("base64")}`;
-  }
-  return null; // carte aux couleurs de la marque
+  return {
+    priceCents: null,
+    png: await renderVisual({
+      kind,
+      headline,
+      brandName,
+      logo,
+      color: c.settings.brand.color,
+      textColor: c.settings.brand.textColor,
+      badge,
+      footer: kind === "post" && c.settings.link ? "Lien en bio" : null,
+    }),
+  };
 }
 
 /** Rédige le contenu et crée son visuel ; le contenu passe « à valider » (ou « programmé » en automatique). */
@@ -325,51 +412,28 @@ export async function generatePost(postId: number, keepText = false) {
   const c = p ? getCampaign(p.campaignId) : null;
   if (!p || !c) return;
   try {
-    const draft: Draft = keepText && p.headline && p.caption ? { headline: p.headline, caption: p.caption, hashtags: [], imagePrompt: p.headline } : await writeDraft(c, p.kind);
-    const caption = keepText && p.caption ? p.caption : fullCaption(c, p.kind, draft);
-    const agent = c.agentId ? getAgent(c.agentId) : null;
-    let background = keepText ? await existingBackground(postId) : null;
-    if (!background) {
-      background = await backgroundFor(c, p.visual, draft.imagePrompt, postId).catch((err) => {
-        // Pas d'image : on garde une carte aux couleurs de la marque, mais on note pourquoi.
-        console.error(`[campagnes] visuel « ${p.visual} » indisponible : ${err instanceof Error ? err.message : err}`);
-        return null;
-      });
+    // Produit retiré ou indisponible : on en choisit un autre.
+    let product = p.productId ? getProduct(p.productId) : null;
+    if (p.visual === "product" && (!product || !product.available || !product.imageFile)) {
+      product = c.settings.objective === "sales" ? pickProduct(c) : null;
+      keepText = false;
     }
-    const png = await renderVisual({
-      kind: p.kind,
-      headline: draft.headline,
-      brandName: agent?.name ?? c.name,
-      color: c.settings.brand.color,
-      textColor: c.settings.brand.textColor,
-      background,
-      badge: c.settings.offer.enabled && c.settings.offer.code ? `Code ${c.settings.offer.code}` : null,
-      footer: p.kind === "post" && c.settings.link ? "Lien en bio" : null,
-    });
+    const draft: Draft = keepText && p.headline && p.caption ? { headline: p.headline, caption: p.caption, hashtags: [] } : await writeDraft(c, p.kind, product);
+    const caption = keepText && p.caption ? p.caption : fullCaption(c, p.kind, draft);
+    const { png, priceCents } = await makeVisual(c, p.kind, draft.headline, product);
     await removeFiles(postId);
     const image = `campaign-${c.id}-${postId}-${Date.now()}.png`;
     await writeFile(path.join(MEDIA_DIR, image), png);
-    let bgFile: string | null = null;
-    if (background?.startsWith("data:")) {
-      bgFile = `campaign-${c.id}-${postId}-${Date.now()}-bg.bin`;
-      await writeFile(path.join(MEDIA_DIR, bgFile), background);
-    }
     const next: PostStatus = c.settings.approval === "auto" ? "scheduled" : "pending";
-    db.prepare(`UPDATE campaign_posts SET headline = ?, caption = ?, image_file = ?, background_file = ?, status = ?, error = NULL WHERE id = ?`).run(
-      draft.headline, caption, image, bgFile, p.status === "scheduled" ? "scheduled" : next, postId,
-    );
+    db.prepare(
+      `UPDATE campaign_posts SET headline = ?, caption = ?, image_file = ?, background_file = NULL, visual = ?, product_id = ?, product_title = ?, price_cents = ?, status = ?, error = NULL WHERE id = ?`,
+    ).run(draft.headline, caption, image, product ? "product" : "card", product?.id ?? null, product?.title ?? null, priceCents, p.status === "scheduled" ? "scheduled" : next, postId);
   } catch (err) {
     db.prepare(`UPDATE campaign_posts SET status = 'failed', error = ? WHERE id = ?`).run(err instanceof Error ? err.message.slice(0, 300) : "Préparation impossible.", postId);
   }
 }
 
-async function existingBackground(postId: number) {
-  const r = db.prepare(`SELECT background_file FROM campaign_posts WHERE id = ?`).get(postId) as { background_file: string | null } | undefined;
-  if (!r?.background_file) return null;
-  return readFile(path.join(MEDIA_DIR, path.basename(r.background_file)), "utf8").catch(() => null);
-}
-
-/** Modification à la main : nouveau titre et/ou légende (le visuel est refait avec le même fond). */
+/** Modification à la main : nouveau titre et/ou légende (le visuel est refait). */
 export async function editPost(postId: number, patch: { headline?: string; caption?: string }) {
   const p = getPost(postId);
   if (!p || p.status === "published" || p.status === "publishing") return;
@@ -389,18 +453,36 @@ export function setPostStatus(postId: number, status: PostStatus, scheduledAt?: 
 export function addManualPost(campaignId: number, kind: PostKind): number {
   const c = getCampaign(campaignId);
   if (!c) return 0;
-  const visual = c.settings.visuals[Math.floor(Math.random() * c.settings.visuals.length)];
+  const product = c.settings.objective === "sales" ? pickProduct(c) : null;
   const res = db
-    .prepare(`INSERT INTO campaign_posts (campaign_id, slot_key, kind, status, scheduled_at, visual, created_at) VALUES (?, NULL, ?, 'generating', ?, ?, ?)`)
-    .run(campaignId, kind, Date.now() + 3_600_000, visual, Date.now());
+    .prepare(`INSERT INTO campaign_posts (campaign_id, slot_key, kind, status, scheduled_at, visual, product_id, product_title, created_at) VALUES (?, NULL, ?, 'generating', ?, ?, ?, ?, ?)`)
+    .run(campaignId, kind, Date.now() + 3_600_000, product ? "product" : "card", product?.id ?? null, product?.title ?? null, Date.now());
   return Number(res.lastInsertRowid);
 }
 
 // ---------- Publication ----------
 
-async function publish(p: CampaignPost) {
+async function publish(post: CampaignPost) {
+  let p = post;
   const c = getCampaign(p.campaignId);
   if (!c || !p.imageFile) return;
+  if (p.productId && c.agentId) {
+    await freshCatalog(c.agentId); // catalogue de plus de 6 h : relu sur le site
+    const product = getProduct(p.productId);
+    if (!product || !product.available) {
+      db.prepare(`UPDATE campaign_posts SET status = 'failed', error = ? WHERE id = ?`).run("Produit plus disponible sur le site : contenu non publié. Régénère-le pour un autre produit.", p.id);
+      return;
+    }
+    const shown = (db.prepare(`SELECT price_cents FROM campaign_posts WHERE id = ?`).get(p.id) as { price_cents: number | null }).price_cents;
+    if (product.priceCents !== shown) {
+      // Le prix a changé sur le site : le visuel est refait avec le bon prix avant de publier.
+      await generatePost(p.id, true);
+      const fresh = getPost(p.id);
+      if (!fresh?.imageFile || fresh.status === "failed") return;
+      p = fresh;
+    }
+  }
+  if (!p.imageFile) return;
   const file = path.join(MEDIA_DIR, path.basename(p.imageFile));
   if (!existsSync(file)) {
     db.prepare(`UPDATE campaign_posts SET status = 'failed', error = 'Visuel introuvable : régénère le contenu.' WHERE id = ?`).run(p.id);
@@ -408,7 +490,8 @@ async function publish(p: CampaignPost) {
   }
   db.prepare(`UPDATE campaign_posts SET status = 'publishing' WHERE id = ?`).run(p.id);
   try {
-    const res = await publishInstagram(p.kind, file, p.caption ?? "", p.kind === "story" ? trackedLink(c) : "");
+    const productUrl = p.productId ? getProduct(p.productId)?.url : null;
+    const res = await publishInstagram(p.kind, file, p.caption ?? "", p.kind === "story" ? trackedLink(c, productUrl) : "");
     db.prepare(`UPDATE campaign_posts SET status = 'published', media_id = ?, media_code = ?, published_at = ?, error = NULL WHERE id = ?`).run(res.id, res.code ?? null, Date.now(), p.id);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Publication impossible.";

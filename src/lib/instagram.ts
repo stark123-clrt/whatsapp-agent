@@ -198,6 +198,12 @@ export async function sendInstagram(jid: string, text: string): Promise<string> 
   return `ig_${id}`;
 }
 
+/** Convertit une image (WebP, AVIF…) en JPEG via le service Python (Pillow). */
+export async function convertToJpeg(src: string, dest: string) {
+  ensureInstagram();
+  await ig("/convert", { src, dest });
+}
+
 /** Publie une photo ou une story (campagnes). */
 export async function publishInstagram(kind: "post" | "story", file: string, caption: string, link: string) {
   return ig<{ id: string; code: string | null }>("/publish", { kind, path: file, caption, link });

@@ -5,13 +5,12 @@ import {
   DEFAULT_CAMPAIGN,
   OBJECTIVES,
   TONES,
-  VISUALS,
   type Campaign,
   type CampaignSettings,
   type Objective,
-  type VisualSource,
 } from "@/lib/campaign-types";
 import { Toggle } from "../agents/[id]/ui";
+import { CatalogPicker, usable, type CatalogProduct } from "./catalog-picker";
 
 export type AgentLite = { id: number; name: string; status: "active" | "paused"; website: string | null };
 
@@ -54,6 +53,8 @@ export function CampaignWizard({
   }));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [logoBusy, setLogoBusy] = useState(false);
   const s = f.settings;
   const set = (patch: Partial<CampaignSettings>) => setF((x) => ({ ...x, settings: { ...x.settings, ...patch } }));
   const agent = agents.find((a) => a.id === f.agentId);
@@ -67,7 +68,7 @@ export function CampaignWizard({
     }
     if (n === 1) {
       if (!s.formats.post && !s.formats.story) return "Choisis au moins un format (publication ou story).";
-      if (!s.visuals.length) return "Choisis au moins une source de visuels.";
+      if (s.objective === "sales" && !products.some(usable)) return "Importe les produits du site (ou ajoute-en un à la main) : une campagne de vente montre de vrais produits.";
     }
     return null;
   }
@@ -264,26 +265,48 @@ export function CampaignWizard({
                   </div>
                   <p className="mt-1 text-xs text-zinc-500">Avec quelques minutes de décalage au hasard, pour un rythme naturel.</p>
                 </div>
+                {s.objective === "sales" ? (
+                  <div>
+                    <span className={label}>Produits à mettre en avant</span>
+                    <CatalogPicker agentId={f.agentId} site={withScheme(s.link)} selected={s.productIds} onChange={(ids) => set({ productIds: ids })} onProducts={setProducts} />
+                    <p className="mt-1 text-xs text-zinc-500">Chaque contenu montre un produit réel (photo, nom, prix), en rotation. Les stories renvoient vers la fiche du produit.</p>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-zinc-200 bg-zinc-50/60 px-4 py-3 text-sm text-zinc-600">
+                    🎨 Visuels : <strong>cartes aux couleurs de ta marque</strong>, avec ton logo. (Choisis l&apos;objectif « Vendre » pour montrer tes vrais produits.)
+                  </div>
+                )}
                 <div>
-                  <span className={label}>Visuels (utilisés en alternance)</span>
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    {(Object.keys(VISUALS) as VisualSource[]).map((v) => {
-                      const on = s.visuals.includes(v);
-                      return (
-                        <button
-                          key={v}
-                          type="button"
-                          onClick={() => set({ visuals: on ? s.visuals.filter((x) => x !== v) : [...s.visuals, v] })}
-                          className={`rounded-xl border p-3 text-left transition ${on ? "border-violet-600 bg-violet-50" : "border-zinc-200 hover:border-zinc-300"}`}
-                        >
-                          <p className={`text-sm font-semibold ${on ? "text-violet-700" : ""}`}>
-                            {on ? "✓ " : ""}
-                            {VISUALS[v].label}
-                          </p>
-                          <p className="mt-0.5 text-xs leading-snug text-zinc-500">{VISUALS[v].hint}</p>
-                        </button>
-                      );
-                    })}
+                  <span className={label}>Logo de la marque (option)</span>
+                  <div className="flex items-center gap-3">
+                    <label className="cursor-pointer rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-sm font-medium hover:bg-zinc-50">
+                      {logoBusy ? "Envoi…" : s.brand.logo ? "Changer le logo" : "Importer un logo"}
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          e.target.value = "";
+                          if (!file) return;
+                          setLogoBusy(true);
+                          const form = new FormData();
+                          form.append("file", file);
+                          const r = await fetch("/api/campaigns/logo", { method: "POST", body: form });
+                          const d = (await r.json().catch(() => ({}))) as { file?: string; error?: string };
+                          setLogoBusy(false);
+                          if (!r.ok || !d.file) return setError(d.error ?? "Logo refusé.");
+                          set({ brand: { ...s.brand, logo: d.file } });
+                        }}
+                      />
+                    </label>
+                    {s.brand.logo ? (
+                      <button type="button" onClick={() => set({ brand: { ...s.brand, logo: null } })} className="text-sm text-zinc-500 hover:text-red-600">
+                        Retirer
+                      </button>
+                    ) : (
+                      <span className="text-xs text-zinc-500">PNG transparent de préférence. Sans logo, le nom de la marque s&apos;affiche.</span>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -421,9 +444,9 @@ export function CampaignWizard({
 
         <aside className="hidden w-80 shrink-0 flex-col border-l border-zinc-100 bg-zinc-50 p-5 lg:flex">
           <p className="text-[11px] font-semibold tracking-wide text-zinc-500 uppercase">Aperçu d&apos;une carte</p>
-          <Preview brand={agent?.name ?? f.name ?? "Votre marque"} settings={s} />
+          <Preview brand={agent?.name ?? f.name ?? "Votre marque"} settings={s} productId={s.objective === "sales" ? (products.filter(usable).find((p) => !s.productIds.length || s.productIds.includes(p.id))?.id ?? null) : null} />
           <p className="mt-3 text-xs leading-relaxed text-zinc-500">
-            Le texte réel est écrit par l&apos;IA pour chaque contenu. Avec « Tes photos » ou « Images créées par l&apos;IA », le titre s&apos;affiche sur la photo.
+            Le texte réel est écrit par l&apos;IA pour chaque contenu.{s.objective === "sales" ? " Le prix affiché est revérifié sur le site juste avant chaque publication." : ""}
           </p>
         </aside>
       </div>
@@ -444,11 +467,11 @@ function Line({ title, text, checked, onChange }: { title: string; text: string;
 }
 
 /** Aperçu rendu par le serveur (même moteur que les vrais visuels). */
-function Preview({ brand, settings: s }: { brand: string; settings: CampaignSettings }) {
+function Preview({ brand, settings: s, productId }: { brand: string; settings: CampaignSettings; productId: number | null }) {
   const [src, setSrc] = useState<string | null>(null);
   const headline =
     s.offer.enabled && s.offer.text ? s.offer.text : { sales: "La pièce qui va tout changer", traffic: "Découvrez la nouvelle collection", awareness: "Bienvenue dans notre univers", promo: "Offre spéciale cette semaine" }[s.objective];
-  const key = JSON.stringify([brand, headline, s.brand, s.offer.code, s.offer.enabled, s.link]);
+  const key = JSON.stringify([brand, headline, s.brand, s.offer.code, s.offer.enabled, s.link, productId]);
   useEffect(() => {
     let url: string | null = null;
     let alive = true;
@@ -458,11 +481,13 @@ function Preview({ brand, settings: s }: { brand: string; settings: CampaignSett
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           kind: "post",
-          headline,
+          headline: productId ? "Coup de cœur du moment" : headline,
           brandName: brand,
           color: s.brand.color,
           textColor: s.brand.textColor,
           badge: s.offer.enabled && s.offer.code ? `Code ${s.offer.code}` : "",
+          logo: s.brand.logo,
+          productId,
           footer: s.link ? "Lien en bio" : "",
         }),
       }).catch(() => null);

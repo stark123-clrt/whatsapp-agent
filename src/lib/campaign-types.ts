@@ -2,7 +2,7 @@
 
 export type CampaignStatus = "draft" | "active" | "paused" | "ended";
 export type Objective = "sales" | "traffic" | "awareness" | "promo";
-export type VisualSource = "card" | "media" | "ai";
+export type VisualSource = "card" | "product";
 export type PostKind = "post" | "story";
 export type PostStatus = "generating" | "pending" | "scheduled" | "publishing" | "published" | "failed" | "rejected";
 
@@ -15,8 +15,9 @@ export type CampaignSettings = {
   formats: { post: boolean; story: boolean };
   perDay: number; // 1 à 3
   slots: string[]; // heures de publication (HH:MM, heure de Paris)
-  visuals: VisualSource[]; // sources utilisées, en alternance
-  brand: { color: string; textColor: string };
+  visuals: VisualSource[]; // (ancien réglage : le visuel dépend maintenant de l'objectif)
+  productIds: number[]; // campagne de vente : produits à mettre en avant (vide = tout le catalogue)
+  brand: { color: string; textColor: string; logo: string | null };
   hashtags: string[]; // toujours ajoutés
   autoHashtags: boolean;
   mentions: string; // mentions obligatoires (ex. « Livraison offerte dès 50 € »)
@@ -52,6 +53,8 @@ export type CampaignPost = {
   error: string | null;
   createdAt: number;
   publishedAt: number | null;
+  productId: number | null;
+  productTitle: string | null;
 };
 
 export const OBJECTIVES: Record<Objective, string> = {
@@ -69,9 +72,8 @@ export const TONES: Record<CampaignSettings["tone"], string> = {
 };
 
 export const VISUALS: Record<VisualSource, { label: string; hint: string }> = {
-  card: { label: "Cartes aux couleurs de la marque", hint: "Un visuel avec ton message, tes couleurs et ton nom." },
-  media: { label: "Tes photos", hint: "Les images de la médiathèque de l'agent, avec un titre par-dessus." },
-  ai: { label: "Images créées par l'IA", hint: "Une illustration générée pour chaque contenu." },
+  product: { label: "Fiche produit", hint: "La vraie photo du produit, son nom et son prix." },
+  card: { label: "Carte de marque", hint: "Ton message sur un visuel à tes couleurs, avec ton logo." },
 };
 
 export const POST_STATUS: Record<PostStatus, { label: string; cls: string }> = {
@@ -93,8 +95,9 @@ export const DEFAULT_CAMPAIGN: CampaignSettings = {
   formats: { post: true, story: true },
   perDay: 2,
   slots: ["09:30", "13:00", "19:00"],
-  visuals: ["card", "media"],
-  brand: { color: "#111827", textColor: "#ffffff" },
+  visuals: ["card"],
+  productIds: [],
+  brand: { color: "#111827", textColor: "#ffffff", logo: null },
   hashtags: [],
   autoHashtags: true,
   mentions: "",
@@ -117,6 +120,7 @@ export function campaignWithDefaults(raw: unknown): CampaignSettings {
     perDay: Math.min(3, Math.max(1, Math.round(Number(s.perDay ?? d.perDay)))),
     slots: (Array.isArray(s.slots) ? s.slots : d.slots).filter((x) => /^\d{2}:\d{2}$/.test(x)).slice(0, 3),
     visuals: visuals.length ? visuals : d.visuals,
+    productIds: Array.isArray(s.productIds) ? s.productIds.map(Number).filter((n) => Number.isInteger(n) && n > 0) : [],
     hashtags: Array.isArray(s.hashtags) ? s.hashtags.map((h) => h.replace(/^#/, "").trim()).filter(Boolean).slice(0, 15) : [],
   };
 }

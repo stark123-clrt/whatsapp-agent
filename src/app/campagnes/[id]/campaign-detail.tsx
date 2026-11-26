@@ -13,7 +13,7 @@ type Data = {
   posts: CampaignPost[];
   agents: AgentLite[];
   instagram: { connected: boolean; username: string | null };
-  plan: { posts: number; stories: number; reason: string } | null;
+  plan: { posts: number; stories: number; engage: number; reason: string } | null;
 };
 
 const dayLabel = (ts: number) => {
@@ -35,6 +35,7 @@ export function CampaignDetail({ id }: { id: number }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ text: string; error?: boolean } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [menu, setMenu] = useState(false);
   const [rhythm, setRhythm] = useState<{ maxPosts: number; maxStories: number } | null>(null);
   const router = useRouter();
 
@@ -87,10 +88,11 @@ export function CampaignDetail({ id }: { id: number }) {
     void load();
   }
 
-  async function prepareNow(kind: "post" | "story") {
+  async function prepareNow(kind: "post" | "story", engage?: "question" | "tip" | "poll" | "versus") {
     setBusy(`new:${kind}`);
-    flash("L'IA prépare le contenu… (jusqu'à une minute avec une image IA)");
-    const r = await fetch(`/api/campaigns/${id}/posts`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind }) });
+    setMenu(false);
+    flash("L'IA prépare le contenu…");
+    const r = await fetch(`/api/campaigns/${id}/posts`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind, engage }) });
     setBusy(null);
     if (!r.ok) flash("Préparation impossible.", true);
     void load();
@@ -174,7 +176,13 @@ export function CampaignDetail({ id }: { id: number }) {
           {data.plan ? (
             <p className="text-xs text-zinc-600">
               🤖 Aujourd&apos;hui, l&apos;agent prévoit <strong>{data.plan.posts} publication{data.plan.posts > 1 ? "s" : ""}</strong> et{" "}
-              <strong>{data.plan.stories} stor{data.plan.stories > 1 ? "ies" : "y"}</strong> — {data.plan.reason}.
+              <strong>{data.plan.stories} stor{data.plan.stories > 1 ? "ies" : "y"}</strong>
+              {data.plan.engage > 0 && (
+                <>
+                  , dont <strong>{data.plan.engage} pour attirer</strong> (questions, sondages, conseils)
+                </>
+              )}{" "}
+              — {data.plan.reason}.
             </p>
           ) : (
             <p className="text-xs text-zinc-500">Rythme manuel : {c.settings.perDay} contenu{c.settings.perDay > 1 ? "s" : ""} par jour.</p>
@@ -188,16 +196,47 @@ export function CampaignDetail({ id }: { id: number }) {
             </p>
           )}
         </div>
-        <div className="flex gap-2">
-          {c.settings.formats.post && (
-            <button onClick={() => prepareNow("post")} disabled={Boolean(busy)} className="rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-sm font-medium hover:bg-zinc-50 disabled:opacity-50">
-              {busy === "new:post" ? "Préparation…" : "✨ Préparer une publication"}
-            </button>
-          )}
-          {c.settings.formats.story && (
-            <button onClick={() => prepareNow("story")} disabled={Boolean(busy)} className="rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-sm font-medium hover:bg-zinc-50 disabled:opacity-50">
-              {busy === "new:story" ? "Préparation…" : "✨ Préparer une story"}
-            </button>
+        <div className="relative">
+          <button onClick={() => setMenu(!menu)} disabled={Boolean(busy)} className="rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-sm font-medium hover:bg-zinc-50 disabled:opacity-50">
+            {busy?.startsWith("new:") ? "Préparation…" : "✨ Préparer un contenu ▾"}
+          </button>
+          {menu && (
+            <div className="absolute right-0 z-20 mt-2 w-64 rounded-xl border border-zinc-200 bg-white py-1 text-sm shadow-xl" onMouseLeave={() => setMenu(false)}>
+              <p className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-zinc-400 uppercase">Vendre</p>
+              {c.settings.formats.post && (
+                <button onClick={() => prepareNow("post")} className="block w-full px-3 py-2 text-left hover:bg-zinc-50">
+                  🛍️ Publication {c.settings.objective === "sales" ? "produit" : "de marque"}
+                </button>
+              )}
+              {c.settings.formats.story && (
+                <button onClick={() => prepareNow("story")} className="block w-full px-3 py-2 text-left hover:bg-zinc-50">
+                  🛍️ Story {c.settings.objective === "sales" ? "produit" : "de marque"}
+                </button>
+              )}
+              <p className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-zinc-400 uppercase">Attirer</p>
+              {c.settings.formats.post && (
+                <>
+                  <button onClick={() => prepareNow("post", "question")} className="block w-full px-3 py-2 text-left hover:bg-zinc-50">
+                    💬 Question (publication)
+                  </button>
+                  <button onClick={() => prepareNow("post", "tip")} className="block w-full px-3 py-2 text-left hover:bg-zinc-50">
+                    💡 Conseil (publication)
+                  </button>
+                </>
+              )}
+              {c.settings.formats.story && (
+                <>
+                  <button onClick={() => prepareNow("story", "poll")} className="block w-full px-3 py-2 text-left hover:bg-zinc-50">
+                    📊 Sondage (story)
+                  </button>
+                  {c.settings.objective === "sales" && (
+                    <button onClick={() => prepareNow("story", "versus")} className="block w-full px-3 py-2 text-left hover:bg-zinc-50">
+                      ⚖️ Ceci ou cela (story, 2 produits)
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -321,7 +360,13 @@ function PostCard({ post: p, busy, onAct, onEdit }: { post: CampaignPost; busy: 
           <span className="text-zinc-500">{p.status === "published" && p.publishedAt ? `publié à ${hour(p.publishedAt)}` : `prévu à ${hour(p.scheduledAt)}`}</span>
           <span className="text-zinc-400">· {VISUALS[p.visual]?.label ?? "Visuel"}</span>
         </div>
-        {p.productTitle && <p className="mt-1.5 truncate text-xs font-medium text-violet-700">🛍️ {p.productTitle}</p>}
+        {p.intent === "engage" ? (
+          <p className="mt-1.5 text-xs font-medium text-fuchsia-700">
+            {{ question: "💬 Question — pour attirer", tip: "💡 Conseil — pour attirer", poll: "📊 Sondage — pour attirer", versus: "⚖️ Ceci ou cela — pour attirer" }[p.engageType ?? "question"]}
+          </p>
+        ) : (
+          p.productTitle && <p className="mt-1.5 truncate text-xs font-medium text-violet-700">🛍️ {p.productTitle}</p>
+        )}
         <p className="mt-1 font-semibold leading-snug">{p.headline ?? "L'IA rédige…"}</p>
         {p.caption && (
           <div className="mt-1">
@@ -331,6 +376,7 @@ function PostCard({ post: p, busy, onAct, onEdit }: { post: CampaignPost; busy: 
             </button>
           </div>
         )}
+        {p.poll && p.poll.options.length >= 2 && <PollView poll={p.poll} results={p.pollResults} />}
         {p.error && <p className="mt-1.5 text-xs text-red-600">⚠️ {p.error}</p>}
 
         <div className="mt-3 flex flex-wrap gap-1.5">
@@ -399,6 +445,29 @@ function EditModal({ post, onClose, onSave }: { post: CampaignPost; onClose: () 
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Sondage : les 2 réponses, puis les votes une fois relus sur Instagram. */
+function PollView({ poll, results }: { poll: { question: string; options: string[] }; results: { text: string; count: number }[] | null }) {
+  const total = (results ?? []).reduce((n, r) => n + r.count, 0);
+  return (
+    <div className="mt-2 space-y-1 rounded-xl bg-fuchsia-50/60 p-2.5">
+      {poll.options.map((o, i) => {
+        const r = results?.find((x) => x.text === o) ?? results?.[i];
+        const pct = total ? Math.round(((r?.count ?? 0) / total) * 100) : 0;
+        return (
+          <div key={o} className="relative overflow-hidden rounded-lg bg-white px-2.5 py-1.5 text-xs">
+            {total > 0 && <div className="absolute inset-y-0 left-0 bg-fuchsia-100" style={{ width: `${pct}%` }} />}
+            <span className="relative flex justify-between gap-2">
+              <span className="font-medium">{o}</span>
+              {total > 0 && <span className="text-zinc-500">{pct} %</span>}
+            </span>
+          </div>
+        );
+      })}
+      <p className="text-[11px] text-zinc-500">{total > 0 ? `${total} vote${total > 1 ? "s" : ""} · l'agent s'en sert pour ses recommandations` : "Les votes s'afficheront ici après la publication."}</p>
     </div>
   );
 }

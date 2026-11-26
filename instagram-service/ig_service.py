@@ -248,10 +248,10 @@ def send(thread_id, text, pending_thread):
         return str(msg.id)
 
 
-def publish(kind, path, caption, link):
+def publish(kind, path, caption, link, poll=None):
     """Publie une photo (publication) ou une story, avec un autocollant lien pour les stories."""
     from PIL import Image
-    from instagrapi.types import StoryLink
+    from instagrapi.types import StoryLink, StoryPoll
 
     src = Path(path)
     jpg = src.with_suffix(".upload.jpg")
@@ -260,8 +260,22 @@ def publish(kind, path, caption, link):
     try:
         with api_lock:
             if kind == "story":
-                links = [StoryLink(webUri=link, x=0.5, y=0.82, width=0.6, height=0.08)] if link else []
-                story = client.photo_upload_to_story(jpg, caption="", links=links)
+                links = [StoryLink(webUri=link, x=0.5, y=0.86, width=0.6, height=0.07)] if link else []
+                polls = []
+                if poll and poll.get("question") and len(poll.get("options") or []) >= 2:
+                    # Autocollant sondage d'Instagram (2 réponses), sous le visuel.
+                    polls = [
+                        StoryPoll(
+                            x=0.5,
+                            y=0.72,
+                            width=0.7,
+                            height=0.16,
+                            rotation=0.0,
+                            question=str(poll["question"])[:80],
+                            options=[str(o)[:25] for o in poll["options"][:2]],
+                        )
+                    ]
+                story = client.photo_upload_to_story(jpg, caption="", links=links, polls=polls)
                 return {"id": str(story.pk), "code": None}
             media = client.photo_upload(jpg, caption)
             return {"id": str(media.pk), "code": media.code}
@@ -295,6 +309,21 @@ def comments(media_pk, amount):
             }
         )
     return out
+
+
+def poll_results(story_pk):
+    """Votes d'un sondage de story (nombre de votes par réponse)."""
+    with api_lock:
+        data = client.private_request(f"media/{story_pk}/info/")
+    item = (data.get("items") or [{}])[0]
+    for sticker in item.get("story_polls") or []:
+        ps = sticker.get("poll_sticker") or {}
+        tallies = ps.get("tallies") or []
+        return {
+            "question": ps.get("question"),
+            "results": [{"text": t.get("text"), "count": int(t.get("count") or 0)} for t in tallies],
+        }
+    return {"question": None, "results": []}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -405,10 +434,17 @@ class Handler(BaseHTTPRequestHandler):
             if b.get("kind") not in ("post", "story") or not b.get("path"):
                 return self.reply(400, {"error": "Contenu invalide."})
             try:
-                return self.reply(200, publish(b["kind"], b["path"], (b.get("caption") or "")[:2200], (b.get("link") or "").strip()))
+                return self.reply(200, publish(b["kind"], b["path"], (b.get("caption") or "")[:2200], (b.get("link") or "").strip(), b.get("poll")))
             except Exception as err:  # noqa: BLE001
                 if isinstance(err, (LoginRequired, ChallengeRequired)):
                     set_state(status="error", error=friendly(err))
+                return self.reply(502, {"error": friendly(err)})
+        if self.path == "/poll-results":
+            if not client:
+                return self.reply(409, {"error": "Instagram n'est pas connecté."})
+            try:
+                return self.reply(200, poll_results(str(b["storyId"])))
+            except Exception as err:  # noqa: BLE001
                 return self.reply(502, {"error": friendly(err)})
         if self.path == "/comments":
             if not client:

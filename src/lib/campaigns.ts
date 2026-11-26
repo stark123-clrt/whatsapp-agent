@@ -11,14 +11,17 @@ import {
   type CampaignPost,
   type CampaignSettings,
   type CampaignStatus,
+  type EngageType,
+  type PostPoll,
   type PostKind,
   type PostStatus,
   type VisualSource,
 } from "./campaign-types";
-import { renderProductVisual, renderVisual } from "./campaign-visuals";
+import { pollInsights } from "./campaign-context";
+import { renderProductVisual, renderVersusVisual, renderVisual } from "./campaign-visuals";
 import { formatPrice, freshCatalog, getProduct, listProducts, type Product } from "./catalog";
 import { db, MEDIA_DIR } from "./db";
-import { instagramConnected, publishInstagram } from "./instagram";
+import { fetchPollResults, getInstagramState, instagramConnected, publishInstagram } from "./instagram";
 import { getAgent } from "./kb";
 import { canPublish, getLimits, parisDayStart } from "./publish-limits";
 
@@ -64,6 +67,11 @@ db.exec(`
   if (!cols.has("product_id")) db.exec(`ALTER TABLE campaign_posts ADD COLUMN product_id INTEGER`);
   if (!cols.has("product_title")) db.exec(`ALTER TABLE campaign_posts ADD COLUMN product_title TEXT`);
   if (!cols.has("price_cents")) db.exec(`ALTER TABLE campaign_posts ADD COLUMN price_cents INTEGER`);
+  if (!cols.has("intent")) db.exec(`ALTER TABLE campaign_posts ADD COLUMN intent TEXT NOT NULL DEFAULT 'sale'`);
+  if (!cols.has("engage_type")) db.exec(`ALTER TABLE campaign_posts ADD COLUMN engage_type TEXT`);
+  if (!cols.has("poll")) db.exec(`ALTER TABLE campaign_posts ADD COLUMN poll TEXT`);
+  if (!cols.has("poll_results")) db.exec(`ALTER TABLE campaign_posts ADD COLUMN poll_results TEXT`);
+  if (!cols.has("poll_checked_at")) db.exec(`ALTER TABLE campaign_posts ADD COLUMN poll_checked_at INTEGER`);
 }
 
 type CampaignRow = { id: number; name: string; agent_id: number | null; status: CampaignStatus; starts_on: string; ends_on: string; settings: string; created_at: number; updated_at: number };
@@ -86,6 +94,17 @@ type PostRow = {
   product_id: number | null;
   product_title: string | null;
   price_cents: number | null;
+  intent: "sale" | "engage" | null;
+  engage_type: EngageType | null;
+  poll: string | null;
+  poll_results: string | null;
+};
+const parse = <T,>(v: string | null): T | null => {
+  try {
+    return v ? (JSON.parse(v) as T) : null;
+  } catch {
+    return null;
+  }
 };
 
 const toCampaign = (r: CampaignRow): Campaign => {
@@ -114,6 +133,10 @@ const toPost = (r: PostRow): CampaignPost => ({
   publishedAt: r.published_at,
   productId: r.product_id,
   productTitle: r.product_title,
+  intent: r.intent === "engage" ? "engage" : "sale",
+  engageType: r.engage_type,
+  poll: parse<PostPoll>(r.poll),
+  pollResults: parse<{ text: string; count: number }[]>(r.poll_results),
 });
 
 export function listCampaigns(): Campaign[] {
@@ -209,7 +232,7 @@ function parisTime(date: string, hhmm: string) {
 
 // ---------- Rythme automatique : l'agent décide combien publier ----------
 
-export type DayPlan = { posts: number; stories: number; reason: string };
+export type DayPlan = { posts: number; stories: number; engage: number; reason: string };
 
 /**
  * Nombre de publications et de stories prévues pour cette campagne un jour donné, sous les plafonds du compte.
@@ -273,11 +296,12 @@ export function autoPlan(c: Campaign, day: string): DayPlan {
   const active = listCampaigns().filter((x) => x.status === "active" && x.startsOn <= day && x.endsOn >= day && x.settings.rhythm !== "manual").length || 1;
   if (active > 1) reason += ` · partagé entre ${active} campagnes`;
   const share = (n: number) => Math.max(1, Math.round((n * factor) / active));
-  return {
-    posts: c.settings.formats.post && maxPosts > 0 ? share(maxPosts) : 0,
-    stories: c.settings.formats.story && maxStories > 0 ? share(maxStories) : 0,
-    reason,
-  };
+  const posts = c.settings.formats.post && maxPosts > 0 ? share(maxPosts) : 0;
+  const stories = c.settings.formats.story && maxStories > 0 ? share(maxStories) : 0;
+  const mix = engageShare(c);
+  const total = posts + stories;
+  const engage = Array.from({ length: total }, (_, i) => Math.round((i + 1) * mix.share) > Math.round(i * mix.share)).filter(Boolean).length;
+  return { posts, stories, engage, reason: mix.reason ? `${reason} · ${mix.reason}` : reason };
 }
 
 /** Heures du jour : publications aux heures de forte audience, stories réparties de 9 h à 21 h 30. */
@@ -292,37 +316,82 @@ function autoSlots(plan: DayPlan): { key: string; kind: PostKind; hhmm: string }
   return out;
 }
 
+/**
+ * Dosage « attirer / vendre » : part des contenus d'engagement (questions, sondages, conseils).
+ * Petit compte → on attire d'abord ; audience qui grandit ou qui écrit beaucoup → plus d'annonces produits.
+ */
+export function engageShare(c: Campaign): { share: number; reason: string } {
+  if (c.settings.engagement === "off") return { share: 0, reason: "" };
+  const followers = getInstagramState().followers ?? 0;
+  let share = followers < 300 ? 0.6 : followers < 1000 ? 0.5 : followers < 5000 ? 0.4 : 0.3;
+  let why = `${followers} abonnés`;
+  const dms = (
+    db.prepare(`SELECT COUNT(*) AS n FROM messages m JOIN chats ch ON ch.jid = m.jid WHERE ch.channel = 'instagram' AND m.sender = 'contact' AND m.ts > ?`).get(Date.now() - 3 * 86_400_000) as { n: number }
+  ).n;
+  if (dms >= 10) {
+    share -= 0.1;
+    why += `, ${dms} messages reçus en 3 jours : l'audience est chaude, plus d'annonces`;
+  }
+  if (c.settings.objective !== "sales") share += 0.1;
+  share = Math.min(0.7, Math.max(0.2, share));
+  return { share, reason: `${Math.round(share * 100)} % d'engagement (${why})` };
+}
+
+type Slot = { key: string; kind: PostKind; hhmm: string };
+
 /** Crée les contenus des prochaines 36 h (sans doublon) pour une campagne active. */
 export function planCampaign(c: Campaign): number {
   if (c.status !== "active") return 0;
   const now = Date.now();
   let created = 0;
-  const insert = (day: string, key: string, kind: PostKind, hhmm: string) => {
-    const at = parisTime(day, hhmm) + Math.floor(Math.random() * 12) * 60_000; // quelques minutes de hasard
+  const { share } = engageShare(c);
+  const insert = (day: string, slot: Slot, engage: boolean) => {
+    const at = parisTime(day, slot.hhmm) + Math.floor(Math.random() * 12) * 60_000; // quelques minutes de hasard
     if (at < now + 10 * 60_000 || at > now + 36 * 3_600_000) return;
-    if (db.prepare(`SELECT 1 FROM campaign_posts WHERE campaign_id = ? AND slot_key = ?`).get(c.id, `${day}#${key}`)) return;
+    if (db.prepare(`SELECT 1 FROM campaign_posts WHERE campaign_id = ? AND slot_key = ?`).get(c.id, `${day}#${slot.key}`)) return;
+    if (engage) {
+      // Engagement : sondage en story (« ceci ou cela » avec 2 produits pour une vente), question ou conseil en publication.
+      let type: EngageType = slot.kind === "story" ? "poll" : Math.random() < 0.6 ? "question" : "tip";
+      let poll: PostPoll | null = null;
+      if (slot.kind === "story" && c.settings.objective === "sales" && Math.random() < 0.5) {
+        const first = pickProduct(c);
+        const second = first ? pickProduct(c, [first.id]) : null;
+        if (first && second) {
+          type = "versus";
+          poll = { question: "", options: [], productIds: [first.id, second.id] };
+        }
+      }
+      const res = db
+        .prepare(`INSERT OR IGNORE INTO campaign_posts (campaign_id, slot_key, kind, status, scheduled_at, visual, intent, engage_type, poll, created_at) VALUES (?, ?, ?, 'generating', ?, ?, 'engage', ?, ?, ?)`)
+        .run(c.id, `${day}#${slot.key}`, slot.kind, at, type === "versus" ? "product" : "card", type, poll ? JSON.stringify(poll) : null, now);
+      created += Number(res.changes);
+      return;
+    }
     const product = c.settings.objective === "sales" ? pickProduct(c) : null;
     const res = db
       .prepare(`INSERT OR IGNORE INTO campaign_posts (campaign_id, slot_key, kind, status, scheduled_at, visual, product_id, product_title, created_at) VALUES (?, ?, ?, 'generating', ?, ?, ?, ?, ?)`)
-      .run(c.id, `${day}#${key}`, kind, at, product ? "product" : "card", product?.id ?? null, product?.title ?? null, now);
+      .run(c.id, `${day}#${slot.key}`, slot.kind, at, product ? "product" : "card", product?.id ?? null, product?.title ?? null, now);
     created += Number(res.changes);
   };
   for (const offset of [0, 1]) {
     const day = addDays(parisDate(now), offset);
     if (day < c.startsOn || day > c.endsOn) continue;
+    let slots: Slot[];
     if (c.settings.rhythm !== "manual") {
-      // Rythme automatique : l'agent décide.
-      for (const slot of autoSlots(autoPlan(c, day))) insert(day, slot.key, slot.kind, slot.hhmm);
-      continue;
+      slots = autoSlots(autoPlan(c, day)); // rythme automatique : l'agent décide
+    } else {
+      // Rythme manuel : nombre et heures choisis dans la campagne (1 par jour la première semaine).
+      const warm = day < addDays(c.startsOn, 7);
+      const perDay = warm ? 1 : c.settings.perDay;
+      const times = (c.settings.slots.length ? c.settings.slots : ["09:30", "13:00", "19:00"]).slice(0, perDay);
+      const dayIndex = Math.round((Date.parse(day) - Date.parse(c.startsOn)) / 86_400_000);
+      const kinds: PostKind[] = [c.settings.formats.post ? "post" : null, c.settings.formats.story ? "story" : null].filter(Boolean) as PostKind[];
+      if (!kinds.length) continue;
+      slots = times.map((hhmm, i) => ({ key: String(i), kind: kinds[(dayIndex + i) % kinds.length], hhmm }));
     }
-    // Rythme manuel : nombre et heures choisis dans la campagne (1 par jour la première semaine).
-    const warm = day < addDays(c.startsOn, 7);
-    const perDay = warm ? 1 : c.settings.perDay;
-    const slots = (c.settings.slots.length ? c.settings.slots : ["09:30", "13:00", "19:00"]).slice(0, perDay);
-    const dayIndex = Math.round((Date.parse(day) - Date.parse(c.startsOn)) / 86_400_000);
-    const kinds: PostKind[] = [c.settings.formats.post ? "post" : null, c.settings.formats.story ? "story" : null].filter(Boolean) as PostKind[];
-    if (!kinds.length) continue;
-    slots.forEach((hhmm, i) => insert(day, String(i), kinds[(dayIndex + i) % kinds.length], hhmm));
+    // Engagement réparti dans la journée (pas tout le matin, pas tout le soir).
+    slots.sort((x, y) => x.hhmm.localeCompare(y.hhmm));
+    slots.forEach((slot, i) => insert(day, slot, Math.round((i + 1) * share) > Math.round(i * share)));
   }
   return created;
 }
@@ -338,8 +407,8 @@ export function campaignProducts(c: Campaign): Product[] {
 }
 
 /** Rotation : le produit le moins mis en avant dans cette campagne (jamais le même deux fois de suite). */
-function pickProduct(c: Campaign): Product | null {
-  const products = campaignProducts(c);
+function pickProduct(c: Campaign, exclude: number[] = []): Product | null {
+  const products = campaignProducts(c).filter((p) => !exclude.includes(p.id));
   if (!products.length) return null;
   const uses = new Map(
     (db.prepare(`SELECT product_id, COUNT(*) AS n, MAX(created_at) AS last FROM campaign_posts WHERE campaign_id = ? AND product_id IS NOT NULL GROUP BY product_id`).all(c.id) as {
@@ -399,6 +468,7 @@ async function writeDraft(c: Campaign, kind: PostKind, product: Product | null):
     s.offer.enabled && s.offer.text && `Offre à mettre en avant : ${s.offer.text}${s.offer.code ? ` (code ${s.offer.code})` : ""}${s.offer.until ? `, valable jusqu'au ${s.offer.until}` : ""}.`,
     s.mentions && `À mentionner quand c'est pertinent : ${s.mentions}.`,
     s.forbidden && `Sujets INTERDITS : ${s.forbidden}.`,
+    c.agentId && pollInsights(c.agentId),
     product &&
       [
         `PRODUIT MIS EN AVANT : « ${product.title} ».`,
@@ -513,6 +583,7 @@ export async function generatePost(postId: number, keepText = false) {
   const p = getPost(postId);
   const c = p ? getCampaign(p.campaignId) : null;
   if (!p || !c) return;
+  if (p.intent === "engage") return generateEngage(p, c, keepText);
   try {
     // Produit retiré ou indisponible : on en choisit un autre.
     let product = p.productId ? getProduct(p.productId) : null;
@@ -535,6 +606,116 @@ export async function generatePost(postId: number, keepText = false) {
   }
 }
 
+// ---------- Contenus d'engagement (questions, sondages, conseils) ----------
+
+type EngageDraft = { headline: string; caption: string; hashtags: string[]; poll: { question: string; options: string[] } | null };
+
+async function writeEngageDraft(c: Campaign, kind: PostKind, type: EngageType, products: Product[]): Promise<EngageDraft> {
+  const agent = c.agentId ? getAgent(c.agentId) : null;
+  const s = c.settings;
+  const recent = (db.prepare(`SELECT headline FROM campaign_posts WHERE campaign_id = ? AND headline IS NOT NULL ORDER BY id DESC LIMIT 15`).all(c.id) as { headline: string }[]).map((r) => `- ${r.headline}`);
+  const brief: Record<EngageType, string> = {
+    question:
+      "Une PUBLICATION « question » : une question ouverte qui donne envie de commenter (goûts, habitudes, avis, souvenirs), dans l'univers de la marque. Ce n'est PAS une vente. headline = la question (12 mots max). caption = 2 à 4 courtes lignes qui invitent à répondre en commentaire, 1 ou 2 émojis.",
+    tip: "Une PUBLICATION « conseil » : une astuce utile et concrète (entretien, style, choix, cadeau…) liée à l'univers de la marque. headline = le conseil en titre court (10 mots max). caption = le conseil développé en 3 à 5 lignes, puis une question pour faire réagir.",
+    poll: "Une STORY « sondage » : une question à 2 réponses courtes sur les goûts de l'audience (ex. : or ou argent, discret ou voyant). headline = la question (8 mots max), options = 2 réponses de 18 caractères maximum. caption = une phrase.",
+    versus: `Une STORY « ceci ou cela » entre deux produits : A = « ${products[0]?.title ?? ""} », B = « ${products[1]?.title ?? ""} ». headline = une question courte pour faire choisir (8 mots max, sans les noms des produits ni les prix). options = 2 réponses de 18 caractères maximum, la première pour A, la seconde pour B. caption = une phrase.`,
+  };
+  const system = [
+    "Tu es le community manager Instagram de cette marque. Ton but ici : créer de l'ENGAGEMENT (réactions, votes, commentaires), pas vendre.",
+    "Informations sur l'entreprise :",
+    agent ? instructionsText(agent.settings).slice(0, 5000) : "(aucune)",
+  ].join("\n\n");
+  const user = [
+    brief[type],
+    `Marque : ${agent?.name ?? c.name}. Ton : ${{ pro: "professionnel", warm: "chaleureux et proche", fun: "fun et dynamique", luxury: "haut de gamme, élégant" }[s.tone]}.`,
+    s.audience && `Public visé : ${s.audience}.`,
+    s.forbidden && `Sujets INTERDITS : ${s.forbidden}.`,
+    recent.length ? `Contenus déjà publiés (change d'angle, ne répète pas) :\n${recent.join("\n")}` : "",
+    'Réponds UNIQUEMENT avec un objet JSON : {"headline": "...", "caption": "...", "hashtags": ["3 à 6 hashtags sans #"], "options": ["réponse 1", "réponse 2"] (seulement pour un sondage)}',
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+  let last: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const raw = await generateReply([{ role: "system", content: system }, { role: "user", content: user }], { temperature: 0.95, maxTokens: 2000 });
+      const d = JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)) as { headline?: string; caption?: string; hashtags?: string[]; options?: string[] };
+      if (!d.headline) throw new Error("Réponse de l'IA incomplète.");
+      const isPoll = type === "poll" || type === "versus";
+      let options = (Array.isArray(d.options) ? d.options : []).map((o) => String(o).trim().slice(0, 25)).filter(Boolean).slice(0, 2);
+      if (isPoll && options.length < 2) options = type === "versus" ? ["Le A", "Le B"] : ["Oui", "Non"];
+      return {
+        headline: String(d.headline).slice(0, 110),
+        caption: String(d.caption ?? "").slice(0, 1800),
+        hashtags: (Array.isArray(d.hashtags) ? d.hashtags : []).map((h) => String(h).replace(/^#/, "").replace(/\s+/g, "")).filter(Boolean).slice(0, 8),
+        poll: isPoll ? { question: String(d.headline).slice(0, 80), options } : null,
+      };
+    } catch (err) {
+      last = err;
+    }
+  }
+  throw last instanceof Error ? last : new Error("Rédaction impossible.");
+}
+
+const ENGAGE_BADGE: Record<EngageType, string> = { question: "Question du jour", tip: "Le conseil", poll: "Sondage", versus: "Ceci ou cela" };
+
+async function generateEngage(p: CampaignPost, c: Campaign, keepText: boolean) {
+  try {
+    const agent = c.agentId ? getAgent(c.agentId) : null;
+    let type: EngageType = p.engageType ?? (p.kind === "story" ? "poll" : "question");
+    let products = (p.poll?.productIds ?? []).map((id) => getProduct(id)).filter((x): x is Product => Boolean(x && x.available && x.imageFile && x.priceCents));
+    if (type === "versus" && products.length < 2) {
+      type = "poll"; // un des produits n'est plus disponible : simple sondage
+      products = [];
+    }
+    const draft: EngageDraft =
+      keepText && p.headline
+        ? { headline: p.headline, caption: p.caption ?? "", hashtags: [], poll: p.poll?.options?.length ? { question: p.headline.slice(0, 80), options: p.poll.options } : null }
+        : await writeEngageDraft(c, p.kind, type, products);
+    const logo = await dataUrl(c.settings.brand.logo);
+    const brandName = agent?.name ?? c.name;
+    let png: Buffer;
+    if (type === "versus") {
+      const side = async (pr: Product, label: string) => ({ image: (await dataUrl(pr.imageFile))!, title: pr.title, price: formatPrice(pr.priceCents, pr.currency), label });
+      png = await renderVersusVisual({ question: draft.headline, a: await side(products[0], "A"), b: await side(products[1], "B"), brandName, logo, color: c.settings.brand.color, textColor: c.settings.brand.textColor });
+    } else {
+      png = await renderVisual({
+        kind: p.kind,
+        headline: draft.headline,
+        brandName,
+        logo,
+        color: c.settings.brand.color,
+        textColor: c.settings.brand.textColor,
+        badge: ENGAGE_BADGE[type],
+        footer: p.kind === "post" ? siteName(c.settings.link) || null : null,
+      });
+    }
+    const caption = keepText && p.caption ? p.caption : p.kind === "story" ? draft.caption : fullCaption(c, p.kind, { headline: draft.headline, caption: draft.caption, hashtags: draft.hashtags });
+    const poll: PostPoll | null = draft.poll ? { ...draft.poll, productIds: products.map((x) => x.id) } : null;
+    await removeFiles(p.id);
+    const image = `campaign-${c.id}-${p.id}-${Date.now()}.png`;
+    await writeFile(path.join(MEDIA_DIR, image), png);
+    const next: PostStatus = c.settings.approval === "auto" ? "scheduled" : "pending";
+    db.prepare(`UPDATE campaign_posts SET headline = ?, caption = ?, image_file = ?, background_file = NULL, visual = ?, engage_type = ?, poll = ?, status = ?, error = NULL WHERE id = ?`).run(
+      draft.headline, caption, image, type === "versus" ? "product" : "card", type, poll ? JSON.stringify(poll) : null, p.status === "scheduled" ? "scheduled" : next, p.id,
+    );
+  } catch (err) {
+    db.prepare(`UPDATE campaign_posts SET status = 'failed', error = ? WHERE id = ?`).run(err instanceof Error ? err.message.slice(0, 300) : "Préparation impossible.", p.id);
+  }
+}
+
+/** Résultats des sondages publiés (relus toutes les 30 minutes pendant 26 h). */
+async function refreshPolls() {
+  const due = db
+    .prepare(`SELECT id, media_id FROM campaign_posts WHERE status = 'published' AND kind = 'story' AND poll IS NOT NULL AND media_id IS NOT NULL AND published_at > ? AND (poll_checked_at IS NULL OR poll_checked_at < ?) LIMIT 2`)
+    .all(Date.now() - 26 * 3_600_000, Date.now() - 30 * 60_000) as { id: number; media_id: string }[];
+  for (const r of due) {
+    const res = await fetchPollResults(r.media_id).catch(() => null);
+    db.prepare(`UPDATE campaign_posts SET poll_results = COALESCE(?, poll_results), poll_checked_at = ? WHERE id = ?`).run(res?.results.length ? JSON.stringify(res.results) : null, Date.now(), r.id);
+  }
+}
+
 /** Modification à la main : nouveau titre et/ou légende (le visuel est refait). */
 export async function editPost(postId: number, patch: { headline?: string; caption?: string }) {
   const p = getPost(postId);
@@ -552,9 +733,24 @@ export function setPostStatus(postId: number, status: PostStatus, scheduledAt?: 
 }
 
 /** « Préparer un contenu maintenant » (hors calendrier, pour essayer). */
-export function addManualPost(campaignId: number, kind: PostKind): number {
+export function addManualPost(campaignId: number, kind: PostKind, engage: EngageType | null = null): number {
   const c = getCampaign(campaignId);
   if (!c) return 0;
+  if (engage) {
+    // Contenu d'engagement : « ceci ou cela » seulement en story, avec 2 produits disponibles.
+    let type: EngageType = kind === "story" ? (engage === "versus" ? "versus" : "poll") : engage === "tip" ? "tip" : "question";
+    let poll: PostPoll | null = null;
+    if (type === "versus") {
+      const first = pickProduct(c);
+      const second = first ? pickProduct(c, [first.id]) : null;
+      if (first && second) poll = { question: "", options: [], productIds: [first.id, second.id] };
+      else type = "poll";
+    }
+    const res = db
+      .prepare(`INSERT INTO campaign_posts (campaign_id, slot_key, kind, status, scheduled_at, visual, intent, engage_type, poll, created_at) VALUES (?, NULL, ?, 'generating', ?, ?, 'engage', ?, ?, ?)`)
+      .run(campaignId, kind, Date.now() + 3_600_000, type === "versus" ? "product" : "card", type, poll ? JSON.stringify(poll) : null, Date.now());
+    return Number(res.lastInsertRowid);
+  }
   const product = c.settings.objective === "sales" ? pickProduct(c) : null;
   const res = db
     .prepare(`INSERT INTO campaign_posts (campaign_id, slot_key, kind, status, scheduled_at, visual, product_id, product_title, created_at) VALUES (?, NULL, ?, 'generating', ?, ?, ?, ?, ?)`)
@@ -593,7 +789,10 @@ async function publish(post: CampaignPost) {
   db.prepare(`UPDATE campaign_posts SET status = 'publishing' WHERE id = ?`).run(p.id);
   try {
     const productUrl = p.productId ? getProduct(p.productId)?.url : null;
-    const res = await publishInstagram(p.kind, file, p.caption ?? "", p.kind === "story" ? trackedLink(c, productUrl) : "");
+    const poll = p.kind === "story" && p.poll?.question && p.poll.options.length >= 2 ? { question: p.poll.question, options: p.poll.options } : null;
+    // Une story sondage garde l'attention sur le vote : pas d'autocollant lien, sauf « ceci ou cela » sans lien non plus.
+    const link = p.kind === "story" && !poll ? trackedLink(c, productUrl) : "";
+    const res = await publishInstagram(p.kind, file, p.caption ?? "", link, poll);
     db.prepare(`UPDATE campaign_posts SET status = 'published', media_id = ?, media_code = ?, published_at = ?, error = NULL WHERE id = ?`).run(res.id, res.code ?? null, Date.now(), p.id);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Publication impossible.";
@@ -642,6 +841,7 @@ async function tick() {
            WHERE p.status = 'scheduled' AND p.scheduled_at <= ? AND c.status = 'active' ORDER BY p.scheduled_at LIMIT 1`,
         )
         .get(Date.now()) as PostRow | undefined;
+      await refreshPolls().catch(() => {});
       if (due) {
         // Rythme du compte (toutes campagnes) : quota du jour et écart minimum entre deux publications.
         const verdict = canPublish(due.kind);

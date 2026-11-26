@@ -104,10 +104,34 @@ function catalogContext(agentId: number, recentText: string): string {
   ].join("\n");
 }
 
+/** Ce que l'audience a voté dans les sondages des 30 derniers jours (goûts, préférences). */
+export function pollInsights(agentId: number): string {
+  try {
+    const rows = db
+      .prepare(
+        `SELECT p.poll, p.poll_results, p.published_at FROM campaign_posts p JOIN campaigns c ON c.id = p.campaign_id
+         WHERE c.agent_id = ? AND p.status = 'published' AND p.poll_results IS NOT NULL AND p.published_at > ? ORDER BY p.published_at DESC LIMIT 8`,
+      )
+      .all(agentId, Date.now() - 30 * 86_400_000) as { poll: string; poll_results: string }[];
+    const lines: string[] = [];
+    for (const r of rows) {
+      const poll = JSON.parse(r.poll) as { question: string };
+      const results = JSON.parse(r.poll_results) as { text: string; count: number }[];
+      const total = results.reduce((n, x) => n + x.count, 0);
+      if (total < 3) continue; // trop peu de votes pour en tirer quoi que ce soit
+      const parts = results.map((x) => `${x.text} ${Math.round((x.count / total) * 100)} %`).join(" / ");
+      lines.push(`- « ${poll.question} » → ${parts} (${total} votes)`);
+    }
+    return lines.length ? ["CE QUE TON AUDIENCE A VOTÉ (sondages en story) : tiens-en compte pour tes recommandations et tes contenus.", ...lines].join("\n") : "";
+  } catch {
+    return "";
+  }
+}
+
 /** Bloc ajouté aux instructions de l'agent, sur tous les canaux. */
 export function agentMarketingContext(agentId: number, recentText = ""): string {
   try {
-    return [campaignsContext(agentId), catalogContext(agentId, recentText)].filter(Boolean).join("\n\n");
+    return [campaignsContext(agentId), pollInsights(agentId), catalogContext(agentId, recentText)].filter(Boolean).join("\n\n");
   } catch {
     return ""; // tables pas encore créées (aucune campagne ni catalogue)
   }

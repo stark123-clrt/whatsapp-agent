@@ -4,6 +4,8 @@ export type CampaignStatus = "draft" | "active" | "paused" | "ended";
 export type Objective = "sales" | "traffic" | "awareness" | "promo";
 export type VisualSource = "card" | "product";
 export type PostKind = "post" | "story";
+export type EngageType = "question" | "tip" | "poll" | "versus";
+export type PostPoll = { question: string; options: string[]; productIds?: number[] };
 export type PostStatus = "generating" | "pending" | "scheduled" | "publishing" | "published" | "failed" | "rejected";
 
 export type CampaignSettings = {
@@ -13,7 +15,8 @@ export type CampaignSettings = {
   audience: string;
   tone: "pro" | "warm" | "fun" | "luxury";
   formats: { post: boolean; story: boolean };
-  rhythm: "auto" | "manual"; // auto : l'agent décide combien publier chaque jour (sous les plafonds du compte)
+  rhythm: "auto" | "manual";
+  engagement: "auto" | "off"; // contenus pour attirer (questions, sondages, conseils), dosés automatiquement // auto : l'agent décide combien publier chaque jour (sous les plafonds du compte)
   perDay: number; // rythme manuel : 1 à 3
   slots: string[]; // heures de publication (HH:MM, heure de Paris)
   visuals: VisualSource[]; // (ancien réglage : le visuel dépend maintenant de l'objectif)
@@ -56,6 +59,10 @@ export type CampaignPost = {
   publishedAt: number | null;
   productId: number | null;
   productTitle: string | null;
+  intent: "sale" | "engage";
+  engageType: EngageType | null;
+  poll: PostPoll | null;
+  pollResults: { text: string; count: number }[] | null;
 };
 
 export const OBJECTIVES: Record<Objective, string> = {
@@ -95,6 +102,7 @@ export const DEFAULT_CAMPAIGN: CampaignSettings = {
   tone: "warm",
   formats: { post: true, story: true },
   rhythm: "auto",
+  engagement: "auto",
   perDay: 2,
   slots: ["09:30", "13:00", "19:00"],
   visuals: ["card"],
@@ -120,6 +128,7 @@ export function campaignWithDefaults(raw: unknown): CampaignSettings {
     brand: { ...d.brand, ...s.brand },
     interactions: { ...d.interactions, ...s.interactions },
     rhythm: s.rhythm === "manual" ? "manual" : "auto",
+    engagement: s.engagement === "off" ? "off" : "auto",
     perDay: Math.min(3, Math.max(1, Math.round(Number(s.perDay ?? d.perDay)))),
     slots: (Array.isArray(s.slots) ? s.slots : d.slots).filter((x) => /^\d{2}:\d{2}$/.test(x)).slice(0, 3),
     visuals: visuals.length ? visuals : d.visuals,

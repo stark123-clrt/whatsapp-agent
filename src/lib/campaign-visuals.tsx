@@ -208,3 +208,50 @@ export async function renderProductVisual(v: ProductVisual): Promise<Buffer> {
   const res = new ImageResponse(element, { width, height, fonts: await loadFonts() });
   return Buffer.from(await res.arrayBuffer());
 }
+
+type VersusSide = { image: string; title: string; price: string; label: string };
+
+/**
+ * Story « ceci ou cela » : deux produits côte à côte, la question au-dessus,
+ * et la place pour l'autocollant sondage d'Instagram en dessous.
+ */
+export async function renderVersusVisual(v: { question: string; a: VersusSide; b: VersusSide; brandName: string; logo?: string | null; color: string; textColor: string }): Promise<Buffer> {
+  const width = 1080;
+  const height = 1920;
+  const ink = v.textColor;
+  const side = (s: VersusSide) => (
+    <div style={{ display: "flex", flexDirection: "column", width: 455 }}>
+      <div style={{ display: "flex", height: 600, borderRadius: 32, background: "#f4f1ec", overflow: "hidden", position: "relative", alignItems: "center", justifyContent: "center" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- rendu d'image côté serveur (Satori) */}
+        <img src={s.image} width={455} height={600} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", filter: "blur(22px)", transform: "scale(1.15)", opacity: 0.85 }} alt="" />
+        {/* eslint-disable-next-line @next/next/no-img-element -- rendu d'image côté serveur (Satori) */}
+        <img src={s.image} width={455} height={600} style={{ position: "relative", width: "100%", height: "100%", objectFit: "contain" }} alt="" />
+        <div style={{ position: "absolute", top: 20, left: 20, display: "flex", width: 64, height: 64, borderRadius: 999, background: ink, color: v.color, fontSize: 34, fontWeight: 800, alignItems: "center", justifyContent: "center" }}>
+          {s.label}
+        </div>
+      </div>
+      <div style={{ display: "flex", fontSize: 34, fontWeight: 800, marginTop: 18, lineHeight: 1.15 }}>{noEmoji(s.title)}</div>
+      <div style={{ display: "flex", fontSize: 32, opacity: 0.85, marginTop: 6 }}>{s.price}</div>
+    </div>
+  );
+  const element = (
+    <div style={{ width, height, display: "flex", flexDirection: "column", position: "relative", fontFamily: "Inter", color: ink, background: `linear-gradient(160deg, ${v.color} 0%, ${shade(v.color, 0.4)} 100%)`, padding: "150px 60px 0" }}>
+      <div style={{ display: "flex", alignItems: "center", height: 60 }}>
+        {v.logo ? (
+          // eslint-disable-next-line @next/next/no-img-element -- rendu d'image côté serveur (Satori)
+          <img src={v.logo} height={56} style={{ height: 56, maxWidth: 260, objectFit: "contain" }} alt="" />
+        ) : (
+          <div style={{ display: "flex", fontSize: 30, fontWeight: 800, letterSpacing: 4, textTransform: "uppercase", opacity: 0.92 }}>{noEmoji(v.brandName)}</div>
+        )}
+      </div>
+      <div style={{ display: "flex", fontSize: 30, fontWeight: 800, letterSpacing: 3, textTransform: "uppercase", opacity: 0.75, marginTop: 40 }}>Ceci ou cela ?</div>
+      <div style={{ display: "flex", fontSize: 64, fontWeight: 800, lineHeight: 1.08, letterSpacing: -1, marginTop: 12, maxWidth: 960 }}>{noEmoji(v.question)}</div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 46 }}>
+        {side(v.a)}
+        {side(v.b)}
+      </div>
+    </div>
+  );
+  const res = new ImageResponse(element, { width, height, fonts: await loadFonts() });
+  return Buffer.from(await res.arrayBuffer());
+}

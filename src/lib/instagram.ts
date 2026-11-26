@@ -246,8 +246,15 @@ export async function convertToJpeg(src: string, dest: string) {
 }
 
 /** Publie une photo ou une story (campagnes). */
-export async function publishInstagram(kind: "post" | "story", file: string, caption: string, link: string) {
-  return ig<{ id: string; code: string | null }>("/publish", { kind, path: file, caption, link });
+export type Poll = { question: string; options: string[] };
+
+export async function publishInstagram(kind: "post" | "story", file: string, caption: string, link: string, poll?: Poll | null) {
+  return ig<{ id: string; code: string | null }>("/publish", { kind, path: file, caption, link, poll: poll ?? null });
+}
+
+/** Votes d'un sondage de story. */
+export async function fetchPollResults(storyId: string) {
+  return ig<{ question: string | null; results: { text: string; count: number }[] }>("/poll-results", { storyId });
 }
 
 export async function loginInstagram(username: string, password: string) {

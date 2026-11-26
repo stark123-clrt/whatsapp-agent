@@ -290,6 +290,17 @@ export function CampaignWizard({
                 </div>
                   </>
                 )}
+                <div className="flex items-start justify-between gap-5 rounded-xl border border-zinc-200 p-4">
+                  <div>
+                    <p className="text-sm font-medium">Attirer avant de vendre</p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-zinc-500">
+                      En plus des contenus {s.objective === "sales" ? "produits" : "de marque"}, l&apos;agent publie des <strong>questions</strong>, des <strong>conseils</strong> et des{" "}
+                      <strong>sondages en story</strong>{s.objective === "sales" ? " (dont des « ceci ou cela » entre 2 produits)" : ""}. Beaucoup au début pour gagner des abonnés, puis plus
+                      d&apos;annonces quand l&apos;audience grandit. Les votes nourrissent ses recommandations.
+                    </p>
+                  </div>
+                  <Toggle checked={s.engagement === "auto"} onChange={(v) => set({ engagement: v ? "auto" : "off" })} label="Attirer avant de vendre" />
+                </div>
                 {s.objective === "sales" ? (
                   <div>
                     <span className={label}>Produits à mettre en avant</span>

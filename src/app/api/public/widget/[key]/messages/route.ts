@@ -2,6 +2,7 @@ import { connection, type NextRequest } from "next/server";
 import { isAiTyping, replyWeb, saveWebVisitorMessage } from "@/lib/agent";
 import { getChat, getMessages, setChatAgent, updateChat, upsertChat } from "@/lib/db";
 import { getAgent } from "@/lib/kb";
+import { routeAgent } from "@/lib/routing";
 import { validVisitorId, webJid } from "@/lib/widget";
 import { clientIp, limited, widgetFor } from "@/lib/widget-guard";
 
@@ -52,11 +53,13 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   upsertChat({ jid, channel: "web", phone, name: name ?? (getChat(jid) ? null : "Visiteur du site") });
   if (lead.email?.trim()) updateChat(jid, { email: lead.email.trim().slice(0, 120) });
 
-  // Agent : celui du code intégré (data-agent), sinon celui choisi dans le widget, sinon le défaut du compte.
+  // Agent : celui du code intégré (data-agent), sinon celui choisi dans le widget, sinon celui du canal.
   const chat = getChat(jid);
   if (chat && !chat.agentId) {
     const wanted = Number(body.agent) || widget.settings.agentId;
-    if (wanted && getAgent(wanted)) setChatAgent(jid, wanted);
+    // Sinon : mot-clé d'un agent, puis l'agent choisi pour le canal « Site web » (Agents IA → Qui répond).
+    const agent = wanted && getAgent(wanted) ? getAgent(wanted) : body.text ? routeAgent("web", body.text) : null;
+    if (agent) setChatAgent(jid, agent.id);
   }
 
   const text = body.text?.trim().slice(0, 2000);

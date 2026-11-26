@@ -1,6 +1,6 @@
 import { dealsFromTags } from "@/lib/deals";
 import { connection, type NextRequest } from "next/server";
-import { chatReadOnly, isAiTyping, whyAiInactive } from "@/lib/agent";
+import { agentOf, chatReadOnly, isAiTyping, whyAiInactive } from "@/lib/agent";
 import { listAgents } from "@/lib/kb";
 import {
   allTags,
@@ -39,6 +39,11 @@ export async function GET(_req: NextRequest, ctx: RouteContext<"/api/chats/[jid]
     })(),
     stats: getStats(jid),
     aiInactive: whyAiInactive(jid, chat.phone),
+    // Agent qui répond vraiment (attribué, ou celui du canal).
+    agent: (() => {
+      const a = agentOf(jid);
+      return a ? { id: a.id, name: a.name, status: a.status, assigned: Boolean(chat.agentId) } : null;
+    })(),
     aiTyping: isAiTyping(jid),
     knownTags: allTags(),
     files: getFiles(jid),

@@ -399,7 +399,7 @@ export function WidgetManager({
             <Section id="ia" title="Intelligence" text="Qui répond, et à quel rythme.">
               <Labeled label="Agent IA" hint="Sur une page précise, tu peux aussi forcer un agent avec data-agent (voir Installation).">
                 <select className={inputClass} value={s.agentId ?? ""} onChange={(e) => set({ agentId: e.target.value ? Number(e.target.value) : null })}>
-                  <option value="">Agent par défaut du compte</option>
+                  <option value="">Agent du canal « Site web » (Agents IA → Qui répond)</option>
                   {agents.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name}

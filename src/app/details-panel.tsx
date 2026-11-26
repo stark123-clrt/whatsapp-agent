@@ -11,6 +11,7 @@ export type Details = {
   chat: Chat;
   stats: ChatStats;
   aiInactive: string | null;
+  agent?: { id: number; name: string; status: "active" | "paused"; assigned: boolean } | null;
   knownTags: string[];
   files: ChatFile[];
   tasks: Task[];
@@ -32,7 +33,7 @@ export function DetailsPanel({
   onHide: () => void;
   notify: (message: string) => void;
 }) {
-  const { chat, stats, aiInactive, knownTags, files, tasks, activity } = data;
+  const { chat, stats, aiInactive, knownTags, files, tasks, activity, agent } = data;
   const [modal, setModal] = useState<"contact" | "tags" | null>(null);
   const [summarizing, setSummarizing] = useState(false);
   const url = `/api/chats/${enc(chat.jid)}`;
@@ -137,7 +138,10 @@ export function DetailsPanel({
       <Section title="Agent">
         <div className="flex items-center gap-2 rounded-lg bg-zinc-50 px-3 py-2 text-sm">
           <span className={`h-2 w-2 rounded-full ${chat.aiPaused ? "bg-amber-500" : aiInactive ? "bg-zinc-400" : "bg-green-600"}`} />
-          <span className="flex-1 font-medium">{chat.agentId ? `Agent n°${chat.agentId}` : "Agent par défaut"}</span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate font-medium">{agent?.name ?? "Aucun agent"}</span>
+            <span className="block text-[11px] text-zinc-500">{agent?.assigned ? "Attribué à cette discussion" : "Agent du canal (Agents IA → Qui répond)"}</span>
+          </span>
           <span className={`text-xs font-medium uppercase ${agentStatus.className}`}>{agentStatus.label}</span>
         </div>
         {aiInactive && !chat.aiPaused && <p className="mt-1.5 text-xs text-zinc-500">{aiInactive}.</p>}

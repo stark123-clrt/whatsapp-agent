@@ -18,7 +18,8 @@ import { generateReply, transcribeAudio, type ChatMessage, type ContentPart } fr
 import { isOpenNow } from "./agent-settings";
 import { addTask, incAiCount, resetAiCounter, setChatAgent, setDraft, setFollowupStage, setPendingReply, updateChat } from "./db";
 import { dealsFromTags } from "./deals";
-import { getAgent, getAgentMedia, getDefaultAgent, listAgents, setMessageAgent, type Agent } from "./kb";
+import { channelAgent, routeAgent } from "./routing";
+import { getAgent, getAgentMedia, setMessageAgent, type Agent } from "./kb";
 import { buildAgentPrompt, modelOptions, parseAgentReply, type AgentAction } from "./knowledge";
 import { getWhatsAppState } from "./whatsapp";
 
@@ -263,30 +264,16 @@ export function replyWeb(jid: string, speed: number) {
 /** Agent qui gère une discussion : celui qui lui est attribué, sinon l'agent par défaut. */
 export function agentOf(jid: string): Agent | null {
   const id = getChat(jid)?.agentId;
-  return (id ? getAgent(id) : null) ?? getDefaultAgent();
+  if (id) return getAgent(id); // conversation attribuée : elle garde son agent
+  const chat = getChat(jid);
+  return chat ? channelAgent(chat.channel) : null; // sinon l'agent de son canal
 }
 
 /** Points d'entrée : attribue un agent à une nouvelle discussion (mots-clés, puis canal par défaut). */
 function routeChat(jid: string, firstText: string) {
   const chat = getChat(jid);
   if (!chat || chat.agentId) return;
-  const agents = listAgents();
-  const text = firstText.toLowerCase();
-  const byKeyword = agents.find((a) =>
-    a.settings.entryRules.some(
-      (r) =>
-        r.enabled &&
-        r.kind === "keyword" &&
-        r.keywords
-          .split(",")
-          .map((k) => k.trim().toLowerCase())
-          .some((k) => k && text.includes(k)),
-    ),
-  );
-  const byDefault =
-    agents.find((a) => a.isDefault && a.settings.entryRules.some((r) => r.enabled && r.kind === "default")) ??
-    agents.find((a) => a.settings.entryRules.some((r) => r.enabled && r.kind === "default"));
-  const agent = byKeyword ?? byDefault;
+  const agent = routeAgent(chat.channel, firstText);
   if (agent) setChatAgent(jid, agent.id);
 }
 

@@ -52,7 +52,6 @@ export function AgentsClient() {
   const list = (agents ?? []).filter(
     (a) => (filter === "all" || a.status === filter) && a.name.toLowerCase().includes(search.trim().toLowerCase()),
   );
-  const def = agents?.find((a) => a.isDefault);
 
   return (
     <main className="mx-auto w-full max-w-6xl px-8 py-10">
@@ -72,23 +71,7 @@ export function AgentsClient() {
         <Card label="En pause" value={agents?.filter((a) => a.status === "paused").length ?? 0} icon="⏸️" />
       </div>
 
-      <div className="mt-4 flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-5 py-4 text-sm">
-        <p>
-          <strong>Qui répond aux nouvelles conversations</strong>
-          <span className="ml-3 text-zinc-500">
-            {def ? `${def.name} répond à tes canaux connectés` : "Aucun agent : crée ton premier agent."}
-          </span>
-        </p>
-        {def && (
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-medium ${
-              def.status === "active" ? "bg-green-50 text-green-700 ring-1 ring-green-200" : "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
-            }`}
-          >
-            ● {def.status === "active" ? "En direct" : "En pause"}
-          </span>
-        )}
-      </div>
+      {agents && <WhoAnswers agents={agents} />}
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <input
@@ -331,5 +314,98 @@ function IconBtn({ label, onClick, danger, children }: { label: string; onClick:
     >
       {children}
     </button>
+  );
+}
+
+type Effective = { id: number; name: string; status: "active" | "paused" } | null;
+const CHANNEL_ROWS = [
+  { id: "whatsapp", label: "WhatsApp", color: "#25D366" },
+  { id: "web", label: "Site web (widget)", color: "#a855f7" },
+] as const;
+
+/** « Qui répond aux nouvelles conversations » : l'agent de chaque canal. */
+function WhoAnswers({ agents }: { agents: AgentWithStats[] }) {
+  const [routing, setRouting] = useState<Record<string, number | null> | null>(null);
+  const [effective, setEffective] = useState<Record<string, Effective>>({});
+
+  const load = useCallback(async () => {
+    const r = await fetch("/api/routing", { cache: "no-store" }).catch(() => null);
+    if (!r?.ok) return;
+    const d = (await r.json()) as { routing: Record<string, number | null>; effective: Record<string, Effective> };
+    setRouting(d.routing);
+    setEffective(d.effective);
+  }, []);
+
+  // Recharge aussi quand un agent change (pause, suppression…).
+  const signature = agents.map((a) => `${a.id}:${a.status}:${a.isDefault}`).join("|");
+  useEffect(() => {
+    const id = setTimeout(load, 0);
+    return () => clearTimeout(id);
+  }, [load, signature]);
+
+  async function choose(channel: string, value: string) {
+    const agentId = value === "auto" ? null : Number(value);
+    setRouting((r) => ({ ...r, [channel]: agentId }));
+    await fetch("/api/routing", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ channel, agentId }) });
+    void load();
+  }
+
+  const live = CHANNEL_ROWS.every((c) => effective[c.id]?.status === "active");
+  const active = agents.filter((a) => a.status === "active");
+  const main = agents.find((a) => a.isDefault);
+  const autoLabel = main ? `Automatique : agent principal (${main.name}${main.status === "paused" ? ", en pause" : ""})` : active.length === 1 ? `Automatique (${active[0].name})` : "Automatique (personne)";
+
+  return (
+    <section className="mt-4 rounded-2xl border border-zinc-200 bg-white">
+      <div className="flex items-center justify-between gap-4 border-b border-zinc-100 px-5 py-3.5">
+        <div>
+          <p className="font-semibold">Qui répond aux nouvelles conversations</p>
+          <p className="text-xs text-zinc-500">Un agent par canal. Une conversation déjà commencée garde son agent (change-le depuis la discussion).</p>
+        </div>
+        {routing && (
+          <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ring-1 ${live ? "bg-green-50 text-green-700 ring-green-200" : "bg-amber-50 text-amber-700 ring-amber-200"}`}>
+            ● {live ? "En direct" : `${CHANNEL_ROWS.filter((c) => effective[c.id]?.status !== "active").length} canal sans réponse`}
+          </span>
+        )}
+      </div>
+      <div className="divide-y divide-zinc-100">
+        {CHANNEL_ROWS.map((c) => {
+          const eff = effective[c.id];
+          const value = routing?.[c.id] ?? null;
+          return (
+            <div key={c.id} className="flex flex-wrap items-center gap-4 px-5 py-3 text-sm">
+              <span className="flex w-44 items-center gap-2 font-medium">
+                <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} />
+                {c.label}
+              </span>
+              <select
+                value={value === null ? "auto" : String(value)}
+                onChange={(e) => choose(c.id, e.target.value)}
+                disabled={!routing}
+                className="min-w-64 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400"
+              >
+                <option value="auto">{autoLabel}</option>
+                {agents.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                    {a.status === "paused" ? " (en pause)" : ""}
+                  </option>
+                ))}
+                <option value="0">Personne ne répond</option>
+              </select>
+              <span className={`ml-auto text-xs ${eff?.status === "active" ? "text-green-700" : "text-amber-700"}`}>
+                {eff
+                  ? eff.status === "active"
+                    ? `✓ ${eff.name} répond`
+                    : `⏸ ${eff.name} est en pause : aucune réponse sur ce canal`
+                  : value === 0
+                    ? "Aucune réponse automatique"
+                    : "⚠ Aucun agent actif pour ce canal"}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }

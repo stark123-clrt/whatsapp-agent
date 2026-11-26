@@ -276,7 +276,7 @@ export function WidgetChat(props: Props) {
       const d = (await r.json().catch(() => ({}))) as { id?: string; error?: string };
       if (!r.ok) throw new Error(d.error ?? "Envoi impossible.");
       setMessages((p) => p.map((m) => (m.id === temp.id ? { ...m, id: d.id ?? m.id, pending: false } : m)));
-      if (embedded) storage.set(`aw_chatted_${widgetKey}`, "1");
+      if (embedded) window.parent.postMessage({ source: "agent-widget", type: "chatted" }, "*"); // le site s'en souvient
     } catch (e) {
       setMessages((p) => p.map((m) => (m.id === temp.id ? { ...m, pending: false, failed: true } : m)));
       setNotice(e instanceof Error ? e.message : "Envoi impossible.");
@@ -314,7 +314,7 @@ export function WidgetChat(props: Props) {
       const d = (await r.json().catch(() => ({}))) as { id?: string; error?: string };
       if (!r.ok) throw new Error(d.error ?? "Envoi impossible.");
       setMessages((p) => p.map((m) => (m.id === temp.id ? { ...m, id: d.id ?? m.id, pending: false, file: undefined } : m)));
-      if (embedded) storage.set(`aw_chatted_${widgetKey}`, "1");
+      if (embedded) window.parent.postMessage({ source: "agent-widget", type: "chatted" }, "*"); // le site s'en souvient
     } catch (e) {
       setMessages((p) => p.map((m) => (m.id === temp.id ? { ...m, pending: false, failed: true } : m)));
       setNotice(e instanceof Error ? e.message : "Envoi impossible.");

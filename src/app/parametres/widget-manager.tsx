@@ -375,6 +375,9 @@ export function WidgetManager({
                       <input className={inputClass} maxLength={24} value={s.proactive.refuse} onChange={(e) => set({ proactive: { ...s.proactive, refuse: e.target.value } })} />
                     </Labeled>
                   </div>
+                  <p className="rounded-lg bg-white px-3 py-2 text-xs leading-relaxed text-zinc-600">
+                    💡 <strong>Pour la tester</strong> : enregistre, attends 1 minute, puis ouvre ton site en ajoutant <code className="rounded bg-zinc-100 px-1">?aw_test</code> à la fin de l&apos;adresse (ex. : votre-site.fr<strong>?aw_test</strong>). Le widget te voit alors comme un nouveau visiteur.
+                  </p>
                   <Labeled label={`Apparaît après ${s.proactive.delay} s`}>
                     <input type="range" min={0} max={60} value={s.proactive.delay} onChange={(e) => set({ proactive: { ...s.proactive, delay: Number(e.target.value) } })} className="w-full accent-green-600" />
                   </Labeled>

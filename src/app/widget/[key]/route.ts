@@ -43,7 +43,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/widget/[key]">) 
   return new Response(`(${loader.toString()})(${JSON.stringify(config)});`, {
     headers: {
       "Content-Type": "application/javascript; charset=utf-8",
-      "Cache-Control": "public, max-age=120",
+      "Cache-Control": "public, max-age=60", // réglages modifiés visibles en 1 minute
       "Access-Control-Allow-Origin": "*",
     },
   });
@@ -97,7 +97,20 @@ function loader(c: LoaderConfig) {
       }
     },
   };
-  const chattedKey = `aw_chatted_${c.key}`;
+  const chattedKey = `aw_wrote_${c.key}`; // le visiteur a envoyé au moins un message (nouveau nom : les anciens « aw_chatted » posés à tort à la simple ouverture sont ignorés)
+  const dismissedKey = `aw_nudge_${c.key}`; // il a refusé la bulle proactive
+  const seenKey = `aw_nudge_seen_${c.key}`; // bulle déjà montrée pendant cette visite
+  // Mode test : ajoute ?aw_test à l'adresse du site pour tout revoir comme un nouveau visiteur.
+  const testing = new URLSearchParams(location.search).has("aw_test");
+  if (testing) {
+    try {
+      localStorage.removeItem(chattedKey);
+      localStorage.removeItem(dismissedKey);
+      sessionStorage.removeItem(seenKey);
+    } catch {
+      /* navigation privée */
+    }
+  }
   if (c.newVisitorsOnly && store.get(chattedKey)) return;
   let vid = store.get(`aw_vid_${c.key}`);
   if (!vid) {
@@ -189,7 +202,6 @@ function loader(c: LoaderConfig) {
     if (v) {
       ensureFrame();
       badge.style.display = "none";
-      store.set(chattedKey, "1");
     }
     send({ type: "visibility", open: v });
   }
@@ -224,6 +236,7 @@ function loader(c: LoaderConfig) {
     if (e.origin !== c.origin || !e.data || e.data.source !== "agent-widget") return;
     if (e.data.type === "ready") send({ type: "visibility", open: isOpen });
     if (e.data.type === "close") setOpen(false);
+    if (e.data.type === "chatted") store.set(chattedKey, "1"); // premier message envoyé
     if (e.data.type === "unread" && !isOpen && e.data.count > 0) {
       badge.textContent = String(Math.min(99, e.data.count));
       badge.style.display = "flex";
@@ -234,9 +247,14 @@ function loader(c: LoaderConfig) {
   // Visiteur qui a déjà discuté : on prépare le chat en arrière-plan pour signaler les nouvelles réponses.
   if (store.get(chattedKey)) ensureFrame();
 
-  // Bulle proactive : une seule fois par visite tant que le visiteur ne l'a pas refusée.
-  const dismissedKey = `aw_nudge_${c.key}`;
-  if (c.proactive.enabled && !store.get(dismissedKey) && !store.get(chattedKey)) {
+  // Bulle proactive : une fois par visite, jamais après un refus ni pour quelqu'un qui a déjà écrit.
+  let seen = false;
+  try {
+    seen = Boolean(sessionStorage.getItem(seenKey));
+  } catch {
+    /* navigation privée */
+  }
+  if (c.proactive.enabled && !seen && !store.get(dismissedKey) && !store.get(chattedKey)) {
     setTimeout(() => {
       if (isOpen) return;
       const initial = (c.name || "?").trim().charAt(0).toUpperCase();
@@ -252,6 +270,11 @@ function loader(c: LoaderConfig) {
         store.set(dismissedKey, "1");
       };
       nudge.classList.add("show");
+      try {
+        sessionStorage.setItem(seenKey, "1");
+      } catch {
+        /* navigation privée */
+      }
       btn.classList.add("pulse");
     }, Math.max(0, c.proactive.delay) * 1000);
   }

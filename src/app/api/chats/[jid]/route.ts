@@ -1,3 +1,4 @@
+import { dealsFromTags } from "@/lib/deals";
 import { connection, type NextRequest } from "next/server";
 import { chatReadOnly, isAiTyping, whyAiInactive } from "@/lib/agent";
 import { listAgents } from "@/lib/kb";
@@ -66,7 +67,9 @@ export async function PATCH(req: NextRequest, ctx: RouteContext<"/api/chats/[jid
     ),
   );
   if (tags && !Array.isArray(tags)) return Response.json({ error: "Tags invalides" }, { status: 400 });
+  const before = getChat(jid)?.tags ?? [];
   updateChat(jid, update);
+  if (tags) dealsFromTags(jid, before); // étiquette déclencheuse → opportunité
   return Response.json({ chat: getChat(jid) });
 }
 

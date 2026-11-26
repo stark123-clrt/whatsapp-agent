@@ -17,6 +17,7 @@ import pino from "pino";
 import { generateReply, transcribeAudio, type ChatMessage, type ContentPart } from "./ai";
 import { isOpenNow } from "./agent-settings";
 import { addTask, incAiCount, resetAiCounter, setChatAgent, setDraft, setFollowupStage, setPendingReply, updateChat } from "./db";
+import { dealsFromTags } from "./deals";
 import { getAgent, getAgentMedia, getDefaultAgent, listAgents, setMessageAgent, type Agent } from "./kb";
 import { buildAgentPrompt, modelOptions, parseAgentReply, type AgentAction } from "./knowledge";
 import { getWhatsAppState } from "./whatsapp";
@@ -591,6 +592,7 @@ async function applyActions(sock: WASocket | null, jid: string, agent: Agent, ac
       const rule = agent.settings.tagRules.find((r) => r.name.toLowerCase() === a.value.toLowerCase());
       if (!rule || chat.tags.includes(rule.name)) continue;
       updateChat(jid, { tags: [...chat.tags, rule.name] });
+      dealsFromTags(jid, chat.tags); // étiquette déclencheuse → opportunité
       addLog({ kind: "out", who, text: `🏷️ Tag ajouté : ${rule.name}` });
       if (/^https:\/\//.test(rule.webhook)) {
         void fetch(rule.webhook, {

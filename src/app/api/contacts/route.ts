@@ -1,6 +1,7 @@
 import { connection, type NextRequest } from "next/server";
 import { allTags, getChat, listChats, updateChat, upsertChat } from "@/lib/db";
 import { listContacts } from "@/lib/contacts";
+import { dealsFromTags } from "@/lib/deals";
 
 // CRM → Contacts : tous les contacts, tous canaux confondus.
 export async function GET() {
@@ -27,5 +28,6 @@ export async function POST(req: NextRequest) {
   upsertChat({ jid, channel: "whatsapp", phone });
   const tags = (body.tags ?? []).map((t) => t.trim()).filter(Boolean).slice(0, 20);
   updateChat(jid, { customName: body.name?.trim().slice(0, 80) || null, email, tags });
+  dealsFromTags(jid);
   return Response.json({ ok: true, jid });
 }

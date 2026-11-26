@@ -7,4 +7,7 @@ export async function register() {
   const { ensureWhatsApp } = await import("./lib/whatsapp");
   // Sans attendre : le serveur doit pouvoir répondre pendant que WhatsApp se connecte.
   void ensureWhatsApp().catch(() => {});
+  // Opportunités : règle « après N jours sans activité, déplacer vers… ».
+  const { startDealsScheduler } = await import("./lib/deals");
+  startDealsScheduler();
 }

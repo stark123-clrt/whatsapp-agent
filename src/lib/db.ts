@@ -14,7 +14,7 @@ export const MEDIA_DIR = path.join(DATA_DIR, "media");
 
 export type Sender = "contact" | "ai" | "human";
 /** Canaux de messagerie. Seul WhatsApp est branché pour l'instant. */
-export type Channel = "whatsapp" | "instagram" | "messenger" | "telegram" | "sms" | "email";
+export type Channel = "whatsapp" | "web" | "instagram" | "messenger" | "telegram" | "sms" | "email";
 export type MessageType = "text" | "image" | "audio" | "video" | "document";
 
 export type Chat = {

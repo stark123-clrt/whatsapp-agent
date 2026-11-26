@@ -3,6 +3,7 @@ import type { Channel } from "./db";
 /** Infos d'affichage de chaque canal (nom, couleur, icône). */
 export const CHANNELS: Record<Channel, { label: string; color: string; available: boolean }> = {
   whatsapp: { label: "WhatsApp", color: "#25D366", available: true },
+  web: { label: "Site web", color: "#a855f7", available: true },
   instagram: { label: "Instagram", color: "#E1306C", available: false },
   messenger: { label: "Messenger", color: "#0084FF", available: false },
   telegram: { label: "Telegram", color: "#229ED9", available: false },

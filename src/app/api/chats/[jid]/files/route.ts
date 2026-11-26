@@ -12,6 +12,9 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/chats/[jid]
   if (!getChat(jid)) return Response.json({ error: "Discussion introuvable" }, { status: 404 });
   const readOnly = chatReadOnly(jid);
   if (readOnly) return Response.json({ error: readOnly }, { status: 409 });
+  if (getChat(jid)?.channel === "web") {
+    return Response.json({ error: "L'envoi de fichiers aux visiteurs du site arrive bientôt." }, { status: 409 });
+  }
   const sock = getSocket();
   if (!sock) return Response.json({ error: "WhatsApp n'est pas connecté" }, { status: 503 });
 

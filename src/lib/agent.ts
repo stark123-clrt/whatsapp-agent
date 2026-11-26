@@ -172,19 +172,81 @@ export function whyAiInactive(jid: string, phone: string | null): string | null 
   if (chat?.dnd) return "« Ne pas déranger » est activé";
   if (chat?.aiPaused) return "IA en pause sur cette discussion";
   const isTest = Boolean(chat?.testContact || (phone !== null && s.allowed.includes(phone)));
+  // Widget de site web : le mode test ne s'applique pas (le widget est installé pour répondre aux visiteurs).
+  const isWeb = chat?.channel === "web";
   const agent = agentOf(jid);
   if (!agent) {
     // Pas encore d'agent créé : ancien fonctionnement (liste de test du fichier .env).
-    if (!s.replyAll && !isTest) return "Ce n'est pas un contact de test";
+    if (!isWeb && !s.replyAll && !isTest) return "Ce n'est pas un contact de test";
     return null;
   }
   if (agent.status === "paused") return `L'agent « ${agent.name} » est en pause`;
-  if (agent.settings.testMode && !isTest) return "Mode test : l'IA ne répond qu'aux contacts de test";
+  if (agent.settings.testMode && !isTest && !isWeb) return "Mode test : l'IA ne répond qu'aux contacts de test";
   const max = agent.settings.maxAiPerChat;
   if (chat && max > 0 && chat.aiCount >= max) {
     return `Limite de ${max} réponses IA atteinte dans cette conversation : prends le relais, ou réinitialise le compteur (ⓘ → Compteur de messages IA)`;
   }
   return null;
+}
+
+// ---------- Widget de site web ----------
+
+const webMessageId = () => `web_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+
+/** Enregistre un message écrit par le visiteur du site. */
+export function saveWebVisitorMessage(jid: string, text: string) {
+  const id = webMessageId();
+  saveMessage({ id, jid, sender: "contact", type: "text", text, mediaFile: null, mime: null, ts: Date.now() });
+  setFollowupStage(jid, 0);
+  return id;
+}
+
+/** Réponse manuelle depuis Discussions vers un visiteur du site : l'IA se met en pause. */
+export function sendWebManualMessage(jid: string, text: string) {
+  setAiPaused(jid, true);
+  saveMessage({ id: webMessageId(), jid, sender: "human", type: "text", text, mediaFile: null, mime: null, ts: Date.now(), status: 4 });
+}
+
+/**
+ * L'IA répond au visiteur du site (mêmes instructions, FAQ et actions que sur WhatsApp).
+ * speed : 0 = plus lent et naturel, 100 = vitesse maximale.
+ */
+export function replyWeb(jid: string, speed: number) {
+  enqueue(jid, async () => {
+    if (whyAiInactive(jid, null)) return;
+    if (getMessages(jid, 1).at(-1)?.sender !== "contact") return; // déjà répondu (messages regroupés)
+    const agent = agentOf(jid);
+    const chat = getChat(jid);
+    const who = chat?.customName ?? chat?.name ?? "Visiteur du site";
+    store.typing.add(jid);
+    try {
+      await sleep(Math.max(300, (100 - Math.min(100, Math.max(0, speed))) * 30));
+      const reply = await generateReply(
+        [{ role: "system", content: systemPromptFor(jid, agent) }, ...(await buildHistory(jid))],
+        agent ? modelOptions(agent) : {},
+      );
+      if (!reply.trim()) throw new Error("Réponse vide du modèle.");
+      const { bubbles, actions } = agent ? parseAgentReply(reply, agent.settings) : { bubbles: [reply], actions: [] as AgentAction[] };
+      if (whyAiInactive(jid, null)) return;
+      if (agent?.settings.draftsOnly) {
+        setDraft(jid, bubbles.join("\n\n"));
+        return addLog({ kind: "skip", who, text: `Brouillon prêt (site web) : ${bubbles.join(" ")}` });
+      }
+      for (const [i, bubble] of bubbles.entries()) {
+        if (i > 0) await sleep(Math.min(2500, 400 + bubble.length * 15));
+        const id = webMessageId();
+        saveMessage({ id, jid, sender: "ai", type: "text", text: bubble, mediaFile: null, mime: null, ts: Date.now(), status: 4 });
+        if (agent) setMessageAgent(id, agent.id);
+        incAiCount(jid);
+      }
+      addLog({ kind: "out", who, text: `🌐 ${bubbles.join(" / ")}` });
+      if (agent) await applyActions(null, jid, agent, actions, who);
+    } catch (err) {
+      addLog({ kind: "error", who, text: err instanceof Error ? err.message : String(err) });
+    } finally {
+      store.typing.delete(jid);
+    }
+  });
 }
 
 /** Agent qui gère une discussion : celui qui lui est attribué, sinon l'agent par défaut. */
@@ -510,7 +572,7 @@ async function replyTo(sock: WASocket, key: WAMessage["key"], jid: string, phone
 }
 
 /** Exécute les actions demandées par l'IA (tag, tâche, nom, info, média, passage à un humain). */
-async function applyActions(sock: WASocket, jid: string, agent: Agent, actions: AgentAction[], who: string) {
+async function applyActions(sock: WASocket | null, jid: string, agent: Agent, actions: AgentAction[], who: string) {
   const caps = agent.settings.capabilities;
   for (const a of actions) {
     const chat = getChat(jid);
@@ -541,7 +603,7 @@ async function applyActions(sock: WASocket, jid: string, agent: Agent, actions: 
       addLog({ kind: "skip", who, text: `🙋 Passage à un humain : ${a.value}` });
     } else if (a.kind === "MEDIA") {
       const media = getAgentMedia(Number(a.value.replace(/\D/g, "")));
-      if (media && media.agentId === agent.id) await sendAgentMedia(sock, jid, agent.id, media.file, media.mime, media.name);
+      if (sock && media && media.agentId === agent.id) await sendAgentMedia(sock, jid, agent.id, media.file, media.mime, media.name);
     }
   }
 }

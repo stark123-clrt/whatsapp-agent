@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { chatReadOnly, sendManualMessage } from "@/lib/agent";
+import { chatReadOnly, sendManualMessage, sendWebManualMessage } from "@/lib/agent";
 import { getChat } from "@/lib/db";
 import { getSocket } from "@/lib/whatsapp";
 
@@ -11,6 +11,10 @@ export async function POST(req: NextRequest, ctx: RouteContext<"/api/chats/[jid]
   if (!getChat(jid)) return Response.json({ error: "Discussion introuvable" }, { status: 404 });
   const readOnly = chatReadOnly(jid);
   if (readOnly) return Response.json({ error: readOnly }, { status: 409 });
+  if (getChat(jid)?.channel === "web") {
+    sendWebManualMessage(jid, text.trim());
+    return Response.json({ ok: true });
+  }
   const sock = getSocket();
   if (!sock) return Response.json({ error: "WhatsApp n'est pas connecté" }, { status: 503 });
   try {

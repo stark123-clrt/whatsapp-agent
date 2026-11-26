@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { WhatsAppState } from "@/lib/whatsapp";
 import { AgentActivity } from "../agent-activity";
+import { Sparkline, WidgetCard } from "./widget-card";
 
 /** Section « Canaux » des paramètres : chaque canal de messagerie et sa connexion. */
 export function ChannelsSection() {
@@ -133,9 +134,7 @@ export function ChannelsSection() {
 
         <Card title="Telegram" description="Connecte un compte Telegram pour répondre aux messages privés depuis ton propre numéro." action={<SoonButton label="Connecter" />} />
 
-        <Card title="Widget de chat pour site web" description="Intègre une bulle de chat IA sur ton site ou celui de tes clients." action={<SoonButton label="Gérer" />}>
-          <Row icon="💬" name="Web widget" badge="BIENTÔT" text="Prochaine étape : une bulle de chat à coller sur n'importe quel site." />
-        </Card>
+        <WidgetCard />
 
         <Card
           title="Compte Twilio"
@@ -312,17 +311,5 @@ function SoonButton({ label, primary }: { label: string; primary?: boolean }) {
     >
       {label} <span className="text-[11px]">· Bientôt</span>
     </span>
-  );
-}
-
-function Sparkline({ values }: { values: number[] }) {
-  const max = Math.max(1, ...values);
-  const w = 600;
-  const h = 60;
-  const points = values.map((v, i) => `${(i / Math.max(1, values.length - 1)) * w},${h - (v / max) * (h - 4) - 2}`).join(" ");
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="mt-2 h-16 w-full" aria-label="Volume d'envoi">
-      <polyline points={points} fill="none" stroke="#a855f7" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-    </svg>
   );
 }

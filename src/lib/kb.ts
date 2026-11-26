@@ -73,6 +73,7 @@ db.exec(`
   if (!cols.has("agent_id")) db.exec(`ALTER TABLE messages ADD COLUMN agent_id INTEGER`);
   const agentCols = new Set((db.prepare(`PRAGMA table_info(agents)`).all() as { name: string }[]).map((c) => c.name));
   if (!agentCols.has("settings")) db.exec(`ALTER TABLE agents ADD COLUMN settings TEXT NOT NULL DEFAULT '{}'`);
+  if (!agentCols.has("prep_phase")) db.exec(`ALTER TABLE agents ADD COLUMN prep_phase TEXT`);
 }
 
 export type AgentRole = "sales" | "support";
@@ -230,6 +231,32 @@ export function agentOverview(agentId: number, days: number) {
 
 // ---------- Agents ----------
 
+/** Étape de construction d'un agent (affichée dans l'écran « On construit votre agent »). */
+export type PrepPhase = "pages" | "instructions";
+
+/** Progression détaillée de la construction d'un agent. */
+export function agentProgress(id: number) {
+  const row = db.prepare(`SELECT name, preparing, prep_phase, instructions FROM agents WHERE id = ?`).get(id) as
+    | { name: string; preparing: number; prep_phase: PrepPhase | null; instructions: string }
+    | undefined;
+  if (!row) return null;
+  const pages = db
+    .prepare(
+      `SELECT COUNT(*) AS total, SUM(p.status = 'ready') AS ready, SUM(p.status = 'error') AS errors
+       FROM kb_pages p JOIN kb_sources s ON s.id = p.source_id WHERE s.agent_id = ?`,
+    )
+    .get(id) as Record<string, number | null>;
+  const faqs = (db.prepare(`SELECT COUNT(*) AS n FROM faqs WHERE agent_id = ?`).get(id) as { n: number }).n;
+  return {
+    name: row.name,
+    preparing: row.preparing === 1,
+    phase: row.preparing === 1 ? (row.prep_phase ?? "pages") : null,
+    pages: { total: pages.total ?? 0, ready: pages.ready ?? 0, errors: pages.errors ?? 0 },
+    faqs,
+    hasInstructions: row.instructions.trim().length > 0,
+  };
+}
+
 export function listAgents(): AgentWithStats[] {
   const agents = (db.prepare(`SELECT * FROM agents ORDER BY is_default DESC, created_at`).all() as AgentRow[]).map(toAgent);
   return agents.map((a) => {
@@ -279,7 +306,10 @@ export function createAgent(a: { name: string; role: AgentRole; language: string
 
 export function updateAgent(
   id: number,
-  u: Partial<Pick<Agent, "name" | "role" | "language" | "instructions" | "status" | "preparing">> & { isDefault?: boolean },
+  u: Partial<Pick<Agent, "name" | "role" | "language" | "instructions" | "status" | "preparing">> & {
+    isDefault?: boolean;
+    prepPhase?: PrepPhase | null;
+  },
 ) {
   const set: string[] = [];
   const values: (string | number)[] = [];
@@ -293,6 +323,10 @@ export function updateAgent(
   if (typeof u.instructions === "string") add("instructions", u.instructions);
   if (u.status) add("status", u.status);
   if (typeof u.preparing === "boolean") add("preparing", u.preparing ? 1 : 0);
+  if (u.prepPhase !== undefined) {
+    set.push("prep_phase = ?");
+    values.push(u.prepPhase ?? (null as unknown as string));
+  }
   if (u.isDefault) db.prepare(`UPDATE agents SET is_default = 0`).run();
   if (u.isDefault) add("is_default", 1);
   if (!set.length) return;

@@ -200,6 +200,10 @@ export function AgentsClient() {
             setCreating(false);
             router.push(`/agents/${id}`);
           }}
+          onBackground={() => {
+            setCreating(false);
+            void load();
+          }}
         />
       )}
     </main>
@@ -210,8 +214,9 @@ function Preparation({ a }: { a: AgentWithStats }) {
   const { total, ready, errors, pending } = a.pages;
   if (a.preparing || pending > 0) {
     return (
-      <span className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700">
-        ⏳ Lecture {ready + errors}/{total} pages…
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-600" />
+        En construction… {total ? `${ready + errors}/${total} pages` : ""}
       </span>
     );
   }

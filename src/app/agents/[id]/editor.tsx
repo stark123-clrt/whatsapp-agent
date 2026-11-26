@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { AgentSettings } from "@/lib/agent-settings";
 import type { Agent } from "@/lib/kb";
+import { BuildProgress } from "../build-progress";
 import { CapabilitiesTab, FaqTab, TagsTab } from "./tabs-b";
 import { EntryTab, FollowupsTab, TryTab } from "./tabs-c";
 import { HoursTab, InstructionsTab, MediaTab, OverviewTab } from "./tabs-a";
@@ -141,6 +142,20 @@ export function AgentEditor({ id }: { id: number }) {
   if (!data || !settings) return <main className="p-10 text-sm text-zinc-500">Chargement…</main>;
 
   const { agent, overview, preparation } = data;
+
+  // Agent encore en construction : on montre la progression plutôt qu'un score incomplet.
+  if (agent.preparing) {
+    return (
+      <main className="mx-auto w-full max-w-3xl px-8 py-10">
+        <Link href="/agents" className="text-sm text-zinc-500 hover:text-zinc-800">
+          ← Agents IA
+        </Link>
+        <div className="mt-6 rounded-2xl border border-zinc-200 bg-white px-8 py-10 shadow-sm">
+          <BuildProgress agentId={agent.id} onDone={() => void reload(true)} />
+        </div>
+      </main>
+    );
+  }
   const index = TABS.findIndex((t) => t.id === tab);
   const done = (t: TabId) => preparation.items.filter((i) => i.tab === t).every((i) => i.points === i.max) && preparation.items.some((i) => i.tab === t);
   const props: TabProps = { agent, settings, update, saveNow, reload: () => reload(true), notify, goTo };

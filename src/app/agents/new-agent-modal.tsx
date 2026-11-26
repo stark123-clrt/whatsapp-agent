@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { BuildProgress } from "./build-progress";
 
 const LANGS = [
   ["fr", "🇫🇷 Français"],
@@ -15,7 +16,16 @@ const LANGS = [
 
 type Doc = { name: string; text: string };
 
-export function NewAgentModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: number) => void }) {
+export function NewAgentModal({
+  onClose,
+  onCreated,
+  onBackground,
+}: {
+  onClose: () => void;
+  onCreated: (id: number) => void;
+  onBackground: () => void;
+}) {
+  const [building, setBuilding] = useState<{ id: number; pages: number } | null>(null);
   const [role, setRole] = useState<"sales" | "support">("sales");
   const [mode, setMode] = useState<"site" | "scratch">("site");
   const [website, setWebsite] = useState("");
@@ -90,7 +100,9 @@ export function NewAgentModal({ onClose, onCreated }: { onClose: () => void; onC
     const body = await res.json().catch(() => ({}));
     setSaving(false);
     if (!res.ok) return setError(body.error ?? "Échec de la création.");
-    onCreated(body.agent.id);
+    // L'agent se construit (lecture du site, FAQ, instructions) : on affiche la progression.
+    if (body.agent.preparing) setBuilding({ id: body.agent.id, pages: chosen.length });
+    else onCreated(body.agent.id);
   }
 
   // Ce qui manque encore pour pouvoir créer l'agent (affiché à côté du bouton).
@@ -106,6 +118,21 @@ export function NewAgentModal({ onClose, onCreated }: { onClose: () => void; onC
         ? "Écris les instructions ou ajoute un document."
         : null;
   const canCreate = !missing && !saving;
+
+  if (building) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+        <div role="dialog" aria-label="Construction de l'agent" className="w-full max-w-xl rounded-2xl bg-white px-8 py-8 shadow-2xl">
+          <BuildProgress
+            agentId={building.id}
+            pagesFound={building.pages || undefined}
+            onDone={() => onCreated(building.id)}
+            onBackground={onBackground}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onMouseDown={onClose}>

@@ -102,6 +102,11 @@ export function getSocket(): WASocket | null {
 
 /** Démarre la connexion si elle n'est pas déjà active. */
 export function ensureWhatsApp(): Promise<void> {
+  // WHATSAPP_DISABLED=true : cette copie de l'appli ne se connecte jamais (ex. ton PC quand le serveur gère).
+  if (process.env.WHATSAPP_DISABLED === "true") {
+    setState({ status: "closed", lastError: "WhatsApp est désactivé sur cette installation (WHATSAPP_DISABLED=true)." });
+    return Promise.resolve();
+  }
   if (store.sock || store.reconnectTimer) return Promise.resolve();
   store.starting ??= connect().finally(() => {
     store.starting = null;

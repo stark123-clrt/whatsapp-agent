@@ -48,11 +48,17 @@ function enqueue<T>(task: () => Promise<T>): Promise<T> {
 
 /** Lit les pages puis rédige les instructions de l'agent. Ne bloque pas : tourne en arrière-plan. */
 export function prepareAgent(agentId: number, pageIds: number[], writeInstructions: boolean) {
-  updateAgent(agentId, { preparing: true });
+  updateAgent(agentId, { preparing: true, prepPhase: "pages" });
   void enqueue(async () => {
-    await processAll(pageIds);
-    if (writeInstructions) await writeAgentInstructions(agentId).catch(() => {});
-    updateAgent(agentId, { preparing: false });
+    try {
+      await processAll(pageIds);
+      if (writeInstructions) {
+        updateAgent(agentId, { prepPhase: "instructions" });
+        await writeAgentInstructions(agentId).catch(() => {});
+      }
+    } finally {
+      updateAgent(agentId, { preparing: false, prepPhase: null });
+    }
   });
 }
 

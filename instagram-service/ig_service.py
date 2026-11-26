@@ -210,8 +210,10 @@ def message_json(m, me):
             break
     if not media_ref and m.media_share is not None:
         media_ref = str(getattr(m.media_share, "pk", "") or "") or None
+    # Diagnostic : quels blocs Instagram accompagnent un message spécial (réponse à une story…).
+    debug = ",".join(k for k in ("reel_share", "story_share", "raw_xma", "media_share", "xma_share", "clip", "reply") if getattr(m, k, None)) or None
     ts = m.timestamp.timestamp() if m.timestamp else time.time()
-    return {"id": str(m.id), "userId": str(m.user_id) if m.user_id else None, "fromMe": str(m.user_id) == me, "ts": int(ts * 1000), "type": m.item_type, "text": label, "mediaRef": media_ref}
+    return {"debug": debug, "id": str(m.id), "userId": str(m.user_id) if m.user_id else None, "fromMe": str(m.user_id) == me, "ts": int(ts * 1000), "type": m.item_type, "text": label, "mediaRef": media_ref}
 
 
 def inbox(amount):

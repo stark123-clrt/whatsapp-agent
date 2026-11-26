@@ -29,7 +29,7 @@ type Thread = {
   threadId: string;
   pending: boolean;
   users: { pk: string; username: string; fullName: string | null; picture: string | null }[];
-  messages: { id: string; fromMe: boolean; ts: number; text: string; type?: string | null; mediaRef?: string | null }[];
+  messages: { id: string; fromMe: boolean; ts: number; text: string; type?: string | null; mediaRef?: string | null; debug?: string | null }[];
 };
 
 const PORT = Number(process.env.IG_PORT ?? 8765);
@@ -150,11 +150,13 @@ function startPolling() {
   let cutoff = since();
   const tick = async () => {
     try {
+      // Heure prise AVANT la relève (avec 2 min de marge) : un message arrivé pendant la relève
+      // ne doit jamais être pris pour de l'historique. Les doublons sont déjà écartés par leur identifiant.
+      const started = Date.now() - 2 * 60_000;
       const { threads } = await ig<{ threads: Thread[] }>("/inbox");
-      const now = Date.now();
       for (const t of threads) ingest(t, cutoff);
-      cutoff = now;
-      writeFileSync(SINCE_FILE, String(now));
+      cutoff = started;
+      writeFileSync(SINCE_FILE, String(started));
     } catch (err) {
       console.error(`[instagram] relève : ${err instanceof Error ? err.message : err}`);
     }
@@ -193,6 +195,7 @@ ${m.text}`;
 ${m.text}`;
     }
     saveMessage({ id, jid, sender: m.fromMe ? "human" : "contact", type: "text", text, mediaFile: null, mime: null, ts: m.ts, status: m.fromMe ? 4 : 0 });
+    if (!m.fromMe && !m.mediaRef && (m.debug || (m.type && m.type !== "text"))) console.log(`[instagram] message « ${m.type} » sans contenu reconnu (${m.debug ?? "aucun bloc"})`);
     if (!m.fromMe && m.ts > cutoff) fresh = text;
     else if (!m.fromMe) history = true;
     if (m.fromMe) {

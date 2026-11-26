@@ -54,7 +54,7 @@ export function Sidebar() {
 
 function AdminSidebar({ pathname }: { pathname: string }) {
   const currentSection = useSearchParams().get("section") ?? (pathname === "/parametres" ? "channels" : null);
-  const { status, unread } = useLiveCounts();
+  const { unread } = useLiveCounts();
   const [closed, setClosed] = useState<Set<string>>(new Set());
   const toggle = (title: string) =>
     setClosed((prev) => {
@@ -68,7 +68,7 @@ function AdminSidebar({ pathname }: { pathname: string }) {
     <nav className="flex w-60 shrink-0 flex-col border-r border-zinc-200 bg-white">
       <p className="px-6 pt-6 pb-4 text-base font-semibold">Agent WhatsApp</p>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-3">
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {SECTIONS.map((section, i) => (
           <div key={i} className="mb-4">
             {section.title && (
@@ -145,24 +145,10 @@ function AdminSidebar({ pathname }: { pathname: string }) {
           await fetch("/api/auth/logout", { method: "POST" });
           window.location.replace("/login"); // rechargement complet : plus aucune donnée en mémoire
         }}
-        className="mx-3 mt-2 rounded-lg px-3 py-1.5 text-left text-xs text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"
+        className="mx-3 my-3 rounded-lg px-3 py-1.5 text-left text-xs text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"
       >
         ⎋ Se déconnecter
       </button>
-      <Link
-        href="/parametres?section=channels"
-        className="m-3 mt-1 flex items-center justify-between rounded-lg border border-zinc-200 px-3 py-2 text-sm hover:bg-zinc-50"
-      >
-        <span className="text-zinc-600">WhatsApp</span>
-        <span className="flex items-center gap-1.5">
-          <span
-            className={`h-2 w-2 rounded-full ${
-              status === "open" ? "bg-green-600" : status ? "bg-amber-500" : "bg-zinc-300"
-            }`}
-          />
-          {status === "open" ? "En ligne" : "Hors ligne"}
-        </span>
-      </Link>
     </nav>
   );
 }

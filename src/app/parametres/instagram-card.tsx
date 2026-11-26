@@ -98,6 +98,7 @@ export function InstagramCard() {
 function ConnectInstagram({ state, onClose, onChanged }: { state: State | null; onClose: () => void; onChanged: () => void }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [code, setCode] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -170,7 +171,30 @@ function ConnectInstagram({ state, onClose, onChanged }: { state: State | null; 
             </label>
             <label className="block text-sm font-medium text-zinc-700">
               Mot de passe
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="off" className={input} />
+              <span className="relative block">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="off"
+                  className={`${input} pr-11`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  title={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  className="absolute top-1/2 right-2 mt-0.75 -translate-y-1/2 rounded-lg p-1.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    {showPassword ? (
+                      <path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.4 5.2A9.8 9.8 0 0 1 12 5c5 0 9 4.5 10 7a13 13 0 0 1-3.2 4.3M6.6 6.6C4.3 8 2.7 10.2 2 12c1 2.5 5 7 10 7a9.6 9.6 0 0 0 4.5-1.1" />
+                    ) : (
+                      <path d="M2 12c1-2.5 5-7 10-7s9 4.5 10 7c-1 2.5-5 7-10 7S3 14.5 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+                    )}
+                  </svg>
+                </button>
+              </span>
             </label>
             <p className="text-xs text-zinc-500">🔒 Le mot de passe sert uniquement à la connexion et n&apos;est jamais enregistré : seule la session Instagram est conservée, sur ton serveur.</p>
             {(error || state?.error) && <p className="text-sm text-red-600">{error ?? state?.error}</p>}

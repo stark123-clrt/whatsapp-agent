@@ -20,7 +20,7 @@ const SECTIONS: { title?: string; items: Item[] }[] = [
   {
     title: "CRM",
     items: [
-      { label: "Contacts", icon: "users" },
+      { label: "Contacts", href: "/contacts", icon: "users" },
       { label: "Opportunités", icon: "briefcase" },
     ],
   },

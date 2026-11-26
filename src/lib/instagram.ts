@@ -195,6 +195,13 @@ export async function loginInstagram(username: string, password: string) {
   store.state = { ...store.state, status: "logging_in", error: null, username };
 }
 
+/** Connexion avec le cookie « sessionid » du navigateur (quand Instagram refuse l'identifiant). */
+export async function loginInstagramSession(sessionid: string) {
+  ensureInstagram();
+  await ig("/login-session", { sessionid });
+  store.state = { ...store.state, status: "logging_in", error: null };
+}
+
 export async function submitInstagramCode(code: string) {
   await ig("/code", { code });
 }

@@ -101,6 +101,11 @@ def friendly(err):
     if isinstance(err, LoginRequired):
         return "La session Instagram a expiré : reconnecte le compte."
     text = str(err) or err.__class__.__name__
+    if "obsol" in text.lower() or "upgrade" in text.lower() or err.__class__.__name__ == "ClientNeedsUpgradeError":
+        return (
+            "Instagram a refusé cette méthode de connexion pour ce compte (fréquent avec un compte tout neuf ou une "
+            "connexion avec l'e-mail). Essaie avec le nom d'utilisateur, ou utilise « Connexion avec la session du navigateur »."
+        )
     return text[:300]
 
 
@@ -127,6 +132,21 @@ def do_login(username, password):
             set_state(status="error", error=friendly(err))
         finally:
             pending.update(kind=None, code=None, username=None, password=None)
+
+
+def do_login_session(sessionid):
+    """Connexion avec le cookie « sessionid » d'un navigateur déjà connecté à Instagram."""
+    global client
+    with api_lock:
+        cl = new_client()
+        try:
+            cl.login_by_sessionid(sessionid)
+            cl.dump_settings(SESSION)
+            client = cl
+            save_account(cl)
+        except Exception as err:  # noqa: BLE001
+            client = None
+            set_state(status="error", error="Session refusée : elle est peut-être expirée ou incomplète. Recopie la valeur « sessionid » après t'être reconnecté sur instagram.com. (" + friendly(err)[:120] + ")")
 
 
 def resume():
@@ -258,6 +278,15 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(409, {"error": "Une connexion est déjà en cours."})
             set_state(status="logging_in", error=None, username=username)
             threading.Thread(target=do_login, args=(username, password), daemon=True).start()
+            return self.reply(200, {"ok": True})
+        if self.path == "/login-session":
+            sessionid = "".join(str(b.get("sessionid") or "").split()).strip('"')
+            if len(sessionid) < 20:
+                return self.reply(400, {"error": "Valeur « sessionid » invalide."})
+            if state["status"] in ("logging_in", "two_factor", "challenge"):
+                return self.reply(409, {"error": "Une connexion est déjà en cours."})
+            set_state(status="logging_in", error=None)
+            threading.Thread(target=do_login_session, args=(sessionid,), daemon=True).start()
             return self.reply(200, {"ok": True})
         if self.path == "/code":
             code = "".join(ch for ch in str(b.get("code") or "") if ch.isdigit())

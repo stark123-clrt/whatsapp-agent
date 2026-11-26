@@ -100,6 +100,8 @@ function ConnectInstagram({ state, onClose, onChanged }: { state: State | null; 
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [code, setCode] = useState("");
+  const [method, setMethod] = useState<"password" | "session">("password");
+  const [sessionid, setSessionid] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const status = state?.status;
@@ -108,10 +110,12 @@ function ConnectInstagram({ state, onClose, onChanged }: { state: State | null; 
     e.preventDefault();
     setSending(true);
     setError(null);
-    const r = await fetch("/api/instagram/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) });
+    const body = method === "session" ? { sessionid } : { username, password };
+    const r = await fetch("/api/instagram/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const d = (await r.json().catch(() => ({}))) as { error?: string };
     setSending(false);
-    setPassword(""); // on ne garde pas le mot de passe dans la page
+    setPassword(""); // on ne garde ni le mot de passe ni la session dans la page
+    setSessionid("");
     if (!r.ok) return setError(d.error ?? "Connexion impossible.");
     onChanged();
   }
@@ -165,9 +169,28 @@ function ConnectInstagram({ state, onClose, onChanged }: { state: State | null; 
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
               ⚠️ Connexion <strong>non officielle</strong> : Instagram peut limiter un compte trop automatisé. Commence avec un <strong>compte de test</strong>, et laisse l&apos;IA répondre seulement aux personnes qui t&apos;écrivent.
             </div>
+            <div className="grid grid-cols-2 gap-1 rounded-xl bg-zinc-100 p-1 text-sm">
+              {(
+                [
+                  ["password", "Identifiant"],
+                  ["session", "Session du navigateur"],
+                ] as const
+              ).map(([id, text]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setMethod(id)}
+                  className={`rounded-lg py-1.5 ${method === id ? "bg-white font-semibold shadow-sm" : "text-zinc-500 hover:text-zinc-800"}`}
+                >
+                  {text}
+                </button>
+              ))}
+            </div>
+            {method === "password" ? (
+              <>
             <label className="block text-sm font-medium text-zinc-700">
               Nom d&apos;utilisateur Instagram
-              <input autoFocus value={username} onChange={(e) => setUsername(e.target.value)} placeholder="ton_compte" autoComplete="off" className={input} />
+              <input autoFocus value={username} onChange={(e) => setUsername(e.target.value)} placeholder="ton_compte (pas l'e-mail)" autoComplete="off" className={input} />
             </label>
             <label className="block text-sm font-medium text-zinc-700">
               Mot de passe
@@ -196,9 +219,37 @@ function ConnectInstagram({ state, onClose, onChanged }: { state: State | null; 
                 </button>
               </span>
             </label>
-            <p className="text-xs text-zinc-500">🔒 Le mot de passe sert uniquement à la connexion et n&apos;est jamais enregistré : seule la session Instagram est conservée, sur ton serveur.</p>
+                {username.includes("@") && username.includes(".") && (
+                  <p className="-mt-2 text-xs text-amber-700">
+                    ⚠️ Mets ton <strong>nom d&apos;utilisateur</strong> (ex. : ata_elroi), pas ton e-mail : Instagram refuse plus souvent la connexion par e-mail.
+                  </p>
+                )}
+              </>
+            ) : (
+              <div className="space-y-3">
+                <ol className="list-decimal space-y-1 rounded-xl bg-zinc-50 py-3 pr-3 pl-8 text-xs leading-relaxed text-zinc-600">
+                  <li>
+                    Sur un ordinateur, ouvre <strong>instagram.com</strong> dans Chrome et connecte-toi au compte.
+                  </li>
+                  <li>
+                    Appuie sur <strong>F12</strong> → onglet <strong>Application</strong> → <strong>Cookies</strong> → <strong>https://www.instagram.com</strong>.
+                  </li>
+                  <li>
+                    Clique sur la ligne <strong>sessionid</strong> et copie sa <strong>valeur</strong> (une longue suite de chiffres et de lettres).
+                  </li>
+                  <li>Colle-la ci-dessous. Ne te déconnecte pas d&apos;instagram.com ensuite : ça couperait aussi la session ici.</li>
+                </ol>
+                <label className="block text-sm font-medium text-zinc-700">
+                  Valeur « sessionid »
+                  <input value={sessionid} onChange={(e) => setSessionid(e.target.value)} autoComplete="off" spellCheck={false} placeholder="123456789%3AAbCdEf…" className={`${input} font-mono text-xs`} />
+                </label>
+              </div>
+            )}
+            <p className="text-xs text-zinc-500">
+              🔒 {method === "password" ? "Le mot de passe sert uniquement à la connexion et n'est jamais enregistré" : "La session n'est jamais affichée ni partagée"} : seule la session Instagram est conservée, sur ton serveur.
+            </p>
             {(error || state?.error) && <p className="text-sm text-red-600">{error ?? state?.error}</p>}
-            <button disabled={sending || !username.trim() || !password} className="w-full rounded-xl bg-gradient-to-r from-amber-500 via-pink-500 to-violet-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+            <button disabled={sending || (method === "password" ? !username.trim() || !password : sessionid.trim().length < 20)} className="w-full rounded-xl bg-gradient-to-r from-amber-500 via-pink-500 to-violet-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
               {sending ? "Connexion…" : "Se connecter"}
             </button>
           </form>

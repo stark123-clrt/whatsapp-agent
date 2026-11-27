@@ -201,7 +201,7 @@ export function ContactsClient() {
   }
 
   return (
-    <main className="min-h-full bg-white px-8 py-7" onClick={() => panel && setPanel(null)}>
+    <main className="min-h-full px-8 py-7" onClick={() => panel && setPanel(null)}>
       {/* Contacts / Listes */}
       <div className="inline-flex rounded-xl border border-zinc-200 bg-white p-1 text-sm">
         <span className="flex items-center gap-2 rounded-lg bg-zinc-100 px-3.5 py-1.5 font-medium">

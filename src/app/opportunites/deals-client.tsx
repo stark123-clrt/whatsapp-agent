@@ -155,7 +155,7 @@ export function DealsClient() {
   const firstOpen = stages.find((s) => s.kind === "open")?.id ?? stages[0]?.id ?? 0;
 
   return (
-    <main className="min-h-full bg-white px-8 py-7" onClick={() => filterOpen && setFilterOpen(false)}>
+    <main className="min-h-full px-8 py-7" onClick={() => filterOpen && setFilterOpen(false)}>
       {/* En-tête */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>

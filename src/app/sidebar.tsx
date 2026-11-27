@@ -68,7 +68,7 @@ function AdminSidebar({ pathname }: { pathname: string }) {
     });
 
   return (
-    <nav className="flex w-60 shrink-0 flex-col border-r border-zinc-200 bg-white">
+    <nav className="relative z-10 flex w-60 shrink-0 flex-col border-r border-zinc-200/80 bg-white/80 backdrop-blur-md">
       <Link href="/tableau-de-bord" className="flex items-center justify-center px-6 pt-6 pb-5" aria-label="Stark Marketing — tableau de bord">
         <Image src="/brand/logo.png" alt="Stark Marketing" width={105} height={48} priority className="h-12 w-auto" />
       </Link>

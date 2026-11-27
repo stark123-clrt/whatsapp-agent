@@ -118,7 +118,7 @@ export function CampaignDetail({ id }: { id: number }) {
   for (const p of upcoming) groups.set(dayLabel(p.scheduledAt), [...(groups.get(dayLabel(p.scheduledAt)) ?? []), p]);
 
   return (
-    <main className="min-h-full bg-white px-8 py-7">
+    <main className="min-h-full px-8 py-7">
       <Link href="/campagnes" className="text-sm text-zinc-500 hover:text-zinc-800">
         ← Campagnes
       </Link>

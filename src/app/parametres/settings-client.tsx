@@ -50,7 +50,7 @@ export function SettingsClient({ section }: { section: string }) {
 
   return (
     <div className="flex min-h-full shrink-0">
-      <aside className="sticky top-0 h-svh w-72 shrink-0 self-start overflow-y-auto border-r border-zinc-200 bg-white px-5 py-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <aside className="sticky top-0 h-svh w-72 shrink-0 self-start overflow-y-auto border-r border-zinc-200/80 bg-white/80 px-5 py-8 backdrop-blur-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <h1 className="text-2xl font-bold">Paramètres</h1>
         <p className="mt-1 text-sm text-zinc-500">Configure ton espace de travail.</p>
         {GROUPS.map((g) => (

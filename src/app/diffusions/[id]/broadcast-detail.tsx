@@ -60,7 +60,7 @@ export function BroadcastDetail({ id }: { id: number }) {
   }
 
   if (error) return <main className="p-8 text-sm text-red-600">{error}</main>;
-  if (!b) return <main className="min-h-full bg-white p-8" />;
+  if (!b) return <main className="min-h-full p-8" />;
 
   const st = BROADCAST_STATUS[b.status];
   const s = b.settings;
@@ -78,7 +78,7 @@ export function BroadcastDetail({ id }: { id: number }) {
   ];
 
   return (
-    <main className="min-h-full bg-white px-8 py-7">
+    <main className="min-h-full px-8 py-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm">
           <Link href="/diffusions" className="text-zinc-500 hover:text-zinc-800">

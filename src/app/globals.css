@@ -23,3 +23,35 @@
 :root {
   color-scheme: light;
 }
+
+/* Fond animé (circuit) : une impulsion lumineuse parcourt chaque piste, les pastilles « respirent ». */
+.circuit-pulse {
+  stroke-dasharray: 70 930;
+  stroke-dashoffset: 1000;
+  animation-name: circuit-run;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes circuit-run {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.circuit-pad {
+  opacity: 0.22;
+  animation: circuit-glow 6s ease-in-out infinite;
+}
+@keyframes circuit-glow {
+  50% {
+    opacity: 0.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .circuit-pulse {
+    animation: none;
+    opacity: 0;
+  }
+  .circuit-pad {
+    animation: none;
+  }
+}

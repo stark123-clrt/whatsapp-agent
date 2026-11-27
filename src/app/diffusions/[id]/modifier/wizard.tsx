@@ -180,10 +180,10 @@ export function BroadcastWizard({ id }: { id: number }) {
   }
 
   if (error && !s) return <main className="p-8 text-sm text-red-600">{error}</main>;
-  if (!s) return <main className="min-h-full bg-white p-8" />;
+  if (!s) return <main className="min-h-full p-8" />;
   if (status !== "draft")
     return (
-      <main className="min-h-full bg-white p-8 text-sm">
+      <main className="min-h-full p-8 text-sm">
         Cette diffusion est déjà lancée.{" "}
         <Link href={`/diffusions/${id}`} className="font-semibold text-blue-700 underline">
           Voir son suivi
@@ -202,7 +202,7 @@ export function BroadcastWizard({ id }: { id: number }) {
   const hint = ["Choisis une liste de contacts pour continuer", "Rédige ton message d'ouverture pour continuer", "Écris le message de relance pour continuer", "Choisis la date d'envoi pour continuer", ""][step];
 
   return (
-    <main className="min-h-full bg-white px-8 pb-6 pt-7">
+    <main className="min-h-full px-8 pb-6 pt-7">
       <div className="mx-auto max-w-4xl">
         <div className="flex items-center gap-2 text-sm">
           <Link href="/diffusions" className="text-zinc-500 hover:text-zinc-800">

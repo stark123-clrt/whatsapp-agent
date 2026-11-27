@@ -29,6 +29,9 @@ async function tick() {
   try {
     let followups = 0;
     for (const chat of chatsForScheduler()) {
+      // Réponses différées et relances partent par WhatsApp : jamais sur Instagram ni le site
+      // (un identifiant Instagram n'est pas un numéro WhatsApp).
+      if (chat.channel !== "whatsapp") continue;
       const agent = agentOf(chat.jid);
       if (!agent || agent.status !== "active" || !isOpenNow(agent.settings)) continue;
 

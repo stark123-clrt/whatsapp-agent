@@ -24,6 +24,21 @@ const TRACES: { d: string; dur: number; delay: number }[] = [
   { d: "M620 420 H760 L810 470 H980 L1030 420 H1120", dur: 13, delay: 3 },
   { d: "M520 610 V700 L570 750 H700", dur: 6.5, delay: 8.5 },
   { d: "M1120 420 V330 L1170 280 H1300", dur: 7.5, delay: 1.8 },
+  // Pistes supplémentaires (plus de densité, même discrétion)
+  { d: "M-20 200 H60 L110 250 H240 L280 290 V340", dur: 9, delay: 6 },
+  { d: "M-20 470 H200 L250 520 H420 L460 480 H560", dur: 10, delay: 1.5 },
+  { d: "M-20 620 H80 L130 670 V760 L180 810 H260", dur: 8, delay: 4.6 },
+  { d: "M-20 900 H230 L280 950 H450 L500 1020", dur: 9.5, delay: 7 },
+  { d: "M300 -20 V40 L350 90 H470 L520 40 V-20", dur: 7, delay: 2.2 },
+  { d: "M700 180 H850 L900 230 H1040 L1090 180 H1200 L1250 130 H1360", dur: 14, delay: 0.4 },
+  { d: "M660 300 V340 L710 390 H880 L930 340 H1010", dur: 9, delay: 8 },
+  { d: "M720 560 H860 L910 610 H1060 L1110 560 H1180 L1230 610 V690", dur: 13.5, delay: 5.2 },
+  { d: "M820 690 V760 L870 810 H990", dur: 6, delay: 3.8 },
+  { d: "M1620 180 H1560 L1510 230 H1390 L1340 280", dur: 8, delay: 7.2 },
+  { d: "M1620 400 H1580 L1530 450 V580 L1580 630 H1620", dur: 9, delay: 2.8 },
+  { d: "M1620 800 H1530 L1480 850 H1380 L1330 800 H1290", dur: 9.5, delay: 0.6 },
+  { d: "M1620 960 H1600 L1550 910 H1560", dur: 5, delay: 4 },
+  { d: "M1000 1020 V980 L1050 930 H1160 L1210 880 H1320", dur: 10, delay: 9 },
 ];
 
 // Pastilles de soudure aux extrémités et aux jonctions.
@@ -32,6 +47,8 @@ const PADS: [number, number][] = [
   [1330, 890], [1190, 1010], [1260, 30], [620, 420], [1120, 420], [700, 750], [1300, 280], [240, 180],
   [340, 400], [420, 760], [170, 850], [610, 110], [1390, 140], [1460, 320], [1430, 690], [1240, 740],
   [750, 910], [930, 80], [810, 470],
+  [280, 340], [560, 480], [260, 810], [500, 1020], [470, 90], [1360, 130], [900, 230], [1010, 340],
+  [1230, 690], [990, 810], [1340, 280], [1530, 450], [1290, 800], [1320, 880], [910, 610], [250, 520],
 ];
 
 export function CircuitBackground() {
@@ -48,7 +65,7 @@ export function CircuitBackground() {
         </defs>
         <rect width="1600" height="1000" fill="url(#circuit-fade)" />
         {/* Pistes */}
-        <g stroke="#2a6cdc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.13">
+        <g stroke="#2a6cdc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.11">
           {TRACES.map((t) => (
             <path key={t.d} d={t.d} />
           ))}
@@ -58,7 +75,7 @@ export function CircuitBackground() {
           {TRACES.map((t) => (
             <g key={`p${t.d}`}>
               <path className="circuit-pulse" d={t.d} pathLength={1000} strokeWidth="6" opacity="0.08" style={{ animationDuration: `${t.dur}s`, animationDelay: `${t.delay}s` }} />
-              <path className="circuit-pulse" d={t.d} pathLength={1000} strokeWidth="2" opacity="0.55" style={{ animationDuration: `${t.dur}s`, animationDelay: `${t.delay}s` }} />
+              <path className="circuit-pulse" d={t.d} pathLength={1000} strokeWidth="2" opacity="0.45" style={{ animationDuration: `${t.dur}s`, animationDelay: `${t.delay}s` }} />
             </g>
           ))}
         </g>

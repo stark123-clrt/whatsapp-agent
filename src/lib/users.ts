@@ -139,8 +139,8 @@ async function createUser(input: { email: string; name: string; password?: strin
     hash = await hashPassword(input.password);
   }
   const r = db
-    .prepare(`INSERT INTO users (email, name, password_hash, google_sub, avatar, role, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`)
-    .run(email, name, hash, input.googleSub ?? null, input.avatar ?? null, input.role, Date.now());
+    .prepare(`INSERT INTO users (email, name, password_hash, google_sub, avatar, role, created_at, last_login_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(email, name, hash, input.googleSub ?? null, input.avatar ?? null, input.role, Date.now(), Date.now()); // créé = connecté
   return getUser(Number(r.lastInsertRowid))!;
 }
 

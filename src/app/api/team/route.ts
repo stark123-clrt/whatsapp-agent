@@ -4,11 +4,11 @@ import { emailEnabled, esc, sendEmail } from "@/lib/mailer";
 import { createInvite, listUsers, pendingInvites, removeUser, revokeInvite, setRole, type Role } from "@/lib/users";
 
 // Équipe : membres et invitations. Lecture pour tous, modifications réservées aux administrateurs.
-export async function GET() {
+export async function GET(req: NextRequest) {
   await connection();
   try {
     const me = await requireUser();
-    return Response.json({ me, users: listUsers(), invites: me.role === "admin" ? pendingInvites() : [], emailEnabled: emailEnabled(), appUrl: appUrl() });
+    return Response.json({ me, users: listUsers(), invites: me.role === "admin" ? pendingInvites() : [], emailEnabled: emailEnabled(), appUrl: appUrl(req) });
   } catch (err) {
     return authErrorResponse(err);
   }
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const me = await requireAdmin();
     const b = (await req.json().catch(() => ({}))) as { email?: string; role?: Role };
     const inv = createInvite(b.email ?? "", b.role === "admin" ? "admin" : "member", me.id);
-    const link = `${appUrl()}/invitation/${inv.token}`;
+    const link = `${appUrl(req)}/invitation/${inv.token}`;
     let emailed = false;
     if (emailEnabled()) {
       emailed = await sendEmail({

@@ -40,9 +40,14 @@ export async function loginResponse(req: Request, user: User, body: unknown = { 
   return Response.json(body, { headers: { "Set-Cookie": sessionCookie(value, isSecure(req)) } });
 }
 
-/** Adresse publique de l'appli (pour les liens dans les e-mails et alertes). */
-export function appUrl(): string {
+/** Adresse publique de l'appli (pour les liens dans les e-mails et alertes) : variable APP_URL, sinon l'adresse
+ *  de la requête en cours (et elle est mémorisée), sinon la dernière adresse connue. */
+export function appUrl(req?: Request): string {
   if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, "");
+  if (req) {
+    rememberOrigin(req);
+    return originOf(req);
+  }
   const r = db.prepare(`SELECT value FROM app_settings WHERE key = 'app_origin'`).get() as { value: string } | undefined;
   return r ? JSON.parse(r.value) : "http://localhost:3000";
 }
@@ -53,7 +58,7 @@ export function originOf(req: Request): string {
   return host ? `${proto}://${host}` : new URL(req.url).origin;
 }
 
-function rememberOrigin(req: Request) {
+export function rememberOrigin(req: Request) {
   try {
     db.exec(`CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
     db.prepare(`INSERT INTO app_settings (key, value) VALUES ('app_origin', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value`).run(JSON.stringify(originOf(req)));

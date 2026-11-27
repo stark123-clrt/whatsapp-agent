@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { originOf } from "@/lib/auth";
+import { originOf, rememberOrigin } from "@/lib/auth";
 import { googleProfile } from "@/lib/google-auth";
 import { createSession, isSecure, sessionCookie } from "@/lib/session";
 import { createFirstAdminGoogle, loginWithGoogle, sessionVersion, userCount } from "@/lib/users";
@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
     const profile = await googleProfile(code, `${origin}/api/auth/google/callback`);
     // Premier compte (code d'installation déjà vérifié) ou connexion d'un compte existant / invité.
     const user = setup === "1" && userCount() === 0 ? await createFirstAdminGoogle(profile) : await loginWithGoogle(profile);
+    rememberOrigin(req); // adresse publique de l'appli, pour les liens des e-mails et alertes
     const value = await createSession(user.id, sessionVersion(user.id) ?? 1);
     const target = decodeURIComponent(next || "/");
     const headers = new Headers({ Location: `${origin}${target.startsWith("/") && !target.startsWith("//") ? target : "/"}` });

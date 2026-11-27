@@ -125,14 +125,14 @@ function AdminSidebar({ pathname }: { pathname: string }) {
                       aria-current={active ? "page" : undefined}
                       className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                         active
-                          ? "bg-zinc-100 font-medium text-zinc-900 before:absolute before:top-2 before:bottom-2 before:-left-3 before:w-1 before:rounded-r-full before:bg-green-600"
+                          ? "bg-zinc-100 font-medium text-zinc-900 before:absolute before:top-2 before:bottom-2 before:-left-3 before:w-1 before:rounded-r-full before:bg-blue-600"
                           : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
                       }`}
                     >
-                      <Icon name={item.icon} className={active ? "text-green-600" : "text-zinc-400"} />
+                      <Icon name={item.icon} className={active ? "text-blue-600" : "text-zinc-400"} />
                       <span className="flex-1">{item.label}</span>
                       {item.href === "/" && unread > 0 && (
-                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-green-600 px-1.5 text-xs font-medium text-white">
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 text-xs font-medium text-white">
                           {unread}
                         </span>
                       )}

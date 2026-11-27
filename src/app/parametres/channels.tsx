@@ -94,15 +94,15 @@ export function ChannelsSection() {
           {connected ? (
             <>
               <div className="flex items-center gap-4">
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-green-50 text-green-700"><UiIcon name="chat" size={20} className="" /></span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-blue-700"><UiIcon name="chat" size={20} className="" /></span>
                 <div className="flex-1">
                   <p className="flex items-center gap-2 font-semibold">
                     {wa?.me?.name ?? "WhatsApp"}
-                    <span className="rounded-md bg-green-50 px-2 py-0.5 text-[11px] font-bold text-green-700">● CONNECTÉ</span>
+                    <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">● CONNECTÉ</span>
                   </p>
                   <p className="font-mono text-sm text-zinc-500">
                     +{phone}
-                    {wa?.expectedPhone === phone && <span className="ml-2 font-sans text-xs text-green-700"><UiIcon name="lock" size={12} className="mr-1 inline-block align-[-3px]" />numéro autorisé</span>}
+                    {wa?.expectedPhone === phone && <span className="ml-2 font-sans text-xs text-blue-700"><UiIcon name="lock" size={12} className="mr-1 inline-block align-[-3px]" />numéro autorisé</span>}
                   </p>
                 </div>
                 <button onClick={disconnect} className="rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50">
@@ -197,7 +197,7 @@ function ConnectModal({ wa, onClose, onChanged }: { wa: WhatsAppState | null; on
         <h3 className="text-center text-lg font-semibold">Connecter WhatsApp Web</h3>
 
         {wa?.status === "open" ? (
-          <p className="mt-6 text-center font-medium text-green-700"><UiIcon name="checkCircle" size={16} className="mr-1 inline-block align-[-3px]" />Connecté !</p>
+          <p className="mt-6 text-center font-medium text-blue-700"><UiIcon name="checkCircle" size={16} className="mr-1 inline-block align-[-3px]" />Connecté !</p>
         ) : step === "form" ? (
           <>
             <label className="mt-5 block text-sm font-medium text-zinc-700">
@@ -218,7 +218,7 @@ function ConnectModal({ wa, onClose, onChanged }: { wa: WhatsAppState | null; on
               <button
                 onClick={() => start("qr")}
                 disabled={busy || phone.replace(/\D/g, "").length < 8}
-                className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300"
+                className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300"
               >
                 <UiIcon name="qr" size={15} className="mr-1 inline-block align-[-3px]" />Scanner un QR code
               </button>
@@ -311,7 +311,7 @@ function SoonButton({ label, primary }: { label: string; primary?: boolean }) {
     <span
       title="Bientôt"
       className={`inline-flex cursor-default items-center gap-2 rounded-xl px-4 py-2 text-sm ${
-        primary ? "bg-green-100 text-green-700" : "border border-zinc-200 text-zinc-400"
+        primary ? "bg-blue-100 text-blue-700" : "border border-zinc-200 text-zinc-400"
       }`}
     >
       {label} <span className="text-[11px]">· Bientôt</span>

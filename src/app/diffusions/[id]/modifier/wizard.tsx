@@ -29,7 +29,7 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 
 function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
-    <button role="switch" aria-checked={checked} aria-label={label} onClick={() => onChange(!checked)} className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? "bg-green-600" : "bg-zinc-300"}`}>
+    <button role="switch" aria-checked={checked} aria-label={label} onClick={() => onChange(!checked)} className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? "bg-blue-600" : "bg-zinc-300"}`}>
       <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? "left-5.5" : "left-0.5"}`} />
     </button>
   );
@@ -180,12 +180,12 @@ export function BroadcastWizard({ id }: { id: number }) {
   }
 
   if (error && !s) return <main className="p-8 text-sm text-red-600">{error}</main>;
-  if (!s) return <main className="min-h-full bg-zinc-50 p-8" />;
+  if (!s) return <main className="min-h-full bg-white p-8" />;
   if (status !== "draft")
     return (
-      <main className="min-h-full bg-zinc-50 p-8 text-sm">
+      <main className="min-h-full bg-white p-8 text-sm">
         Cette diffusion est déjà lancée.{" "}
-        <Link href={`/diffusions/${id}`} className="font-semibold text-green-700 underline">
+        <Link href={`/diffusions/${id}`} className="font-semibold text-blue-700 underline">
           Voir son suivi
         </Link>
       </main>
@@ -202,7 +202,7 @@ export function BroadcastWizard({ id }: { id: number }) {
   const hint = ["Choisis une liste de contacts pour continuer", "Rédige ton message d'ouverture pour continuer", "Écris le message de relance pour continuer", "Choisis la date d'envoi pour continuer", ""][step];
 
   return (
-    <main className="min-h-full bg-zinc-50 px-8 pb-6 pt-7">
+    <main className="min-h-full bg-white px-8 pb-6 pt-7">
       <div className="mx-auto max-w-4xl">
         <div className="flex items-center gap-2 text-sm">
           <Link href="/diffusions" className="text-zinc-500 hover:text-zinc-800">
@@ -220,7 +220,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                 className={`flex items-center gap-2 ${i <= step ? "font-semibold text-zinc-900" : "text-zinc-400"} ${i < step ? "cursor-pointer" : "cursor-default"}`}
               >
                 <span
-                  className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${i < step ? "bg-green-600 text-white" : i === step ? "border-2 border-green-500 text-green-700" : "bg-zinc-200 text-zinc-500"}`}
+                  className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${i < step ? "bg-blue-600 text-white" : i === step ? "border-2 border-blue-500 text-blue-700" : "bg-zinc-200 text-zinc-500"}`}
                 >
                   {i < step ? "✓" : i + 1}
                 </span>
@@ -242,7 +242,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                 <Label>
                   NOM <span className="text-red-500">*</span>
                 </Label>
-                <input value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5 w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100" />
+                <input value={name} onChange={(e) => setName(e.target.value)} className="mt-1.5 w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
               </Section>
               <Section title="Canal" hint="Le canal utilisé pour cette diffusion.">
                 <div className="grid gap-3 md:grid-cols-3">
@@ -250,7 +250,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                     <p className="text-sm font-semibold">WhatsApp Business (API)</p>
                     <p className="text-xs text-zinc-500">Bientôt</p>
                   </div>
-                  <div className="rounded-xl border border-green-400 bg-green-50 p-3">
+                  <div className="rounded-xl border border-blue-400 bg-blue-50 p-3">
                     <p className="text-sm font-semibold">WhatsApp Web</p>
                     {connected ? (
                       quota && (
@@ -288,10 +288,10 @@ export function BroadcastWizard({ id }: { id: number }) {
                       <button
                         key={l.id}
                         onClick={() => setS({ ...s, listId: l.id })}
-                        className={`rounded-xl border p-3 text-left ${s.listId === l.id ? "border-green-400 bg-green-50" : "border-zinc-200 hover:border-zinc-300"}`}
+                        className={`rounded-xl border p-3 text-left ${s.listId === l.id ? "border-blue-400 bg-blue-50" : "border-zinc-200 hover:border-zinc-300"}`}
                       >
                         <p className="text-sm font-semibold">
-                          {l.kind === "smart" && <UiIcon name="sparkles" size={14} className="mr-1 inline-block align-[-2px] text-green-600" />}
+                          {l.kind === "smart" && <UiIcon name="sparkles" size={14} className="mr-1 inline-block align-[-2px] text-blue-600" />}
                           {l.name}
                         </p>
                         <p className="text-xs text-zinc-500">
@@ -321,7 +321,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                     onChange={(e) => setS({ ...s, message: e.target.value.slice(0, 1600) })}
                     rows={11}
                     placeholder={"{Salut|Bonjour|Hello} {{first_name}} ! ..."}
-                    className="w-full resize-none rounded-xl border border-zinc-200 p-3.5 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                    className="w-full resize-none rounded-xl border border-zinc-200 p-3.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   />
                   <div className="mt-1.5 flex items-center justify-between text-xs text-zinc-500">
                     <div className="flex flex-wrap gap-1.5">
@@ -339,14 +339,14 @@ export function BroadcastWizard({ id }: { id: number }) {
                   <div className="flex items-center justify-between">
                     <Label>PRÉVISUALISATION</Label>
                     {versions > 1 && (
-                      <button onClick={() => setSeed(seed + 1)} className="text-xs font-medium text-green-700 hover:underline">
+                      <button onClick={() => setSeed(seed + 1)} className="text-xs font-medium text-blue-700 hover:underline">
                         Autre version
                       </button>
                     )}
                   </div>
                   <p className="mt-2 text-xs text-zinc-500">Pour {exampleContact.name}</p>
-                  <div className="mt-2 rounded-2xl bg-[#efeae2] p-3">
-                    <div className="ml-auto max-w-[95%] whitespace-pre-wrap rounded-xl rounded-tr-sm bg-[#d9fdd3] px-3 py-2 text-sm shadow-sm">
+                  <div className="mt-2 rounded-2xl bg-zinc-100 p-3">
+                    <div className="ml-auto max-w-[95%] whitespace-pre-wrap rounded-xl rounded-tr-sm bg-blue-50 px-3 py-2 text-sm shadow-sm">
                       {s.media && s.media.mime.startsWith("image/") && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={`/api/broadcasts/media?file=${s.media.file}`} alt="" className="mb-2 max-h-40 w-full rounded-lg object-cover" />
@@ -394,7 +394,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                     {products.length ? (
                       <div className="mt-2 grid max-h-72 grid-cols-3 gap-2 overflow-y-auto md:grid-cols-5">
                         {products.map((p) => (
-                          <button key={p.id} onClick={() => pickProduct(p)} className="rounded-lg border border-zinc-200 p-1.5 text-left hover:border-green-400">
+                          <button key={p.id} onClick={() => pickProduct(p)} className="rounded-lg border border-zinc-200 p-1.5 text-left hover:border-blue-400">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={`/api/catalog/${p.id}/image`} alt="" className="aspect-square w-full rounded object-cover" />
                             <p className="mt-1 line-clamp-2 text-[11px]">{p.title}</p>
@@ -418,7 +418,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                 <p className="mt-3 text-sm text-zinc-600">
                   Écris des variantes avec des accolades et des barres, comme <code className="rounded bg-zinc-100 px-1">{"{Salut|Bonjour|Coucou}"}</code> : une option est tirée au hasard pour chaque contact. Ou laisse l&apos;IA les ajouter.
                 </p>
-                {versions > 1 && <p className="mt-2 text-sm font-semibold text-green-700">Ce message peut être envoyé sous {versions.toLocaleString("fr-FR")} versions différentes.</p>}
+                {versions > 1 && <p className="mt-2 text-sm font-semibold text-blue-700">Ce message peut être envoyé sous {versions.toLocaleString("fr-FR")} versions différentes.</p>}
                 <button onClick={variants} disabled={busy === "variants" || !s.message.trim()} className="mt-3 rounded-xl border border-zinc-200 px-3.5 py-2 text-sm font-medium hover:bg-zinc-50 disabled:opacity-50">
                   {busy === "variants" ? "L'IA ajoute des variantes…" : "Ajouter des variantes avec l'IA"}
                 </button>
@@ -441,12 +441,12 @@ export function BroadcastWizard({ id }: { id: number }) {
               </div>
               <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
                 <div className="grid gap-3 md:grid-cols-2">
-                  <button onClick={() => setS({ ...s, agentId: null })} className={`rounded-xl border p-4 text-left ${s.agentId === null ? "border-green-400 bg-green-50" : "border-zinc-200 hover:border-zinc-300"}`}>
+                  <button onClick={() => setS({ ...s, agentId: null })} className={`rounded-xl border p-4 text-left ${s.agentId === null ? "border-blue-400 bg-blue-50" : "border-zinc-200 hover:border-zinc-300"}`}>
                     <p className="font-semibold"><UiIcon name="users" size={16} className="mr-1 inline-block align-[-3px] text-zinc-500" />L&apos;équipe gère les réponses</p>
                     <p className="mt-0.5 text-sm text-zinc-500">Pas d&apos;IA : les réponses arrivent dans Discussions.</p>
                   </button>
                   {agents.map((a) => (
-                    <button key={a.id} onClick={() => setS({ ...s, agentId: a.id })} className={`rounded-xl border p-4 text-left ${s.agentId === a.id ? "border-green-400 bg-green-50" : "border-zinc-200 hover:border-zinc-300"}`}>
+                    <button key={a.id} onClick={() => setS({ ...s, agentId: a.id })} className={`rounded-xl border p-4 text-left ${s.agentId === a.id ? "border-blue-400 bg-blue-50" : "border-zinc-200 hover:border-zinc-300"}`}>
                       <p className="font-semibold">
                         <UiIcon name="robot" size={16} className="mr-1 inline-block align-[-3px] text-zinc-500" />{a.name} {a.paused && <span className="ml-1 text-xs font-bold text-amber-600">EN PAUSE</span>}
                       </p>
@@ -484,7 +484,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                       onChange={(e) => setS({ ...s, followup: { ...s.followup, message: e.target.value } })}
                       rows={3}
                       placeholder={"{Petit rappel|Je me permets de revenir vers toi} {{first_name}} : ... ?"}
-                      className="w-full resize-none rounded-xl border border-zinc-200 p-3 text-sm outline-none focus:border-green-500"
+                      className="w-full resize-none rounded-xl border border-zinc-200 p-3 text-sm outline-none focus:border-blue-500"
                     />
                   </div>
                 )}
@@ -509,7 +509,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                     <button
                       key={k}
                       onClick={() => setS({ ...s, schedule: { ...s.schedule, mode: k } })}
-                      className={`rounded-xl px-3.5 py-2 text-sm font-semibold ${s.schedule.mode === k ? "bg-green-600 text-white" : "border border-zinc-200 text-zinc-700 hover:bg-zinc-50"}`}
+                      className={`rounded-xl px-3.5 py-2 text-sm font-semibold ${s.schedule.mode === k ? "bg-blue-600 text-white" : "border border-zinc-200 text-zinc-700 hover:bg-zinc-50"}`}
                     >
                       {l}
                     </button>
@@ -543,7 +543,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                           <button
                             key={d}
                             onClick={() => setS({ ...s, window: { ...s.window, days: on ? s.window.days.filter((x) => x !== i + 1) : [...s.window.days, i + 1].sort() } })}
-                            className={`rounded-lg border px-2.5 py-1 text-xs font-medium ${on ? "border-green-500 bg-green-50 text-green-800" : "border-zinc-200 text-zinc-500"}`}
+                            className={`rounded-lg border px-2.5 py-1 text-xs font-medium ${on ? "border-blue-500 bg-blue-50 text-blue-800" : "border-zinc-200 text-zinc-500"}`}
                           >
                             {d}
                           </button>
@@ -624,10 +624,10 @@ export function BroadcastWizard({ id }: { id: number }) {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-green-700">✓ Tout est prêt.</p>
+                  <p className="text-sm text-blue-700">✓ Tout est prêt.</p>
                 )}
                 {!connected && <p className="mt-2 text-sm text-amber-700">WhatsApp n&apos;est pas connecté : la diffusion partira dès la reconnexion.</p>}
-                <button onClick={launch} disabled={problems.length > 0 || busy !== null} className="mt-4 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:opacity-40">
+                <button onClick={launch} disabled={problems.length > 0 || busy !== null} className="mt-4 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-40">
                   <UiIcon name="rocket" size={15} className="mr-1 inline-block align-[-3px]" />{busy === "launch" ? "Lancement…" : s.schedule.mode === "later" ? "Programmer la diffusion" : "Lancer la diffusion"}
                 </button>
               </Section>
@@ -645,7 +645,7 @@ export function BroadcastWizard({ id }: { id: number }) {
             </button>
             <div className="flex items-center gap-4">
               {!canNext && <span className="text-sm text-zinc-500">{hint}</span>}
-              <button onClick={() => save(step + 1)} disabled={!canNext || busy !== null} className="rounded-xl bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-40">
+              <button onClick={() => save(step + 1)} disabled={!canNext || busy !== null} className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-40">
                 {busy === "save" ? "Enregistrement…" : "Continuer ›"}
               </button>
             </div>

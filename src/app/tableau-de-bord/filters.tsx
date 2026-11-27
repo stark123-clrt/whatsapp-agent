@@ -28,7 +28,7 @@ const Chevron = ({ up }: { up: boolean }) => (
   </svg>
 );
 const Check = () => (
-  <svg viewBox="0 0 20 20" className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" strokeWidth={2}>
+  <svg viewBox="0 0 20 20" className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" strokeWidth={2}>
     <path d="m4.5 10.5 3.5 3.5 7.5-8" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
@@ -78,7 +78,7 @@ export function Picker({ label, allLabel, icon, options, selected, onChange, mul
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Rechercher…"
-            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100"
+            className="w-full rounded-xl border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
           />
           <div className="mt-1.5 max-h-64 overflow-y-auto">
             <button onClick={() => (onChange([]), setOpen(false))} className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-zinc-50">
@@ -230,7 +230,7 @@ export function PeriodPicker({ value, onChange }: { value: Period; onChange: (p:
                   disabled={future}
                   onClick={() => clickDay(k)}
                   className={`mx-auto flex h-9 w-9 items-center justify-center rounded-xl text-sm ${
-                    edge ? "bg-green-600 font-semibold text-white" : inRange(k) ? "bg-green-50 text-green-800" : k === todayKey ? "border border-green-400" : ""
+                    edge ? "bg-blue-600 font-semibold text-white" : inRange(k) ? "bg-blue-50 text-blue-800" : k === todayKey ? "border border-blue-400" : ""
                   } ${future || other ? "text-zinc-300" : edge ? "" : "text-zinc-800 hover:bg-zinc-100"}`}
                 >
                   {d.getDate()}
@@ -269,7 +269,7 @@ export function PeriodPicker({ value, onChange }: { value: Period; onChange: (p:
             <button onClick={() => setOpen(false)} className="rounded-lg px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100">
               Annuler
             </button>
-            <button onClick={apply} disabled={!start} className="rounded-lg bg-green-600 px-3.5 py-1.5 text-sm font-semibold text-white disabled:opacity-40">
+            <button onClick={apply} disabled={!start} className="rounded-lg bg-blue-600 px-3.5 py-1.5 text-sm font-semibold text-white disabled:opacity-40">
               Appliquer
             </button>
           </div>

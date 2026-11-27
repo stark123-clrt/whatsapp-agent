@@ -89,7 +89,7 @@ export const POST_STATUS: Record<PostStatus, { label: string; cls: string }> = {
   pending: { label: "À valider", cls: "bg-amber-50 text-amber-700" },
   scheduled: { label: "Programmé", cls: "bg-sky-50 text-sky-700" },
   publishing: { label: "Publication…", cls: "bg-violet-50 text-violet-700" },
-  published: { label: "Publié", cls: "bg-green-50 text-green-700" },
+  published: { label: "Publié", cls: "bg-blue-50 text-blue-700" },
   failed: { label: "Échec", cls: "bg-red-50 text-red-600" },
   rejected: { label: "Écarté", cls: "bg-zinc-100 text-zinc-400" },
 };

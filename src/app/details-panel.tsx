@@ -67,7 +67,7 @@ export function DetailsPanel({
     ? { label: "En pause", className: "text-amber-600" }
     : aiInactive
       ? { label: "Inactif", className: "text-zinc-500" }
-      : { label: "Actif", className: "text-green-700" };
+      : { label: "Actif", className: "text-blue-700" };
 
   return (
     <aside className="w-80 shrink-0 overflow-y-auto border-l border-zinc-200 bg-white">
@@ -132,7 +132,7 @@ export function DetailsPanel({
           </div>
           <button
             onClick={() => patch({ resetAiCounter: true }, "Compteur remis à zéro.")}
-            className="rounded-lg border border-green-600/40 px-2.5 py-1 text-xs font-medium text-green-700 hover:bg-green-50"
+            className="rounded-lg border border-blue-600/40 px-2.5 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50"
           >
             Réinitialiser
           </button>
@@ -142,7 +142,7 @@ export function DetailsPanel({
       <Section title="Agent">
         <div className="rounded-lg bg-zinc-50 px-3 py-2.5 text-sm">
           <div className="flex items-center gap-2">
-            <span className={`h-2 w-2 shrink-0 rounded-full ${chat.aiPaused ? "bg-amber-500" : aiInactive ? "bg-zinc-400" : "bg-green-600"}`} />
+            <span className={`h-2 w-2 shrink-0 rounded-full ${chat.aiPaused ? "bg-amber-500" : aiInactive ? "bg-zinc-400" : "bg-blue-600"}`} />
             <span className="min-w-0 flex-1 truncate font-medium">{agent?.name ?? "Aucun agent"}</span>
             <span className={`text-xs font-medium uppercase ${agentStatus.className}`}>{agentStatus.label}</span>
           </div>
@@ -169,11 +169,11 @@ export function DetailsPanel({
         {aiInactive && !chat.aiPaused && <p className="mt-1.5 text-xs leading-relaxed text-zinc-500">{aiInactive}.</p>}
         <div className="mt-1 flex flex-wrap gap-x-3 text-xs font-medium">
           {agent && (
-            <Link href={`/agents/${agent.id}`} className="text-green-700 hover:underline">
+            <Link href={`/agents/${agent.id}`} className="text-blue-700 hover:underline">
               Ouvrir l&apos;agent →
             </Link>
           )}
-          <Link href="/agents" className="text-green-700 hover:underline">
+          <Link href="/agents" className="text-blue-700 hover:underline">
             Qui répond sur chaque canal →
           </Link>
         </div>
@@ -348,7 +348,7 @@ function TasksSection({ jid, tasks, onChanged }: { jid: string; tasks: Task[]; o
       <ul className="space-y-1">
         {tasks.map((t) => (
           <li key={t.id} className="group flex items-start gap-2 text-sm">
-            <input type="checkbox" checked={t.done} onChange={() => toggle(t)} className="mt-0.5 accent-green-600" />
+            <input type="checkbox" checked={t.done} onChange={() => toggle(t)} className="mt-0.5 accent-blue-600" />
             <span className={`flex-1 ${t.done ? "text-zinc-400 line-through" : "text-zinc-800"}`}>{t.text}</span>
             <button
               onClick={() => remove(t)}
@@ -420,7 +420,7 @@ function Section({
           </svg>
         </button>
         {action && (
-          <button onClick={action.run} className="text-xs font-medium text-green-700 hover:underline">
+          <button onClick={action.run} className="text-xs font-medium text-blue-700 hover:underline">
             {action.label}
           </button>
         )}
@@ -449,7 +449,7 @@ function QuickButton({
       title={soon ? "Bientôt" : label}
       className="flex flex-col items-center gap-1 rounded-xl border border-zinc-200 py-2.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:cursor-default disabled:text-zinc-400 disabled:hover:bg-white"
     >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={soon ? "" : "text-green-600"} aria-hidden>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={soon ? "" : "text-blue-600"} aria-hidden>
         {children}
       </svg>
       {label}
@@ -479,7 +479,7 @@ function Toggle({
         aria-checked={checked}
         aria-label={label}
         onClick={() => onChange(!checked)}
-        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? "bg-green-600" : "bg-zinc-300"}`}
+        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? "bg-blue-600" : "bg-zinc-300"}`}
       >
         <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? "left-5.5" : "left-0.5"}`} />
       </button>
@@ -508,7 +508,7 @@ function Stat({ label, value }: { label: string; value: number }) {
 function Event({ label, ts }: { label: string; ts: number }) {
   return (
     <li className="flex gap-2.5">
-      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-green-600" />
+      <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-600" />
       <div>
         <p className="text-zinc-800">{label}</p>
         <p className="text-xs text-zinc-400">{day(ts)}</p>

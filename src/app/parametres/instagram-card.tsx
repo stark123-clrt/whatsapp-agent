@@ -69,7 +69,7 @@ export function InstagramCard() {
             <div className="min-w-0 flex-1">
               <p className="flex items-center gap-2 font-semibold">
                 {s.fullName || `@${s.username}`}
-                <span className="rounded-md bg-green-50 px-2 py-0.5 text-[11px] font-bold text-green-700">● CONNECTÉ</span>
+                <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">● CONNECTÉ</span>
               </p>
               <p className="text-sm text-zinc-500">
                 @{s.username}
@@ -149,7 +149,7 @@ function ConnectInstagram({ state, onClose, onChanged }: { state: State | null; 
 
         {status === "connected" ? (
           <div className="mt-6 text-center">
-            <p className="font-medium text-green-700"><UiIcon name="checkCircle" size={16} className="mr-1 inline-block align-[-3px]" />Connecté : @{state?.username}</p>
+            <p className="font-medium text-blue-700"><UiIcon name="checkCircle" size={16} className="mr-1 inline-block align-[-3px]" />Connecté : @{state?.username}</p>
             <p className="mt-2 text-sm text-zinc-500">Les messages privés arrivent dans Discussions. Choisis l&apos;agent d&apos;Instagram dans Agents IA → Qui répond.</p>
             <button onClick={onClose} className="mt-5 rounded-xl bg-zinc-900 px-5 py-2 text-sm font-medium text-white">
               Fermer

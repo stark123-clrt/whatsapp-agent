@@ -155,7 +155,7 @@ export function DealsClient() {
   const firstOpen = stages.find((s) => s.kind === "open")?.id ?? stages[0]?.id ?? 0;
 
   return (
-    <main className="min-h-full bg-zinc-50 px-8 py-7" onClick={() => filterOpen && setFilterOpen(false)}>
+    <main className="min-h-full bg-white px-8 py-7" onClick={() => filterOpen && setFilterOpen(false)}>
       {/* En-tête */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -189,7 +189,7 @@ export function DealsClient() {
           <button
             onClick={() => setEditing({ deal: null, stageId: firstOpen })}
             disabled={!pipeline}
-            className="flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700"
+            className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
           >
             <Icon d={ICONS.plus} /> Nouvelle opportunité
           </button>
@@ -203,7 +203,7 @@ export function DealsClient() {
           return (
             <button key={s.id} onClick={() => setSegment(s.id)} className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition ${on ? "bg-zinc-100 font-semibold text-zinc-900" : "text-zinc-500 hover:text-zinc-800"}`}>
               {s.label}
-              <span className={`rounded-md px-1.5 text-xs ${on ? "bg-green-100 text-green-700" : "bg-zinc-100 text-zinc-500"}`}>{deals.filter(s.test).length}</span>
+              <span className={`rounded-md px-1.5 text-xs ${on ? "bg-blue-100 text-blue-700" : "bg-zinc-100 text-zinc-500"}`}>{deals.filter(s.test).length}</span>
             </button>
           );
         })}
@@ -211,7 +211,7 @@ export function DealsClient() {
       <div className="mt-3 flex flex-wrap gap-2">
         <button
           onClick={() => setChips(new Set())}
-          className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${chips.size === 0 ? "bg-green-600 text-white shadow-sm" : "border border-zinc-200 bg-white text-zinc-600"}`}
+          className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${chips.size === 0 ? "bg-blue-600 text-white shadow-sm" : "border border-zinc-200 bg-white text-zinc-600"}`}
         >
           Tous
         </button>
@@ -228,7 +228,7 @@ export function DealsClient() {
                   return next;
                 })
               }
-              className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition ${on ? "border-green-600 bg-green-600 font-medium text-white" : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300"}`}
+              className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition ${on ? "border-blue-600 bg-blue-600 font-medium text-white" : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300"}`}
             >
               {c.label}
               <span className={`rounded-md px-1.5 text-xs ${on ? "bg-white/20" : "bg-zinc-100 text-zinc-500"}`}>{deals.filter(c.test).length}</span>
@@ -243,7 +243,7 @@ export function DealsClient() {
           <Tile icon={ICONS.trend} tone="text-violet-600 bg-violet-50" title="Pipeline ouvert" value={eur(sum(openDeals))} sub={`${openDeals.length} opportunité${openDeals.length > 1 ? "s" : ""}`} />
           <Tile icon={ICONS.target} tone="text-rose-600 bg-rose-50" title="Prévision pondérée" value={eur(weighted)} sub="valeur × probabilité" hint="Ce que le pipeline ouvert devrait rapporter, compte tenu des probabilités." />
           <Tile icon={ICONS.trophy} tone="text-amber-600 bg-amber-50" title="Gagnées ce mois-ci" value={eur(sum(wonMonth))} sub={`${wonMonth.length} opportunité${wonMonth.length > 1 ? "s" : ""}`} />
-          <Tile icon={ICONS.coins} tone="text-green-600 bg-green-50" title="Total gagné" value={eur(sum(wonDeals))} sub={`${wonDeals.length} opportunité${wonDeals.length > 1 ? "s" : ""} au total`} />
+          <Tile icon={ICONS.coins} tone="text-blue-600 bg-blue-50" title="Total gagné" value={eur(sum(wonDeals))} sub={`${wonDeals.length} opportunité${wonDeals.length > 1 ? "s" : ""} au total`} />
         </div>
       )}
 
@@ -257,9 +257,9 @@ export function DealsClient() {
         <div className="relative" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setFilterOpen(!filterOpen)}
-            className={`flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-medium hover:bg-zinc-50 ${activeFilters ? "border-green-600 text-green-700" : "border-zinc-200"}`}
+            className={`flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-medium hover:bg-zinc-50 ${activeFilters ? "border-blue-600 text-blue-700" : "border-zinc-200"}`}
           >
-            <Icon d={ICONS.filter} /> Filtrer {activeFilters > 0 && <span className="rounded-md bg-green-100 px-1.5 text-xs">{activeFilters}</span>}
+            <Icon d={ICONS.filter} /> Filtrer {activeFilters > 0 && <span className="rounded-md bg-blue-100 px-1.5 text-xs">{activeFilters}</span>}
           </button>
           {filterOpen && (
             <div className="absolute top-full left-0 z-20 mt-2 w-64 space-y-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-xl">
@@ -310,14 +310,14 @@ export function DealsClient() {
       {/* Contenu */}
       {data && deals.length === 0 ? (
         <div className="mt-5 flex flex-col items-center rounded-2xl border border-zinc-200 bg-white px-6 py-16 text-center shadow-sm">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-50 text-green-600">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
             <Icon d={ICONS.trend} size={28} />
           </span>
           <p className="mt-4 text-lg font-semibold">Aucune opportunité pour le moment</p>
           <p className="mt-1 max-w-md text-sm text-zinc-500">
             Ajoute ta première opportunité, ou laisse l&apos;IA les créer : donne une étiquette déclencheuse à une étape (bouton Étapes), et chaque contact qui la reçoit arrive ici.
           </p>
-          <button onClick={() => setEditing({ deal: null, stageId: firstOpen })} className="mt-5 flex items-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700">
+          <button onClick={() => setEditing({ deal: null, stageId: firstOpen })} className="mt-5 flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
             <Icon d={ICONS.plus} /> Nouvelle opportunité
           </button>
         </div>
@@ -437,7 +437,7 @@ function Kanban({
         const list = deals.filter((d) => d.stageId === s.id);
         const total = list.reduce((n, d) => n + d.value, 0);
         const avg = list.length ? Math.round(list.reduce((n, d) => n + d.probability, 0) / list.length) : 0;
-        const tint = s.kind === "won" ? "bg-emerald-50/60 border-emerald-200" : s.kind === "lost" ? "bg-red-50/50 border-red-200" : "bg-white border-zinc-200";
+        const tint = s.kind === "won" ? "bg-blue-50/60 border-blue-200" : s.kind === "lost" ? "bg-red-50/50 border-red-200" : "bg-white border-zinc-200";
         return (
           <section
             key={s.id}
@@ -455,7 +455,7 @@ function Kanban({
               setDragging(null);
               setOver(null);
             }}
-            className={`flex max-h-[calc(100vh-260px)] min-h-[420px] w-[300px] shrink-0 flex-col rounded-2xl border transition ${tint} ${over === s.id ? "ring-2 ring-green-500/40" : ""}`}
+            className={`flex max-h-[calc(100vh-260px)] min-h-[420px] w-[300px] shrink-0 flex-col rounded-2xl border transition ${tint} ${over === s.id ? "ring-2 ring-blue-500/40" : ""}`}
           >
             <header className="px-4 pt-3.5 pb-2">
               <div className="flex items-center gap-2">
@@ -470,7 +470,7 @@ function Kanban({
                   <Icon d={ICONS.plus} />
                 </button>
               </div>
-              <p className={`mt-1.5 text-base font-bold tabular-nums ${s.kind === "won" ? "text-emerald-700" : s.kind === "lost" ? "text-red-600" : "text-zinc-800"}`}>{eur(total)}</p>
+              <p className={`mt-1.5 text-base font-bold tabular-nums ${s.kind === "won" ? "text-blue-700" : s.kind === "lost" ? "text-red-600" : "text-zinc-800"}`}>{eur(total)}</p>
             </header>
 
             <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-3 pb-2">
@@ -515,7 +515,7 @@ function Kanban({
                     onBlur={() => setAdding(null)}
                     onKeyDown={(e) => e.key === "Escape" && setAdding(null)}
                     placeholder="Titre, puis Entrée"
-                    className="w-full rounded-lg border border-green-500 bg-white px-3 py-2 text-sm outline-none"
+                    className="w-full rounded-lg border border-blue-500 bg-white px-3 py-2 text-sm outline-none"
                   />
                 </form>
               ) : (
@@ -586,7 +586,7 @@ function Card({
         </div>
         <div className="flex shrink-0 items-center opacity-60 transition group-hover:opacity-100" onClick={(e) => e.stopPropagation()}>
           {contact && (
-            <Link href={`/?c=${encodeURIComponent(contact.jid)}`} title="Ouvrir la discussion" className="rounded-md p-1 text-green-600 hover:bg-green-50">
+            <Link href={`/?c=${encodeURIComponent(contact.jid)}`} title="Ouvrir la discussion" className="rounded-md p-1 text-blue-600 hover:bg-blue-50">
               <Icon d={ICONS.chat} size={15} />
             </Link>
           )}
@@ -596,7 +596,7 @@ function Card({
           {menu && (
             <div className="absolute top-10 right-2 z-10 w-44 rounded-xl border border-zinc-200 bg-white py-1 text-sm shadow-xl" onMouseLeave={() => setMenu(false)}>
               {stage.kind !== "won" && (
-                <button onClick={() => onMark("won")} className="block w-full px-3 py-2 text-left text-emerald-700 hover:bg-emerald-50">
+                <button onClick={() => onMark("won")} className="block w-full px-3 py-2 text-left text-blue-700 hover:bg-blue-50">
                   ✓ Marquer gagnée
                 </button>
               )}
@@ -616,7 +616,7 @@ function Card({
       {d.description && <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-zinc-500">{d.description}</p>}
 
       <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
-        <span className={`rounded-md px-1.5 py-0.5 font-semibold ${d.probability >= 70 ? "bg-green-50 text-green-700" : d.probability >= 40 ? "bg-amber-50 text-amber-700" : "bg-zinc-100 text-zinc-500"}`}>{d.probability} %</span>
+        <span className={`rounded-md px-1.5 py-0.5 font-semibold ${d.probability >= 70 ? "bg-blue-50 text-blue-700" : d.probability >= 40 ? "bg-amber-50 text-amber-700" : "bg-zinc-100 text-zinc-500"}`}>{d.probability} %</span>
         {d.priority !== "none" && (
           <span className="flex items-center gap-1 rounded-md border border-zinc-200 px-1.5 py-0.5 text-zinc-600">
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: PRIORITY[d.priority].color }} />

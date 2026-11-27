@@ -89,7 +89,7 @@ export function WidgetCard() {
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2 font-semibold">
                   {s.name}
-                  <span className="rounded-md bg-green-50 px-2 py-0.5 text-[11px] font-bold text-green-700">● CONNECTÉ</span>
+                  <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700">● CONNECTÉ</span>
                 </p>
                 <p className="truncate text-sm text-zinc-500">
                   Thème {THEMES[s.theme].label} ·{" "}
@@ -189,7 +189,7 @@ function CreateModal({ onClose, onCreated, onCustomize }: { onClose: () => void;
 
           {created ? (
             <div className="flex-1 space-y-4 overflow-y-auto px-7 py-6">
-              <pre className="rounded-xl bg-zinc-950 p-4 font-mono text-[12.5px] leading-relaxed break-all whitespace-pre-wrap text-emerald-300">{snippetFor(created.key)}</pre>
+              <pre className="rounded-xl bg-zinc-950 p-4 font-mono text-[12.5px] leading-relaxed break-all whitespace-pre-wrap text-blue-300">{snippetFor(created.key)}</pre>
               <button
                 onClick={async () => {
                   await navigator.clipboard.writeText(snippetFor(created.key));
@@ -204,7 +204,7 @@ function CreateModal({ onClose, onCreated, onCustomize }: { onClose: () => void;
                 <li>• Shopify : Thème → Modifier le code → theme.liquid, avant &lt;/body&gt;.</li>
                 <li>• Wix, Webflow, Framer : réglages du site → Code personnalisé.</li>
               </ul>
-              <a href={`/w/${created.key}`} target="_blank" rel="noreferrer" className="block text-sm font-medium text-green-700 hover:underline">
+              <a href={`/w/${created.key}`} target="_blank" rel="noreferrer" className="block text-sm font-medium text-blue-700 hover:underline">
                 Tester le chat maintenant ↗
               </a>
             </div>
@@ -265,11 +265,11 @@ function CreateModal({ onClose, onCreated, onCustomize }: { onClose: () => void;
               {created ? "Fermer" : "Annuler"}
             </button>
             {created ? (
-              <button onClick={onCustomize} className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
+              <button onClick={onCustomize} className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
                 Personnaliser davantage →
               </button>
             ) : (
-              <button onClick={save} disabled={busy || !s.name.trim()} className="rounded-xl bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300">
+              <button onClick={save} disabled={busy || !s.name.trim()} className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300">
                 {busy ? "Création…" : "Enregistrer le widget"}
               </button>
             )}
@@ -305,7 +305,7 @@ export function WidgetStage({
       <div className="flex items-center gap-2 border-b border-zinc-100 bg-zinc-50 px-4 py-2.5">
         <span className="h-2.5 w-2.5 rounded-full bg-red-300" />
         <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
-        <span className="h-2.5 w-2.5 rounded-full bg-green-300" />
+        <span className="h-2.5 w-2.5 rounded-full bg-blue-300" />
         <span className="ml-3 flex-1 truncate rounded-md bg-white px-3 py-1 text-[11px] text-zinc-400">https://votre-site.fr</span>
       </div>
       <div className="relative flex-1 overflow-hidden">

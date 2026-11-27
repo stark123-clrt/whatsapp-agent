@@ -93,7 +93,7 @@ export type Broadcast = {
 export const BROADCAST_STATUS: Record<BroadcastStatus, { label: string; cls: string }> = {
   draft: { label: "Brouillon", cls: "bg-zinc-100 text-zinc-600" },
   scheduled: { label: "Programmée", cls: "bg-sky-50 text-sky-700" },
-  sending: { label: "● Envoi en cours", cls: "bg-green-50 text-green-700" },
+  sending: { label: "● Envoi en cours", cls: "bg-blue-50 text-blue-700" },
   paused: { label: "En pause", cls: "bg-amber-50 text-amber-700" },
   done: { label: "Terminée", cls: "bg-zinc-100 text-zinc-600" },
   cancelled: { label: "Annulée", cls: "bg-zinc-100 text-zinc-400" },

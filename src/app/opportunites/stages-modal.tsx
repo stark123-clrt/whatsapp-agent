@@ -8,7 +8,7 @@ import { ICONS, Icon, Modal, StageIcon, field, label } from "./shared";
 
 type Row = { key: string; id?: number; name: string; color: string; kind: StageKind; triggerTags: string[]; defaultValue: number; idleDays: number; idleTarget: string | null; open?: boolean };
 
-const COLORS = ["#8b5cf6", "#3b82f6", "#06b6d4", "#f59e0b", "#ec4899", "#64748b", "#10b981", "#ef4444"];
+const COLORS = ["#8b5cf6", "#3b82f6", "#06b6d4", "#f59e0b", "#ec4899", "#64748b", "#2a6cdc", "#ef4444"];
 
 let counter = 0;
 const fresh = (name: string, kind: StageKind, color: string): Row => ({ key: `n${++counter}`, name, color, kind, triggerTags: [], defaultValue: 0, idleDays: 0, idleTarget: null });
@@ -30,7 +30,7 @@ export function StagesModal({
   const [rows, setRows] = useState<Row[]>(() =>
     pipeline
       ? stages.map((s) => ({ key: `s${s.id}`, id: s.id, name: s.name, color: s.color, kind: s.kind, triggerTags: s.triggerTags, defaultValue: s.defaultValue, idleDays: s.idleDays, idleTarget: s.idleTarget ? `s${s.idleTarget}` : null }))
-      : [fresh("Lead", "open", "#8b5cf6"), fresh("Qualifié", "open", "#3b82f6"), fresh("Gagné", "won", "#10b981"), fresh("Perdu", "lost", "#ef4444")],
+      : [fresh("Lead", "open", "#8b5cf6"), fresh("Qualifié", "open", "#3b82f6"), fresh("Gagné", "won", "#2a6cdc"), fresh("Perdu", "lost", "#ef4444")],
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -204,7 +204,7 @@ export function StagesModal({
           <button onClick={onClose} className="rounded-xl px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100">
             Annuler
           </button>
-          <button onClick={save} disabled={busy} className="rounded-xl bg-green-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:bg-green-300">
+          <button onClick={save} disabled={busy} className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:bg-blue-300">
             {busy ? "Enregistrement…" : "Appliquer les modifications"}
           </button>
         </>
@@ -222,7 +222,7 @@ export function StagesModal({
           <div className="rounded-xl border border-zinc-100 bg-zinc-50/70 p-4">
             <div className="flex gap-1.5">
               <StageIcon kind="open" color="#3b82f6" size={20} />
-              <StageIcon kind="won" color="#10b981" size={20} />
+              <StageIcon kind="won" color="#2a6cdc" size={20} />
               <StageIcon kind="lost" color="#ef4444" size={20} />
             </div>
             <p className="mt-2 text-sm font-semibold text-zinc-800">Comment ça marche</p>
@@ -234,7 +234,7 @@ export function StagesModal({
 
         <div className="space-y-5">
           {section("open", "Ouvert", "#18181b", "en cours")}
-          {section("won", "Gagné", "#059669", "vente conclue")}
+          {section("won", "Gagné", "#2257b8", "vente conclue")}
           {section("lost", "Perdu", "#dc2626", "abandonnée")}
 
           <div className="rounded-xl border border-zinc-200 p-4">

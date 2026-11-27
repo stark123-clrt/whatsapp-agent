@@ -107,7 +107,7 @@ export function Inbox() {
           <h1 className="flex items-center gap-2 text-xl font-semibold">
             Discussions
             {totalUnread > 0 && (
-              <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-green-600 px-2 text-xs font-medium text-white">
+              <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-blue-600 px-2 text-xs font-medium text-white">
                 {totalUnread}
               </span>
             )}
@@ -161,13 +161,13 @@ export function Inbox() {
                     <span className={`truncate text-sm ${c.unread ? "font-semibold" : "font-medium"}`}>
                       {displayName(c)}
                     </span>
-                    <span className={`shrink-0 text-xs ${c.unread ? "font-medium text-green-700" : "text-zinc-400"}`}>
+                    <span className={`shrink-0 text-xs ${c.unread ? "font-medium text-blue-700" : "text-zinc-400"}`}>
                       {formatListTime(c.lastAt)}
                     </span>
                   </div>
                   <div className="mt-0.5 flex items-center justify-between gap-2">
                     {c.aiTyping ? (
-                      <span className="truncate text-sm font-medium text-green-700">L&apos;IA écrit…</span>
+                      <span className="truncate text-sm font-medium text-blue-700">L&apos;IA écrit…</span>
                     ) : (
                       <span className={`truncate text-sm ${c.unread ? "font-medium text-zinc-900" : "text-zinc-500"}`}>
                         {c.lastSender && c.lastSender !== "contact" && (
@@ -177,7 +177,7 @@ export function Inbox() {
                       </span>
                     )}
                     {c.unread > 0 && (
-                      <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-green-600 px-1.5 text-xs font-medium text-white">
+                      <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-blue-600 px-1.5 text-xs font-medium text-white">
                         {c.unread}
                       </span>
                     )}
@@ -348,7 +348,7 @@ function Conversation({
           <div className="min-w-0 flex-1">
             <p className="truncate font-medium">{displayName(chat)}</p>
             {aiTyping ? (
-              <p className="text-xs font-medium text-green-700">L&apos;IA écrit…</p>
+              <p className="text-xs font-medium text-blue-700">L&apos;IA écrit…</p>
             ) : (
               <p className="text-xs text-zinc-500">
                 {CHANNELS[chat.channel].label}
@@ -367,7 +367,7 @@ function Conversation({
               disabled={busy === "toggle"}
               onClick={() => setPaused(!chat.aiPaused)}
               className={`relative h-6 w-11 rounded-full transition-colors ${
-                chat.aiPaused ? "bg-zinc-300" : "bg-green-600"
+                chat.aiPaused ? "bg-zinc-300" : "bg-blue-600"
               }`}
             >
               <span
@@ -417,12 +417,12 @@ function Conversation({
                 )}
                 {firstUnread?.id === m.id && (
                   <div className="my-3 flex items-center gap-3">
-                    <span className="h-px flex-1 bg-green-600/40" />
-                    <span className="rounded-full bg-green-600 px-3 py-0.5 text-xs font-medium text-white">
+                    <span className="h-px flex-1 bg-blue-600/40" />
+                    <span className="rounded-full bg-blue-600 px-3 py-0.5 text-xs font-medium text-white">
                       {firstUnread.count} message{firstUnread.count > 1 ? "s" : ""} non lu
                       {firstUnread.count > 1 ? "s" : ""}
                     </span>
-                    <span className="h-px flex-1 bg-green-600/40" />
+                    <span className="h-px flex-1 bg-blue-600/40" />
                   </div>
                 )}
                 <Bubble
@@ -437,7 +437,7 @@ function Conversation({
             ))}
             {aiTyping && (
               <div className="flex justify-end">
-                <div className="rounded-xl bg-[#D9FDD3] px-3 py-2 text-sm font-medium text-green-700 shadow-sm">
+                <div className="rounded-xl bg-[#D9FDD3] px-3 py-2 text-sm font-medium text-blue-700 shadow-sm">
                   L&apos;IA écrit…
                 </div>
               </div>
@@ -447,8 +447,8 @@ function Conversation({
         </div>
 
         {chat.draft && !readOnly && (
-          <div className="border-t border-green-200 bg-green-50 px-5 py-3">
-            <p className="text-xs font-semibold text-green-800"><UiIcon name="pen" size={13} className="mr-1.5 inline-block align-[-3px]" />Brouillon proposé par l&apos;IA</p>
+          <div className="border-t border-blue-200 bg-blue-50 px-5 py-3">
+            <p className="text-xs font-semibold text-blue-800"><UiIcon name="pen" size={13} className="mr-1.5 inline-block align-[-3px]" />Brouillon proposé par l&apos;IA</p>
             <p className="mt-1 text-sm whitespace-pre-wrap text-zinc-800">{chat.draft}</p>
             <div className="mt-2 flex gap-2">
               <button
@@ -457,7 +457,7 @@ function Conversation({
                   await call("send", `/api/chats/${enc(jid)}/messages`, { method: "POST", body: JSON.stringify({ text: draftText }) });
                   await call("toggle", `/api/chats/${enc(jid)}`, { method: "PATCH", body: JSON.stringify({ draft: null, aiPaused: false }) });
                 }}
-                className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700"
+                className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
               >
                 Envoyer
               </button>

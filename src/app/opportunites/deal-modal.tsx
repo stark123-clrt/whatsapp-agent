@@ -112,7 +112,7 @@ export function DealModal({
           <button onClick={onClose} className="rounded-xl px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100">
             Annuler
           </button>
-          <button onClick={save} disabled={busy} className="rounded-xl bg-green-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:bg-green-300">
+          <button onClick={save} disabled={busy} className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:bg-blue-300">
             {busy ? "Enregistrement…" : deal ? "Enregistrer" : "Créer une opportunité"}
           </button>
         </>
@@ -216,7 +216,7 @@ export function DealModal({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <span className={label}>Probabilité ({f.probability} %)</span>
-            <input type="range" min={0} max={100} step={5} value={f.probability} onChange={(e) => set({ probability: Number(e.target.value) })} className="mt-2 w-full accent-green-600" />
+            <input type="range" min={0} max={100} step={5} value={f.probability} onChange={(e) => set({ probability: Number(e.target.value) })} className="mt-2 w-full accent-blue-600" />
             <div className="mt-1 flex justify-between text-[11px] text-zinc-400">
               <span>Peu probable</span>
               <span>Quasi sûr</span>
@@ -286,7 +286,7 @@ function ContactPicker({ contacts, value, onChange }: { contacts: ContactLite[];
       {open && (
         <div className="absolute top-full right-0 left-0 z-10 mt-1.5 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl">
           <div className="border-b border-zinc-100 p-2">
-            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher un contact…" className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-green-500" />
+            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher un contact…" className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500" />
           </div>
           <div className="max-h-56 overflow-y-auto py-1">
             {shown.map((c) => (
@@ -298,7 +298,7 @@ function ContactPicker({ contacts, value, onChange }: { contacts: ContactLite[];
                   setOpen(false);
                   setQ("");
                 }}
-                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-zinc-50 ${c.jid === value ? "bg-green-50" : ""}`}
+                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-zinc-50 ${c.jid === value ? "bg-blue-50" : ""}`}
               >
                 <span className="scale-75">
                   <Avatar jid={c.jid} name={c.name} phone={c.phone} channel={c.channel} />
@@ -314,7 +314,7 @@ function ContactPicker({ contacts, value, onChange }: { contacts: ContactLite[];
         </div>
       )}
       {current && (
-        <Link href={`/?c=${encodeURIComponent(current.jid)}`} className="mt-1 inline-block text-xs font-medium text-green-700 hover:underline">
+        <Link href={`/?c=${encodeURIComponent(current.jid)}`} className="mt-1 inline-block text-xs font-medium text-blue-700 hover:underline">
           Ouvrir la discussion →
         </Link>
       )}
@@ -330,7 +330,7 @@ export function Tags({ values, onChange, placeholder = "+ Ajouter des étiquette
     setDraft("");
   };
   return (
-    <div className="flex min-h-[44px] flex-wrap items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-2 py-1.5 focus-within:border-green-500">
+    <div className="flex min-h-[44px] flex-wrap items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-2 py-1.5 focus-within:border-blue-500">
       {values.map((v) => (
         <span key={v} className="inline-flex items-center gap-1 rounded-lg border border-indigo-100 bg-indigo-50 py-0.5 pr-1 pl-2 text-xs font-medium text-indigo-700">
           {v}

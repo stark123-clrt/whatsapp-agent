@@ -83,5 +83,5 @@ export function Modal({ title, subtitle, onClose, children, footer, wide }: { ti
   );
 }
 
-export const field = "w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/15";
+export const field = "w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15";
 export const label = "mb-1.5 block text-[11px] font-semibold tracking-wide text-zinc-500 uppercase";

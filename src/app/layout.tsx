@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="fr" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="flex h-dvh overflow-hidden bg-zinc-50 text-zinc-900">
+      <body className="flex h-dvh overflow-hidden bg-white text-zinc-900">
         {/* Le menu lit l'adresse de la page : il s'affiche dans un bloc Suspense. */}
         <Suspense fallback={<nav className="w-60 shrink-0 border-r border-zinc-200 bg-white" />}>
           <Sidebar />

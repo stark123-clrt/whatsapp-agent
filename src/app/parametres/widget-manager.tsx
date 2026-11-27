@@ -156,7 +156,7 @@ export function WidgetManager({
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold">Widget · {s.name || "Sans nom"}</p>
           <p className="text-xs text-zinc-500">
-            {flash ? <span className="text-green-700">✓ {flash}</span> : dirty ? "Modifications non enregistrées" : "Tout est enregistré"}
+            {flash ? <span className="text-blue-700">✓ {flash}</span> : dirty ? "Modifications non enregistrées" : "Tout est enregistré"}
           </p>
         </div>
         {error && <p className="max-w-xs truncate text-sm text-red-600">{error}</p>}
@@ -171,7 +171,7 @@ export function WidgetManager({
           onClick={save}
           disabled={!dirty || busy}
           title="Ctrl + S"
-          className="rounded-xl bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300"
+          className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300"
         >
           {busy ? "Enregistrement…" : "Enregistrer"}
         </button>
@@ -381,7 +381,7 @@ export function WidgetManager({
                     <UiIcon name="bulb" size={15} className="mr-1 inline-block align-[-3px]" /><strong>Pour la tester</strong> : enregistre, attends 1 minute, puis ouvre ton site en ajoutant <code className="rounded bg-zinc-100 px-1">?aw_test</code> à la fin de l&apos;adresse (ex. : votre-site.fr<strong>?aw_test</strong>). Le widget te voit alors comme un nouveau visiteur.
                   </p>
                   <Labeled label={`Apparaît après ${s.proactive.delay} s`}>
-                    <input type="range" min={0} max={60} value={s.proactive.delay} onChange={(e) => set({ proactive: { ...s.proactive, delay: Number(e.target.value) } })} className="w-full accent-green-600" />
+                    <input type="range" min={0} max={60} value={s.proactive.delay} onChange={(e) => set({ proactive: { ...s.proactive, delay: Number(e.target.value) } })} className="w-full accent-blue-600" />
                   </Labeled>
                 </div>
               )}
@@ -413,7 +413,7 @@ export function WidgetManager({
                 </select>
               </Labeled>
               <Labeled label="Vitesse de réponse">
-                <input type="range" min={0} max={100} step={5} value={s.aiSpeed} onChange={(e) => set({ aiSpeed: Number(e.target.value) })} className="w-full accent-green-600" />
+                <input type="range" min={0} max={100} step={5} value={s.aiSpeed} onChange={(e) => set({ aiSpeed: Number(e.target.value) })} className="w-full accent-blue-600" />
                 <div className="mt-1 flex justify-between text-xs text-zinc-500">
                   <span>Naturelle (prend son temps)</span>
                   <span className="font-medium text-zinc-700">{speedLabel(s.aiSpeed)}</span>
@@ -515,7 +515,7 @@ export function WidgetManager({
           </div>
           <p className="mt-3 text-center text-xs text-zinc-500">
             Écris dans l&apos;aperçu pour sentir le rythme ·{" "}
-            <a href={`/w/${widget.key}`} target="_blank" rel="noreferrer" className="font-medium text-green-700 hover:underline">
+            <a href={`/w/${widget.key}`} target="_blank" rel="noreferrer" className="font-medium text-blue-700 hover:underline">
               tester avec la vraie IA ↗
             </a>
           </p>
@@ -670,7 +670,7 @@ function CopyBlock({ value, open }: { value: string; open?: boolean }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="flex items-stretch gap-2">
-      <code className="min-w-0 flex-1 truncate rounded-xl bg-zinc-950 px-4 py-3 font-mono text-[12.5px] text-emerald-300">{value}</code>
+      <code className="min-w-0 flex-1 truncate rounded-xl bg-zinc-950 px-4 py-3 font-mono text-[12.5px] text-blue-300">{value}</code>
       <button
         onClick={async () => {
           await navigator.clipboard.writeText(value);

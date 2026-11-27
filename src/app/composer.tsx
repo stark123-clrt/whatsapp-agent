@@ -73,7 +73,7 @@ export function Composer({ text, setText, busy, drafting, onSendText, onSendFile
           onClick={stopAndSend}
           disabled={recorder.state !== "recording"}
           aria-label="Envoyer le vocal"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
         >
           <SendIcon />
         </button>
@@ -87,9 +87,9 @@ export function Composer({ text, setText, busy, drafting, onSendText, onSendFile
     <div>
       {recorder.error && <p className="mb-2 text-sm text-red-600">{recorder.error}</p>}
       {reply && (
-        <div className="mb-2 flex items-start gap-2 rounded-lg border-l-4 border-green-600 bg-zinc-50 px-3 py-2 text-sm">
+        <div className="mb-2 flex items-start gap-2 rounded-lg border-l-4 border-blue-600 bg-zinc-50 px-3 py-2 text-sm">
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium text-green-700">Réponse à {reply.who}</p>
+            <p className="text-xs font-medium text-blue-700">Réponse à {reply.who}</p>
             <p className="truncate text-zinc-600">{reply.text}</p>
           </div>
           <button onClick={reply.cancel} className="text-zinc-500 hover:text-zinc-900" aria-label="Annuler la réponse">
@@ -169,7 +169,7 @@ export function Composer({ text, setText, busy, drafting, onSendText, onSendFile
             onClick={send}
             disabled={busy}
             aria-label="Envoyer"
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
           >
             <SendIcon />
           </button>
@@ -178,7 +178,7 @@ export function Composer({ text, setText, busy, drafting, onSendText, onSendFile
             onClick={recorder.start}
             disabled={busy}
             aria-label="Enregistrer un vocal"
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
               <rect x="9" y="3" width="6" height="11" rx="3" />

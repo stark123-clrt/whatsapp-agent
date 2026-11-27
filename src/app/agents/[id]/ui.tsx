@@ -23,7 +23,7 @@ export function Card({
         <div>
           <h3 className="flex items-center gap-2 font-semibold">
             {title}
-            {badge && <span className="rounded-md bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700">● {badge}</span>}
+            {badge && <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">● {badge}</span>}
           </h3>
           {description && <p className="mt-1 text-sm text-zinc-500">{description}</p>}
         </div>
@@ -41,7 +41,7 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       aria-checked={checked}
       aria-label={label}
       onClick={() => onChange(!checked)}
-      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? "bg-green-600" : "bg-zinc-300"}`}
+      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? "bg-blue-600" : "bg-zinc-300"}`}
     >
       <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? "left-5.5" : "left-0.5"}`} />
     </button>
@@ -93,8 +93,8 @@ export function Warning({ children }: { children: React.ReactNode }) {
 
 export function Info({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
-      <UiIcon name="info" size={16} className="mt-0.5 shrink-0 text-green-700" />
+    <div className="flex gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+      <UiIcon name="info" size={16} className="mt-0.5 shrink-0 text-blue-700" />
       <div>{children}</div>
     </div>
   );

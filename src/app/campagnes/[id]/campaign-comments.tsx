@@ -23,7 +23,7 @@ type Comment = {
 
 const CATEGORY: Record<NonNullable<Comment["category"]>, { label: string; cls: string }> = {
   question: { label: "Question", cls: "bg-sky-50 text-sky-700" },
-  interest: { label: "Intéressé", cls: "bg-green-50 text-green-700" },
+  interest: { label: "Intéressé", cls: "bg-blue-50 text-blue-700" },
   compliment: { label: "Compliment", cls: "bg-pink-50 text-pink-700" },
   negative: { label: "Négatif", cls: "bg-red-50 text-red-600" },
   spam: { label: "Spam", cls: "bg-zinc-100 text-zinc-500" },
@@ -126,7 +126,7 @@ function CommentCard({ c, onDone }: { c: Comment; onDone: () => void }) {
         {c.category && <span className={`rounded-md px-1.5 py-0.5 font-semibold ${CATEGORY[c.category].cls}`}>{CATEGORY[c.category].label}</span>}
         <span className="text-zinc-400">{new Date(c.ts).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span>
         {c.postHeadline && <span className="truncate text-zinc-400">· sous « {c.postHeadline} »</span>}
-        <span className={`ml-auto rounded-md px-2 py-0.5 font-semibold ${c.status === "done" ? "bg-green-50 text-green-700" : c.status === "alert" || c.status === "failed" ? "bg-red-50 text-red-600" : "bg-zinc-100 text-zinc-600"}`}>
+        <span className={`ml-auto rounded-md px-2 py-0.5 font-semibold ${c.status === "done" ? "bg-blue-50 text-blue-700" : c.status === "alert" || c.status === "failed" ? "bg-red-50 text-red-600" : "bg-zinc-100 text-zinc-600"}`}>
           {STATUS[c.status]}
           {c.status === "scheduled" && c.doAt ? ` à ${new Date(c.doAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}` : ""}
         </span>

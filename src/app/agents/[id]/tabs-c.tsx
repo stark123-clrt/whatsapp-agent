@@ -88,7 +88,7 @@ export function EntryTab({ settings: s, update }: TabProps) {
         action={
           <button
             onClick={() => setRules((r) => [...r, { id: crypto.randomUUID(), kind: "keyword", keywords: "", enabled: true }])}
-            className="shrink-0 text-sm font-medium text-green-700 hover:underline"
+            className="shrink-0 text-sm font-medium text-blue-700 hover:underline"
           >
             ＋ Nouveau point d&apos;entrée
           </button>
@@ -101,8 +101,8 @@ export function EntryTab({ settings: s, update }: TabProps) {
               <li key={rule.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-zinc-200 px-4 py-3">
                 {rule.kind === "default" ? (
                   <div className="flex-1">
-                    <span className="rounded-md bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">◎ Canal par défaut</span>{" "}
-                    <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">WhatsApp</span>
+                    <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">◎ Canal par défaut</span>{" "}
+                    <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">WhatsApp</span>
                     <p className="mt-1 text-sm text-zinc-600">Par défaut pour ce canal : toutes les nouvelles conversations sans autre règle.</p>
                   </div>
                 ) : (
@@ -198,7 +198,7 @@ export function TryTab({ agent, settings: s, update, saveNow }: TabProps) {
             title="Instructions de l'IA"
             description="Modifie, enregistre, puis teste à droite."
             action={
-              <button onClick={() => saveNow()} className="shrink-0 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700">
+              <button onClick={() => saveNow()} className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
                 Enregistrer
               </button>
             }
@@ -246,7 +246,7 @@ export function TryTab({ agent, settings: s, update, saveNow }: TabProps) {
               {messages.map((m, i) => (
                 <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[80%] rounded-xl px-3 py-2 text-sm shadow-sm ${m.role === "user" ? "bg-zinc-200" : "bg-[#D9FDD3]"}`}>
-                    {m.role === "assistant" && <p className="mb-0.5 text-xs font-medium text-green-700">IA</p>}
+                    {m.role === "assistant" && <p className="mb-0.5 text-xs font-medium text-blue-700">IA</p>}
                     <p className="whitespace-pre-wrap">{m.content}</p>
                     {m.actions && m.actions.length > 0 && (
                       <div className="mt-1.5 flex flex-wrap gap-1">
@@ -260,7 +260,7 @@ export function TryTab({ agent, settings: s, update, saveNow }: TabProps) {
                   </div>
                 </div>
               ))}
-              {busy && <p className="text-sm font-medium text-green-700">L&apos;IA écrit…</p>}
+              {busy && <p className="text-sm font-medium text-blue-700">L&apos;IA écrit…</p>}
               <div ref={bottom} />
             </div>
             {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
@@ -278,7 +278,7 @@ export function TryTab({ agent, settings: s, update, saveNow }: TabProps) {
                 placeholder="Écris en tant que contact…"
                 className={`${inputClass} resize-none`}
               />
-              <button onClick={submit} disabled={busy || !text.trim()} className="rounded-xl bg-green-600 px-4 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300">
+              <button onClick={submit} disabled={busy || !text.trim()} className="rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300">
                 ➤
               </button>
             </div>

@@ -107,9 +107,9 @@ export function BuildProgress({
   return (
     <div className="flex flex-col items-center px-2 py-4 text-center">
       <div className="relative flex h-20 w-20 items-center justify-center">
-        {!finished && <span className="absolute inset-0 animate-ping rounded-full bg-green-200 opacity-60" />}
-        <span className={`relative flex h-20 w-20 items-center justify-center rounded-full text-4xl ${finished ? "bg-green-100" : "bg-green-50"}`}>
-          <UiIcon name={finished ? "checkCircle" : "sparkles"} size={36} className="text-green-700" />
+        {!finished && <span className="absolute inset-0 animate-ping rounded-full bg-blue-200 opacity-60" />}
+        <span className={`relative flex h-20 w-20 items-center justify-center rounded-full text-4xl ${finished ? "bg-blue-100" : "bg-blue-50"}`}>
+          <UiIcon name={finished ? "checkCircle" : "sparkles"} size={36} className="text-blue-700" />
         </span>
       </div>
       <h2 className="mt-5 text-xl font-semibold">
@@ -122,10 +122,10 @@ export function BuildProgress({
           <li key={s.label} className="flex items-center gap-3">
             <span
               className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${
-                s.state === "done" ? "bg-green-600 text-white" : s.state === "active" ? "bg-green-100 text-green-700" : "bg-zinc-100 text-zinc-300"
+                s.state === "done" ? "bg-blue-600 text-white" : s.state === "active" ? "bg-blue-100 text-blue-700" : "bg-zinc-100 text-zinc-300"
               }`}
             >
-              {s.state === "done" ? "✓" : s.state === "active" ? <span className="h-2 w-2 animate-pulse rounded-full bg-green-600" /> : "•"}
+              {s.state === "done" ? "✓" : s.state === "active" ? <span className="h-2 w-2 animate-pulse rounded-full bg-blue-600" /> : "•"}
             </span>
             <span className={`flex-1 text-sm ${s.state === "todo" ? "text-zinc-400" : "font-medium text-zinc-800"}`}>{s.label}</span>
             {s.detail && <span className="text-xs text-zinc-500 tabular-nums">{s.detail}</span>}
@@ -135,7 +135,7 @@ export function BuildProgress({
 
       {!pagesDone && total > 0 && (
         <div className="mt-5 h-1.5 w-full max-w-md overflow-hidden rounded-full bg-zinc-100">
-          <div className="h-1.5 rounded-full bg-green-600 transition-all duration-700" style={{ width: `${Math.max(4, pct)}%` }} />
+          <div className="h-1.5 rounded-full bg-blue-600 transition-all duration-700" style={{ width: `${Math.max(4, pct)}%` }} />
         </div>
       )}
 

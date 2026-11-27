@@ -57,7 +57,7 @@ export function WhatsAppConnection() {
           <span
             className={`h-2 w-2 rounded-full ${
               status === "open"
-                ? "bg-green-600"
+                ? "bg-blue-600"
                 : status === "closed"
                   ? "bg-red-500"
                   : "bg-amber-500"

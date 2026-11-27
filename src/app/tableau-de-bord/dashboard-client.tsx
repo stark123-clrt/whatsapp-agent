@@ -7,7 +7,7 @@ import { PeriodPicker, Picker, PRESETS, type Period } from "./filters";
 
 type Data = { dashboard: Dashboard; agents: { id: number; name: string }[]; tags: string[] };
 
-const ACCENT = "#16a34a"; // une seule série par graphique : la couleur de l'appli
+const ACCENT = "#2a6cdc"; // une seule série par graphique : la couleur de l'appli
 const fr = (n: number) => n.toLocaleString("fr-FR");
 const CHANNEL: Record<string, string> = { whatsapp: "WhatsApp", instagram: "Instagram", web: "Site web", messenger: "Messenger", telegram: "Telegram", sms: "SMS", email: "E-mail" };
 
@@ -45,7 +45,7 @@ function Delta({ m, lowerIsBetter = false, unit = "" }: { m: Metric; lowerIsBett
   if (diff === 0) return <span className="text-xs text-zinc-500">= période préc.</span>;
   const good = lowerIsBetter ? diff < 0 : diff > 0;
   return (
-    <span className={`text-xs font-medium ${good ? "text-green-700" : "text-red-600"}`} title="Comparé à la période précédente de même durée">
+    <span className={`text-xs font-medium ${good ? "text-blue-700" : "text-red-600"}`} title="Comparé à la période précédente de même durée">
       {diff > 0 ? "▲" : "▼"} {Math.abs(diff)}
       {unit === "pts" ? " pts" : " %"}
     </span>
@@ -168,7 +168,7 @@ export function DashboardClient() {
   const sent = m ? m.aiReplies.value + m.humanReplies.value : 0;
 
   return (
-    <main className="min-h-full bg-zinc-50 px-8 py-7">
+    <main className="min-h-full bg-white px-8 py-7">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Tableau de bord</h1>
@@ -319,7 +319,7 @@ export function DashboardClient() {
               <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold">Opportunités</h2>
-                  <Link href="/opportunites" className="text-xs font-medium text-green-700 hover:underline">
+                  <Link href="/opportunites" className="text-xs font-medium text-blue-700 hover:underline">
                     Ouvrir
                   </Link>
                 </div>
@@ -344,7 +344,7 @@ export function DashboardClient() {
                 <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
                   <div className="flex items-center justify-between">
                     <h2 className="font-semibold">Instagram</h2>
-                    <Link href="/campagnes" className="text-xs font-medium text-green-700 hover:underline">
+                    <Link href="/campagnes" className="text-xs font-medium text-blue-700 hover:underline">
                       Performances
                     </Link>
                   </div>

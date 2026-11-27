@@ -230,7 +230,7 @@ export function InstagramGrowth() {
                   <span className="min-w-0 flex-1 truncate">
                     <strong>{r.fullName || `@${r.username}`}</strong> <span className="text-zinc-400">{ago(r.at)}</span>
                   </span>
-                  {r.followedBack && <span className="rounded bg-green-50 px-1.5 py-0.5 text-[10px] font-semibold text-green-700">Suivi</span>}
+                  {r.followedBack && <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">Suivi</span>}
                   {r.welcomed && <span className="rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-semibold text-sky-700">Bienvenue</span>}
                 </li>
               ))}

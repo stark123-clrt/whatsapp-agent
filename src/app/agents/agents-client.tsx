@@ -62,7 +62,7 @@ export function AgentsClient() {
           <h1 className="text-3xl font-bold">Agents IA</h1>
           <p className="mt-1 text-zinc-600">Tes agents IA : leurs instructions, leurs connaissances et leur façon de répondre.</p>
         </div>
-        <button onClick={() => setCreating(true)} className="rounded-xl bg-green-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:bg-green-700">
+        <button onClick={() => setCreating(true)} className="rounded-xl bg-blue-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:bg-blue-700">
           ＋ Nouvel agent
         </button>
       </div>
@@ -123,7 +123,7 @@ export function AgentsClient() {
               <tr key={a.id} className="border-b border-zinc-50 last:border-0 hover:bg-zinc-50/60">
                 <td className="px-5 py-4">
                   <button onClick={() => router.push(`/agents/${a.id}`)} className="flex items-center gap-3 text-left">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-50 text-green-700"><UiIcon name={a.role === "sales" ? "bag" : "lifebuoy"} size={18} className="" /></span>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-700"><UiIcon name={a.role === "sales" ? "bag" : "lifebuoy"} size={18} className="" /></span>
                     <span>
                       <span className="block font-semibold hover:underline">{a.name}</span>
                       <span className="text-xs text-zinc-500">
@@ -142,7 +142,7 @@ export function AgentsClient() {
                 <td className="px-3 py-4">
                   <span
                     className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
-                      a.status === "active" ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"
+                      a.status === "active" ? "bg-blue-50 text-blue-700" : "bg-amber-50 text-amber-700"
                     }`}
                   >
                     {a.status === "active" ? "● ACTIF" : "EN PAUSE"}
@@ -241,9 +241,9 @@ function DeleteAgentModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onMouseDown={onClose}>
       <div className="w-full max-w-lg rounded-2xl bg-white p-7 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold">Supprimer l&apos;agent « {agent.name} » ?</h2>
-        <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+        <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
           <UiIcon name="bulb" size={15} className="mr-1 inline-block align-[-3px]" /><strong>Tu peux plutôt le désactiver</strong> : il ne répond plus, mais tu gardes ses instructions et ses connaissances pour le réactiver plus tard.
-          <button onClick={deactivate} disabled={busy} className="mt-2 block rounded-lg bg-white px-3 py-1.5 font-medium ring-1 ring-green-300 hover:bg-green-100">
+          <button onClick={deactivate} disabled={busy} className="mt-2 block rounded-lg bg-white px-3 py-1.5 font-medium ring-1 ring-blue-300 hover:bg-blue-100">
             Désactiver plutôt
           </button>
         </div>
@@ -279,15 +279,15 @@ function Preparation({ a }: { a: AgentWithStats }) {
   const { total, ready, errors, pending } = a.pages;
   if (a.preparing || pending > 0) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-600" />
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-600" />
         En construction… {total ? `${ready + errors}/${total} pages` : ""}
       </span>
     );
   }
   if (!a.instructions.trim()) return <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700">● Action requise : instructions</span>;
   return (
-    <Link href="/base-de-connaissances" className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 hover:underline">
+    <Link href="/base-de-connaissances" className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 hover:underline">
       ● Prêt · {a.faqCount} FAQ{errors ? ` · ${errors} erreur${errors > 1 ? "s" : ""}` : ""}
     </Link>
   );
@@ -366,7 +366,7 @@ function WhoAnswers({ agents }: { agents: AgentWithStats[] }) {
           <p className="text-xs text-zinc-500">Un agent par canal. Une conversation déjà commencée garde son agent (change-le depuis la discussion).</p>
         </div>
         {routing && (
-          <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ring-1 ${live ? "bg-green-50 text-green-700 ring-green-200" : "bg-amber-50 text-amber-700 ring-amber-200"}`}>
+          <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ring-1 ${live ? "bg-blue-50 text-blue-700 ring-blue-200" : "bg-amber-50 text-amber-700 ring-amber-200"}`}>
             ● {live ? "En direct" : `${CHANNEL_ROWS.filter((c) => effective[c.id]?.status !== "active").length} canal sans réponse`}
           </span>
         )}
@@ -396,7 +396,7 @@ function WhoAnswers({ agents }: { agents: AgentWithStats[] }) {
                 ))}
                 <option value="0">Personne ne répond</option>
               </select>
-              <span className={`ml-auto text-xs ${eff?.status === "active" ? "text-green-700" : "text-amber-700"}`}>
+              <span className={`ml-auto text-xs ${eff?.status === "active" ? "text-blue-700" : "text-amber-700"}`}>
                 {eff
                   ? eff.status === "active"
                     ? `✓ ${eff.name} répond`

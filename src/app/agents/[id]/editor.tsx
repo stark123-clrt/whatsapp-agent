@@ -135,7 +135,7 @@ export function AgentEditor({ id }: { id: number }) {
     return (
       <main className="p-10">
         <p>Cet agent n&apos;existe plus.</p>
-        <Link href="/agents" className="text-green-700 underline">
+        <Link href="/agents" className="text-blue-700 underline">
           Retour aux agents
         </Link>
       </main>
@@ -174,13 +174,13 @@ export function AgentEditor({ id }: { id: number }) {
         <button
           onClick={() => patchAgent({ status: agent.status === "active" ? "paused" : "active" }, agent.status === "active" ? "Agent mis en pause." : "Agent activé.")}
           title="Cliquer pour changer"
-          className={`rounded-full px-3 py-1 text-xs font-bold ${agent.status === "active" ? "bg-green-50 text-green-700 ring-1 ring-green-200" : "bg-amber-50 text-amber-700 ring-1 ring-amber-200"}`}
+          className={`rounded-full px-3 py-1 text-xs font-bold ${agent.status === "active" ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200" : "bg-amber-50 text-amber-700 ring-1 ring-amber-200"}`}
         >
           {agent.status === "active" ? "● ACTIF" : "EN PAUSE"}
         </button>
         <span
           className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${
-            preparation.score >= 80 ? "bg-green-50 text-green-700 ring-green-200" : preparation.score >= 50 ? "bg-amber-50 text-amber-700 ring-amber-200" : "bg-red-50 text-red-700 ring-red-200"
+            preparation.score >= 80 ? "bg-blue-50 text-blue-700 ring-blue-200" : preparation.score >= 50 ? "bg-amber-50 text-amber-700 ring-amber-200" : "bg-red-50 text-red-700 ring-red-200"
           }`}
         >
           ● {preparation.score} /100
@@ -211,7 +211,7 @@ export function AgentEditor({ id }: { id: number }) {
                     <span className="mr-1.5 text-zinc-400">{i + 1}.</span>
                     {t.label}
                   </span>
-                  {done(t.id) && <span className="text-green-600">✓</span>}
+                  {done(t.id) && <span className="text-blue-600">✓</span>}
                 </button>
               </li>
             ))}
@@ -252,7 +252,7 @@ export function AgentEditor({ id }: { id: number }) {
             {saving ? "Enregistrement…" : "Enregistrer les modifications"}
           </button>
           {index < TABS.length - 1 && (
-            <button onClick={() => goTo(TABS[index + 1].id)} className="rounded-xl bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700">
+            <button onClick={() => goTo(TABS[index + 1].id)} className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700">
               Continuer →
             </button>
           )}

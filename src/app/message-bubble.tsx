@@ -56,7 +56,7 @@ export function Bubble({ m, quoted, contactName, onReply, onChanged, notify }: P
       <div className={`relative max-w-[75%] ${mine ? "order-2" : ""}`}>
         <div className={`rounded-xl px-3 py-2 text-sm shadow-sm ${mine ? "bg-[#D9FDD3]" : "bg-white"}`}>
           {mine && (
-            <p className={`mb-0.5 text-xs font-medium ${m.sender === "ai" ? "text-green-700" : "text-zinc-500"}`}>
+            <p className={`mb-0.5 text-xs font-medium ${m.sender === "ai" ? "text-blue-700" : "text-zinc-500"}`}>
               {m.sender === "ai"
                 ? `IA${m.agentName ? ` · ${m.agentName}` : ""}${m.agentDeleted ? " (agent supprimé)" : ""}`
                 : "Vous"}
@@ -68,8 +68,8 @@ export function Bubble({ m, quoted, contactName, onReply, onChanged, notify }: P
           ) : (
             <>
               {m.replyTo && (
-                <div className={`mb-1.5 rounded-lg border-l-4 border-green-600 px-2 py-1 text-xs ${mine ? "bg-black/5" : "bg-zinc-100"}`}>
-                  <p className="font-medium text-green-700">
+                <div className={`mb-1.5 rounded-lg border-l-4 border-blue-600 px-2 py-1 text-xs ${mine ? "bg-black/5" : "bg-zinc-100"}`}>
+                  <p className="font-medium text-blue-700">
                     {quoted ? (quoted.sender === "contact" ? contactName : quoted.sender === "ai" ? "IA" : "Vous") : "Message"}
                   </p>
                   <p className="line-clamp-2 text-zinc-600">{quoted ? preview(quoted) : "Message plus ancien"}</p>
@@ -167,7 +167,7 @@ export function Bubble({ m, quoted, contactName, onReply, onChanged, notify }: P
                     onClick={() => react(e)}
                     aria-label={`Réagir ${e}`}
                     className={`flex h-8 w-8 items-center justify-center rounded-full text-xl hover:bg-zinc-100 ${
-                      m.myReaction === e ? "bg-green-50 ring-1 ring-green-600/40" : ""
+                      m.myReaction === e ? "bg-blue-50 ring-1 ring-blue-600/40" : ""
                     }`}
                   >
                     {e}
@@ -233,7 +233,7 @@ function Ticks({ status }: { status: number }) {
       strokeWidth="1.8"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={read ? "text-green-600" : "text-zinc-400"}
+      className={read ? "text-blue-600" : "text-zinc-400"}
       aria-label={label}
     >
       <title>{label}</title>

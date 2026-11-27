@@ -47,7 +47,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={busy || !password}
-        className="mt-5 w-full rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300"
+        className="mt-5 w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300"
       >
         {busy ? "Connexion…" : "Se connecter"}
       </button>

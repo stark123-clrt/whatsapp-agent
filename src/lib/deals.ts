@@ -56,6 +56,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS deals_stage ON deals(stage_id);
   CREATE INDEX IF NOT EXISTS deals_jid ON deals(jid);
 `);
+// Couleur de la marque : les étapes créées avec l'ancien vert passent au bleu Stark (une seule fois, sans effet ensuite).
+db.prepare(`UPDATE stages SET color = '#2a6cdc' WHERE color IN ('#10b981', '#059669', '#22c55e', '#16a34a')`).run();
 
 const json = (v: string | null): string[] => {
   try {
@@ -431,7 +433,7 @@ if (!db.prepare(`SELECT 1 FROM pipelines LIMIT 1`).get()) {
     { name: "Nouveau lead", color: "#8b5cf6", kind: "open" },
     { name: "Qualifié", color: "#3b82f6", kind: "open" },
     { name: "Devis envoyé", color: "#f59e0b", kind: "open" },
-    { name: "Gagné", color: "#10b981", kind: "won" },
+    { name: "Gagné", color: "#2a6cdc", kind: "won" },
     { name: "Perdu", color: "#ef4444", kind: "lost" },
   ], true);
 }

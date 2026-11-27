@@ -16,7 +16,7 @@ const STATUS: Record<ContactStatus, { label: string; cls: string; icon?: IconNam
   nouveau: { label: "NOUVEAU", cls: "bg-sky-50 text-sky-600", icon: "sparkles" },
   "a-relancer": { label: "À RELANCER", cls: "bg-amber-50 text-amber-700" },
   inactif: { label: "INACTIF", cls: "bg-zinc-100 text-zinc-500" },
-  client: { label: "CLIENT", cls: "bg-green-50 text-green-700", icon: "star" },
+  client: { label: "CLIENT", cls: "bg-blue-50 text-blue-700", icon: "star" },
   dnd: { label: "NE PAS DÉRANGER", cls: "bg-red-50 text-red-600" },
 };
 
@@ -201,7 +201,7 @@ export function ContactsClient() {
   }
 
   return (
-    <main className="min-h-full bg-zinc-50 px-8 py-7" onClick={() => panel && setPanel(null)}>
+    <main className="min-h-full bg-white px-8 py-7" onClick={() => panel && setPanel(null)}>
       {/* Contacts / Listes */}
       <div className="inline-flex rounded-xl border border-zinc-200 bg-white p-1 text-sm">
         <span className="flex items-center gap-2 rounded-lg bg-zinc-100 px-3.5 py-1.5 font-medium">
@@ -232,7 +232,7 @@ export function ContactsClient() {
           <button onClick={() => exportCsv(shown)} disabled={!shown.length} className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium hover:bg-zinc-50 disabled:opacity-50">
             <Icon d="M5 12h14M13 6l6 6-6 6" /> Exporter
           </button>
-          <button onClick={() => setCreating(true)} className="flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700">
+          <button onClick={() => setCreating(true)} className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
             <Icon d="M15 19a6 6 0 0 0-12 0M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19 8v6M16 11h6" /> Nouveau contact
           </button>
         </div>
@@ -253,7 +253,7 @@ export function ContactsClient() {
               className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition ${on ? "bg-zinc-100 font-semibold text-zinc-900" : "text-zinc-500 hover:text-zinc-800"}`}
             >
               {s.label}
-              <span className={`rounded-md px-1.5 text-xs ${on ? "bg-green-100 text-green-700" : "bg-zinc-100 text-zinc-500"}`}>{count}</span>
+              <span className={`rounded-md px-1.5 text-xs ${on ? "bg-blue-100 text-blue-700" : "bg-zinc-100 text-zinc-500"}`}>{count}</span>
             </button>
           );
         })}
@@ -275,7 +275,7 @@ export function ContactsClient() {
               key={f.id}
               onClick={() => toggleQuick(f.id)}
               className={`flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm transition ${
-                on ? "border-green-600 bg-green-600 font-medium text-white shadow-sm" : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300"
+                on ? "border-blue-600 bg-blue-600 font-medium text-white shadow-sm" : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300"
               }`}
             >
               <Icon d={f.icon} size={14} />
@@ -306,10 +306,10 @@ export function ContactsClient() {
         <div className="relative" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setPanel(panel === "filter" ? null : "filter")}
-            className={`flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-medium hover:bg-zinc-50 ${activeFilters ? "border-green-600 text-green-700" : "border-zinc-200"}`}
+            className={`flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-medium hover:bg-zinc-50 ${activeFilters ? "border-blue-600 text-blue-700" : "border-zinc-200"}`}
           >
             <Icon d="M4 5h16l-6 8v5l-4 2v-7z" size={16} /> Filtrer
-            {activeFilters > 0 && <span className="rounded-md bg-green-100 px-1.5 text-xs">{activeFilters}</span>}
+            {activeFilters > 0 && <span className="rounded-md bg-blue-100 px-1.5 text-xs">{activeFilters}</span>}
           </button>
           {panel === "filter" && (
             <div className="absolute top-full left-0 z-20 mt-2 w-72 space-y-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-xl">
@@ -354,7 +354,7 @@ export function ContactsClient() {
             <div className="absolute top-full left-0 z-20 mt-2 w-56 rounded-2xl border border-zinc-200 bg-white p-2 shadow-xl">
               {COLUMNS.map((c) => (
                 <label key={c.id} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm hover:bg-zinc-50">
-                  <input type="checkbox" checked={has(c.id)} onChange={() => toggleColumn(c.id)} className="accent-green-600" />
+                  <input type="checkbox" checked={has(c.id)} onChange={() => toggleColumn(c.id)} className="accent-blue-600" />
                   {c.label}
                 </label>
               ))}
@@ -393,7 +393,7 @@ export function ContactsClient() {
                   checked={allChecked}
                   onChange={() => setSelected(allChecked ? new Set() : new Set(visible.map((c) => c.jid)))}
                   aria-label="Tout sélectionner"
-                  className="accent-green-600"
+                  className="accent-blue-600"
                 />
               </th>
               <Th onClick={() => sortBy("name")} active={sort.by === "name"} dir={sort.dir}>
@@ -430,7 +430,7 @@ export function ContactsClient() {
             {visible.map((c) => {
               const href = `/?c=${encodeURIComponent(c.jid)}`;
               return (
-                <tr key={c.jid} className={`group border-b border-zinc-50 transition hover:bg-zinc-50/70 ${selected.has(c.jid) ? "bg-green-50/40" : ""}`}>
+                <tr key={c.jid} className={`group border-b border-zinc-50 transition hover:bg-zinc-50/70 ${selected.has(c.jid) ? "bg-blue-50/40" : ""}`}>
                   <td className="py-3 pl-5">
                     <input
                       type="checkbox"
@@ -444,7 +444,7 @@ export function ContactsClient() {
                         })
                       }
                       aria-label={`Sélectionner ${c.name ?? c.phone ?? ""}`}
-                      className="accent-green-600"
+                      className="accent-blue-600"
                     />
                   </td>
                   <td className="px-3 py-3">
@@ -523,7 +523,7 @@ export function ContactsClient() {
                   {has("flags") && (
                     <td className="px-3 py-3 pr-5">
                       <span className="flex items-center gap-2">
-                        <Flag on={!c.aiPaused && !c.dnd} title={c.aiPaused ? "IA en pause" : "IA active"} d="M8 8h8v8H8zM12 4v4M4 12h4M16 12h4M9 20h6" color="text-green-600" />
+                        <Flag on={!c.aiPaused && !c.dnd} title={c.aiPaused ? "IA en pause" : "IA active"} d="M8 8h8v8H8zM12 4v4M4 12h4M16 12h4M9 20h6" color="text-blue-600" />
                         <Flag on={c.dnd} title="Ne pas déranger" d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10z" color="text-red-500" />
                         <Flag on={c.testContact} title="Contact de test" d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3" color="text-violet-500" />
                       </span>
@@ -570,7 +570,7 @@ export function ContactsClient() {
         <div className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-xl bg-zinc-900 px-5 py-3 text-sm text-white shadow-xl">
           ✓ {toast.text}
           {toast.jid && (
-            <Link href={`/?c=${encodeURIComponent(toast.jid)}`} className="font-semibold text-green-400 hover:underline">
+            <Link href={`/?c=${encodeURIComponent(toast.jid)}`} className="font-semibold text-blue-400 hover:underline">
               Ouvrir la discussion →
             </Link>
           )}
@@ -590,7 +590,7 @@ function ago(ts: number, now: number) {
 }
 
 function ScoreBar({ score }: { score: number }) {
-  const tone = score >= 70 ? { pill: "bg-green-50 text-green-700", bar: "bg-green-500" } : score >= 40 ? { pill: "bg-amber-50 text-amber-700", bar: "bg-amber-400" } : { pill: "bg-zinc-100 text-zinc-500", bar: "bg-zinc-300" };
+  const tone = score >= 70 ? { pill: "bg-blue-50 text-blue-700", bar: "bg-blue-500" } : score >= 40 ? { pill: "bg-amber-50 text-amber-700", bar: "bg-amber-400" } : { pill: "bg-zinc-100 text-zinc-500", bar: "bg-zinc-300" };
   return (
     <span className="flex items-center gap-2.5" title={`Score d'engagement : ${score}/100`}>
       <span className={`w-10 rounded-lg py-1 text-center text-[13px] font-bold ${tone.pill}`}>{score}</span>
@@ -724,7 +724,7 @@ function NewContactModal({ allTags, onClose, onCreated }: { allTags: string[]; o
           <button type="button" onClick={onClose} className="rounded-xl px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100">
             Annuler
           </button>
-          <button type="submit" disabled={busy || form.phone.replace(/\D/g, "").length < 8} className="rounded-xl bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300">
+          <button type="submit" disabled={busy || form.phone.replace(/\D/g, "").length < 8} className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300">
             {busy ? "Ajout…" : "Ajouter le contact"}
           </button>
         </div>
@@ -762,7 +762,7 @@ function TagModal({ allTags, count, onClose, onSave }: { allTags: string[]; coun
           <button type="button" onClick={onClose} className="rounded-xl px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100">
             Annuler
           </button>
-          <button type="submit" disabled={!tag.trim()} className="rounded-xl bg-green-600 px-5 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300">
+          <button type="submit" disabled={!tag.trim()} className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300">
             Ajouter
           </button>
         </div>

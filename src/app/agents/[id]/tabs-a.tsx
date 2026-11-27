@@ -25,7 +25,7 @@ export function OverviewTab({
   const next = paused ? null : missing.sort((a, b) => b.max - b.points - (a.max - a.points))[0];
   const total = overview.aiReplies + overview.human;
   const aiShare = total ? Math.round((overview.aiReplies / total) * 100) : 0;
-  const color = preparation.score >= 80 ? "#16a34a" : preparation.score >= 50 ? "#d97706" : "#dc2626";
+  const color = preparation.score >= 80 ? "#2a6cdc" : preparation.score >= 50 ? "#d97706" : "#dc2626";
 
   return (
     <>
@@ -64,7 +64,7 @@ export function OverviewTab({
               <>
                 <span className="rounded-md bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700">ACTION REQUISE</span>
                 <p className="mt-2 text-sm font-medium">L&apos;agent est en pause : il ne répond à personne.</p>
-                <button onClick={() => patchAgent({ status: "active" }, "Agent activé.")} className="mt-3 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
+                <button onClick={() => patchAgent({ status: "active" }, "Agent activé.")} className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
                   Activer l&apos;agent
                 </button>
               </>
@@ -72,12 +72,12 @@ export function OverviewTab({
               <>
                 <p className="text-sm font-medium">À améliorer : {next.label}</p>
                 <p className="text-sm text-zinc-500">{next.detail}</p>
-                <button onClick={() => goTo(next.tab as TabId)} className="mt-3 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
+                <button onClick={() => goTo(next.tab as TabId)} className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
                   Prochaine étape recommandée →
                 </button>
               </>
             ) : (
-              <p className="text-sm font-medium text-green-700">Tout est prêt</p>
+              <p className="text-sm font-medium text-blue-700">Tout est prêt</p>
             )}
           </div>
         </div>
@@ -86,12 +86,12 @@ export function OverviewTab({
             <div key={g.group}>
               <div className="flex justify-between text-sm">
                 <span>{g.group}</span>
-                <span className="font-medium text-green-700">
+                <span className="font-medium text-blue-700">
                   {g.points}/{g.max}
                 </span>
               </div>
               <div className="mt-1.5 h-1.5 rounded-full bg-zinc-100">
-                <div className={`h-1.5 rounded-full ${g.points === g.max ? "bg-green-600" : g.points ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${(g.points / g.max) * 100}%` }} />
+                <div className={`h-1.5 rounded-full ${g.points === g.max ? "bg-blue-600" : g.points ? "bg-amber-500" : "bg-red-500"}`} style={{ width: `${(g.points / g.max) * 100}%` }} />
               </div>
             </div>
           ))}
@@ -120,7 +120,7 @@ export function OverviewTab({
         <ul className="grid gap-3 sm:grid-cols-2">
           {working.map((i) => (
             <li key={i.label} className="text-sm">
-              <span className="font-medium"><UiIcon name="checkCircle" size={15} className="mr-1 inline-block align-[-3px] text-green-600" />{i.label}</span>
+              <span className="font-medium"><UiIcon name="checkCircle" size={15} className="mr-1 inline-block align-[-3px] text-blue-600" />{i.label}</span>
               <span className="ml-1 text-xs text-zinc-400">
                 {i.points}/{i.max}
               </span>
@@ -133,7 +133,7 @@ export function OverviewTab({
       <div className="grid gap-5 lg:grid-cols-2">
         <Card title="IA vs humain" description="Qui a écrit les messages envoyés sur la période.">
           <div className="flex h-2 overflow-hidden rounded-full bg-zinc-100">
-            <div className="bg-green-600" style={{ width: `${aiShare}%` }} />
+            <div className="bg-blue-600" style={{ width: `${aiShare}%` }} />
             <div className="bg-zinc-400" style={{ width: `${total ? 100 - aiShare : 0}%` }} />
           </div>
           <div className="mt-3 space-y-1 text-sm">
@@ -337,7 +337,7 @@ export function InstructionsTab({ agent, settings: s, update, reload, notify }: 
           <span>{Math.round((budget / 100_000) * 100)} %</span>
         </div>
         <div className="mt-2 h-2 rounded-full bg-zinc-100">
-          <div className={`h-2 rounded-full ${budget > 90_000 ? "bg-red-500" : "bg-green-600"}`} style={{ width: `${Math.min(100, (budget / 100_000) * 100)}%` }} />
+          <div className={`h-2 rounded-full ${budget > 90_000 ? "bg-red-500" : "bg-blue-600"}`} style={{ width: `${Math.min(100, (budget / 100_000) * 100)}%` }} />
         </div>
       </Card>
 
@@ -401,7 +401,7 @@ function Choice({ active, onClick, title, sub }: { active: boolean; onClick: () 
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`rounded-xl border px-4 py-3 text-left ${active ? "border-green-500 bg-green-50" : "border-zinc-200 hover:bg-zinc-50"}`}
+      className={`rounded-xl border px-4 py-3 text-left ${active ? "border-blue-500 bg-blue-50" : "border-zinc-200 hover:bg-zinc-50"}`}
     >
       <span className="block text-sm font-semibold">{title}</span>
       <span className="block text-xs text-zinc-500">{sub}</span>
@@ -499,14 +499,14 @@ export function MediaTab({ agent, notify }: TabProps) {
         title={`${media?.length ?? 0} élément${(media?.length ?? 0) > 1 ? "s" : ""}`}
         badge="Enregistrement instantané"
         action={
-          <button onClick={() => setAdding(true)} className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
+          <button onClick={() => setAdding(true)} className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
             ＋ Ajouter un média
           </button>
         }
       >
         {media && media.length === 0 ? (
           <Empty icon="sparkles" title="Aucun média pour l'instant" text="Importe des images, vidéos, fichiers audio ou PDF et indique à l'agent quand envoyer chacun d'eux.">
-            <button onClick={() => setAdding(true)} className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
+            <button onClick={() => setAdding(true)} className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
               ＋ Ajouter un média
             </button>
           </Empty>
@@ -608,7 +608,7 @@ function AddMediaModal({ agentId, onClose, onAdded }: { agentId: number; onClose
             <p className="mb-1.5 text-xs font-semibold tracking-wide text-zinc-500 uppercase">1. Le fichier</p>
             <input ref={picker} type="file" accept="image/*,video/*,audio/*,application/pdf" className="hidden" onChange={(e) => pick(e.target.files?.[0])} />
             {file ? (
-              <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50/60 p-3">
+              <div className="flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50/60 p-3">
                 {preview ? (
                   // eslint-disable-next-line @next/next/no-img-element -- aperçu local du fichier choisi
                   <img src={preview} alt="" className="h-14 w-14 rounded-lg object-cover" />
@@ -621,7 +621,7 @@ function AddMediaModal({ agentId, onClose, onAdded }: { agentId: number; onClose
                     {kind} · {size}
                   </p>
                 </div>
-                <button onClick={() => picker.current?.click()} className="rounded-lg px-3 py-1.5 text-sm font-medium text-green-700 hover:bg-green-100">
+                <button onClick={() => picker.current?.click()} className="rounded-lg px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100">
                   Changer
                 </button>
               </div>
@@ -640,7 +640,7 @@ function AddMediaModal({ agentId, onClose, onAdded }: { agentId: number; onClose
                   pick(e.dataTransfer.files?.[0]);
                 }}
                 className={`flex w-full flex-col items-center gap-1.5 rounded-xl border-2 border-dashed px-4 py-7 text-center transition ${
-                  dragging ? "border-green-500 bg-green-50" : "border-zinc-300 hover:border-green-500 hover:bg-green-50/40"
+                  dragging ? "border-blue-500 bg-blue-50" : "border-zinc-300 hover:border-blue-500 hover:bg-blue-50/40"
                 }`}
               >
                 <UiIcon name="clip" size={28} className="text-zinc-400" />
@@ -660,7 +660,7 @@ function AddMediaModal({ agentId, onClose, onAdded }: { agentId: number; onClose
           <button onClick={onClose} className="rounded-xl px-4 py-2.5 text-sm text-zinc-600 hover:bg-zinc-100">
             Annuler
           </button>
-          <button onClick={add} disabled={busy} className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300">
+          <button onClick={add} disabled={busy} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300">
             {busy ? "Envoi…" : "Ajouter"}
           </button>
         </div>

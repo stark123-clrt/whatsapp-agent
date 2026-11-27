@@ -118,7 +118,7 @@ export function CampaignDetail({ id }: { id: number }) {
   for (const p of upcoming) groups.set(dayLabel(p.scheduledAt), [...(groups.get(dayLabel(p.scheduledAt)) ?? []), p]);
 
   return (
-    <main className="min-h-full bg-zinc-50 px-8 py-7">
+    <main className="min-h-full bg-white px-8 py-7">
       <Link href="/campagnes" className="text-sm text-zinc-500 hover:text-zinc-800">
         ← Campagnes
       </Link>
@@ -168,7 +168,7 @@ export function CampaignDetail({ id }: { id: number }) {
       <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Tile n={count("pending")} label="À valider" tone="text-amber-600" />
         <Tile n={count("scheduled")} label="Programmés" tone="text-sky-700" />
-        <Tile n={count("published")} label="Publiés" tone="text-green-700" />
+        <Tile n={count("published")} label="Publiés" tone="text-blue-700" />
         <Tile n={count("failed")} label="Échecs" tone={count("failed") ? "text-red-600" : "text-zinc-400"} />
       </div>
 

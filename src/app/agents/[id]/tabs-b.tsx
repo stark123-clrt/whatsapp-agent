@@ -56,13 +56,13 @@ export function FaqTab({ agent, settings: s, update, notify }: TabProps) {
         description={
           <>
             Les FAQ de ses sources, celles ajoutées pour lui et celles communes à tous les agents.{" "}
-            <Link href="/base-de-connaissances" className="text-green-700 underline">
+            <Link href="/base-de-connaissances" className="text-blue-700 underline">
               Gérer la bibliothèque complète
             </Link>
           </>
         }
         action={
-          <button onClick={() => setAdding(!adding)} className="shrink-0 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
+          <button onClick={() => setAdding(!adding)} className="shrink-0 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
             ＋ Ajouter des FAQ
           </button>
         }
@@ -72,7 +72,7 @@ export function FaqTab({ agent, settings: s, update, notify }: TabProps) {
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Question" className={inputClass} autoFocus />
             <textarea value={a} onChange={(e) => setA(e.target.value)} rows={3} placeholder="Réponse" className={inputClass} />
             <div className="flex justify-end">
-              <button onClick={addFaq} disabled={!q.trim() || !a.trim()} className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white disabled:bg-green-300">
+              <button onClick={addFaq} disabled={!q.trim() || !a.trim()} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:bg-blue-300">
                 Ajouter
               </button>
             </div>
@@ -190,7 +190,7 @@ function FaqLine({ faq, onChanged }: { faq: Faq; onChanged: () => void }) {
           <button onClick={() => setEditing(false)} className="rounded-lg px-3 py-1.5 text-sm hover:bg-zinc-100">
             Annuler
           </button>
-          <button onClick={save} className="rounded-lg bg-green-600 px-3 py-1.5 text-sm text-white">
+          <button onClick={save} className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white">
             Enregistrer
           </button>
         </div>
@@ -202,7 +202,7 @@ function FaqLine({ faq, onChanged }: { faq: Faq; onChanged: () => void }) {
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold">
           {faq.question}{" "}
-          <span className={`ml-1 rounded px-1.5 py-0.5 text-[11px] font-medium ${faq.pageId ? "bg-green-50 text-green-700" : "bg-sky-50 text-sky-700"}`}>
+          <span className={`ml-1 rounded px-1.5 py-0.5 text-[11px] font-medium ${faq.pageId ? "bg-blue-50 text-blue-700" : "bg-sky-50 text-sky-700"}`}>
             {faq.pageId ? "Depuis la source" : faq.agentId ? "Ajoutée pour cet agent" : "Commune"}
           </span>
         </p>

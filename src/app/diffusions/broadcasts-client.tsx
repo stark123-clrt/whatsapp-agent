@@ -79,20 +79,20 @@ export function BroadcastsClient() {
   const count = (st: BroadcastStatus) => all.filter((b) => b.status === st).length;
   const shown = all.filter((b) => (tab === "all" || b.status === tab) && (!q.trim() || b.name.toLowerCase().includes(q.trim().toLowerCase())));
   const tiles = [
-    { label: "TOTAL", value: all.length, icon: "megaphone" as const, cls: "bg-green-50 text-green-700" },
-    { label: "EN COURS D'ENVOI", value: count("sending"), icon: "spark" as const, cls: "bg-green-50 text-green-700" },
+    { label: "TOTAL", value: all.length, icon: "megaphone" as const, cls: "bg-blue-50 text-blue-700" },
+    { label: "EN COURS D'ENVOI", value: count("sending"), icon: "spark" as const, cls: "bg-blue-50 text-blue-700" },
     { label: "PROGRAMMÉES", value: count("scheduled"), icon: "calendar" as const, cls: "bg-sky-50 text-sky-700" },
     { label: "BROUILLONS", value: count("draft"), icon: "pen" as const, cls: "bg-zinc-100 text-zinc-600" },
   ];
 
   return (
-    <main className="min-h-full bg-zinc-50 px-8 py-7">
+    <main className="min-h-full bg-white px-8 py-7">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Diffusions</h1>
           <p className="mt-1 text-zinc-500">Envois groupés sur WhatsApp : audience, message, réponses et planification au même endroit.</p>
         </div>
-        <button onClick={create} disabled={busy} className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:opacity-60">
+        <button onClick={create} disabled={busy} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 disabled:opacity-60">
           <Icon name="plus" size={16} className="mr-1 inline-block align-[-3px]" />Nouvelle diffusion
         </button>
       </div>
@@ -160,7 +160,7 @@ export function BroadcastsClient() {
                 <tr key={b.id} className="border-t border-zinc-100 hover:bg-zinc-50/60">
                   <td className="px-5 py-3">
                     <Link href={b.status === "draft" ? `/diffusions/${b.id}/modifier` : `/diffusions/${b.id}`} className="flex items-center gap-3 font-semibold hover:underline">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-600 text-xs font-bold text-white">WA</span>
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-xs font-bold text-white">WA</span>
                       <span className="truncate">{b.name}</span>
                     </Link>
                   </td>

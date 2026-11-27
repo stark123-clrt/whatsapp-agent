@@ -60,7 +60,7 @@ export function KbClient() {
           onClick={() => setAdding(true)}
           disabled={!data?.agents.length}
           title={data?.agents.length ? undefined : "Crée d'abord un agent"}
-          className="rounded-xl bg-green-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:bg-green-700 disabled:bg-green-300"
+          className="rounded-xl bg-blue-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:bg-blue-700 disabled:bg-blue-300"
         >
           ＋ Ajouter une source
         </button>
@@ -108,7 +108,7 @@ export function KbClient() {
                     {s.pages.length} page{s.pages.length > 1 ? "s" : ""} · {faqs} FAQ
                   </span>
                 </button>
-                {agentName(s.agentId) && <span className="text-xs font-medium text-green-700"><UiIcon name="link" size={13} className="mr-1 inline-block align-[-3px]" />{agentName(s.agentId)}</span>}
+                {agentName(s.agentId) && <span className="text-xs font-medium text-blue-700"><UiIcon name="link" size={13} className="mr-1 inline-block align-[-3px]" />{agentName(s.agentId)}</span>}
                 {s.kind === "site" && (
                   <button onClick={() => act(`/api/kb/sources/${s.id}`, "POST")} className="rounded-lg px-2 py-1 text-sm text-zinc-600 hover:bg-zinc-100">
                     ↻ Actualiser
@@ -157,7 +157,7 @@ export function KbClient() {
 const STATUS: Record<KbPage["status"], { label: string; className: string }> = {
   pending: { label: "EN ATTENTE", className: "bg-zinc-100 text-zinc-600" },
   processing: { label: "LECTURE…", className: "bg-sky-50 text-sky-700" },
-  ready: { label: "PRÊT", className: "bg-green-50 text-green-700" },
+  ready: { label: "PRÊT", className: "bg-blue-50 text-blue-700" },
   error: { label: "ERREUR", className: "bg-red-50 text-red-700" },
 };
 
@@ -265,7 +265,7 @@ function FaqItem({ faq, onChanged }: { faq: Faq; onChanged: () => void }) {
           <button onClick={() => setEditing(false)} className="rounded-lg px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100">
             Annuler
           </button>
-          <button onClick={save} className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700">
+          <button onClick={save} className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700">
             Enregistrer
           </button>
         </div>
@@ -280,7 +280,7 @@ function FaqItem({ faq, onChanged }: { faq: Faq; onChanged: () => void }) {
         {faq.section && <span className="rounded-md bg-amber-50 px-2 py-0.5 text-xs text-amber-700">{faq.section}</span>}
         <span className="text-xs text-zinc-400">utilisé {faq.used}×</span>
         <span className="ml-auto space-x-2 text-xs opacity-0 group-hover:opacity-100">
-          <button onClick={() => setEditing(true)} className="text-green-700 hover:underline">
+          <button onClick={() => setEditing(true)} className="text-blue-700 hover:underline">
             Modifier
           </button>
           <button onClick={remove} className="text-red-600 hover:underline">
@@ -350,7 +350,7 @@ function AddSourceModal({ agents, onClose, onAdded }: { agents: { id: number; na
                 <label className="flex cursor-pointer items-center gap-3 px-4 py-1.5 text-sm hover:bg-zinc-50">
                   <input
                     type="checkbox"
-                    className="accent-green-600"
+                    className="accent-blue-600"
                     checked={picked.has(p)}
                     disabled={!picked.has(p) && picked.size >= 25}
                     onChange={() =>
@@ -373,7 +373,7 @@ function AddSourceModal({ agents, onClose, onAdded }: { agents: { id: number; na
           <button onClick={onClose} className="rounded-xl px-4 py-2.5 text-sm text-zinc-600 hover:bg-zinc-100">
             Annuler
           </button>
-          <button onClick={add} disabled={busy || picked.size === 0} className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300">
+          <button onClick={add} disabled={busy || picked.size === 0} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300">
             Importer {picked.size || ""} page{picked.size > 1 ? "s" : ""}
           </button>
         </div>

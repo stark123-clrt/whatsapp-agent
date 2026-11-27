@@ -403,7 +403,7 @@ export function WidgetChat(props: Props) {
               initial
             )}
           </div>
-          <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full bg-emerald-400" style={{ boxShadow: `0 0 0 2px ${s.colors.brand}` }} />
+          <span className="absolute -right-0.5 -bottom-0.5 h-3 w-3 rounded-full bg-blue-400" style={{ boxShadow: `0 0 0 2px ${s.colors.brand}` }} />
         </div>
         <div className="min-w-0 flex-1 leading-tight">
           <p className="truncate text-[15px] font-semibold">{s.name || "Notre équipe"}</p>

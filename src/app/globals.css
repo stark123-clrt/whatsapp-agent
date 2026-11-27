@@ -5,6 +5,20 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Couleur de la marque : le bleu du logo Stark (#2A6CDC), décliné du plus clair au plus foncé. */
+@theme {
+  --color-blue-50: #eef4fd;
+  --color-blue-100: #dbe7fb;
+  --color-blue-200: #bfd4f7;
+  --color-blue-300: #93b7f1;
+  --color-blue-400: #5f92e8;
+  --color-blue-500: #3d7be2;
+  --color-blue-600: #2a6cdc;
+  --color-blue-700: #2257b8;
+  --color-blue-800: #214b94;
+  --color-blue-900: #1f3f76;
+}
+
 /* Les couleurs viennent des classes Tailwind (thème clair uniquement pour l'instant). */
 :root {
   color-scheme: light;

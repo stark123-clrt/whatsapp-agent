@@ -11,7 +11,7 @@ import { InstagramDashboard } from "./instagram-dashboard";
 
 export const CAMPAIGN_STATUS: Record<CampaignStatus, { label: string; cls: string }> = {
   draft: { label: "Brouillon", cls: "bg-zinc-100 text-zinc-600" },
-  active: { label: "● Active", cls: "bg-green-50 text-green-700" },
+  active: { label: "● Active", cls: "bg-blue-50 text-blue-700" },
   paused: { label: "En pause", cls: "bg-amber-50 text-amber-700" },
   ended: { label: "Terminée", cls: "bg-zinc-100 text-zinc-400" },
 };
@@ -39,7 +39,7 @@ export function CampaignsClient() {
   }, [load]);
 
   return (
-    <main className="min-h-full bg-zinc-50 px-8 py-7">
+    <main className="min-h-full bg-white px-8 py-7">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Campagnes</h1>
@@ -97,7 +97,7 @@ export function CampaignsClient() {
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                   <Stat n={n.pending ?? 0} label="À valider" tone={n.pending ? "text-amber-600" : ""} />
                   <Stat n={n.scheduled ?? 0} label="Programmés" />
-                  <Stat n={n.published ?? 0} label="Publiés" tone={n.published ? "text-green-700" : ""} />
+                  <Stat n={n.published ?? 0} label="Publiés" tone={n.published ? "text-blue-700" : ""} />
                 </div>
               </Link>
             );

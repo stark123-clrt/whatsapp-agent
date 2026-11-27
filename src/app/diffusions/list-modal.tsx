@@ -56,14 +56,14 @@ export function ListModal({ contacts, tags, onClose, onCreated }: { contacts: Li
 
   const setRule = (i: number, patch: Partial<ListRule>) => setRules(rules.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   const canCreate = name.trim() && (kind === "static" ? picked.size > 0 : rules.some(ready));
-  const input = "w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100";
+  const input = "w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
   const select = "rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-zinc-400";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/30 p-4 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="flex max-h-[90vh] w-full max-w-xl flex-col rounded-2xl bg-white shadow-xl">
         <div className="flex items-start gap-3 border-b border-zinc-100 p-5">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-700"><UiIcon name="users" size={20} className="" /></span>
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><UiIcon name="users" size={20} className="" /></span>
           <div className="flex-1">
             <p className="font-semibold">{kind === "smart" ? "Nouvelle liste intelligente" : "Nouvelle liste de contacts"}</p>
             <p className="text-sm text-zinc-500">{kind === "smart" ? "Les contacts sont ajoutés et retirés automatiquement, selon des règles." : "Regroupe des contacts pour leur envoyer une diffusion."}</p>
@@ -83,8 +83,8 @@ export function ListModal({ contacts, tags, onClose, onCreated }: { contacts: Li
                   ["smart", "Liste intelligente", "Les contacts sont ajoutés et retirés automatiquement, selon des règles."],
                 ] as const
               ).map(([k, t, d]) => (
-                <button key={k} onClick={() => setKind(k)} className={`rounded-xl border p-3 text-left ${kind === k ? "border-green-400 bg-green-50" : "border-zinc-200 hover:border-zinc-300"}`}>
-                  <p className={`text-sm font-semibold ${kind === k ? "text-green-700" : ""}`}>{t}</p>
+                <button key={k} onClick={() => setKind(k)} className={`rounded-xl border p-3 text-left ${kind === k ? "border-blue-400 bg-blue-50" : "border-zinc-200 hover:border-zinc-300"}`}>
+                  <p className={`text-sm font-semibold ${kind === k ? "text-blue-700" : ""}`}>{t}</p>
                   <p className="mt-0.5 text-xs text-zinc-500">{d}</p>
                 </button>
               ))}
@@ -107,7 +107,7 @@ export function ListModal({ contacts, tags, onClose, onCreated }: { contacts: Li
                 {shown.length > 1 && (
                   <button
                     onClick={() => setPicked(shown.every((c) => picked.has(c.jid)) ? new Set([...picked].filter((j) => !shown.some((c) => c.jid === j))) : new Set([...picked, ...shown.map((c) => c.jid)]))}
-                    className="w-full px-4 py-2 text-left text-xs font-medium text-green-700 hover:bg-zinc-50"
+                    className="w-full px-4 py-2 text-left text-xs font-medium text-blue-700 hover:bg-zinc-50"
                   >
                     {shown.every((c) => picked.has(c.jid)) ? "Tout désélectionner" : `Tout sélectionner (${shown.length})`}
                   </button>
@@ -130,7 +130,7 @@ export function ListModal({ contacts, tags, onClose, onCreated }: { contacts: Li
                         else n.add(c.jid);
                         setPicked(n);
                       }}
-                      className="h-4 w-4 accent-green-600"
+                      className="h-4 w-4 accent-blue-600"
                     />
                   </label>
                 ))}
@@ -199,7 +199,7 @@ export function ListModal({ contacts, tags, onClose, onCreated }: { contacts: Li
                               <button
                                 key={v}
                                 onClick={() => setRule(i, { values: on ? r.values.filter((x) => x !== v) : [...r.values, v] })}
-                                className={`rounded-lg border px-2.5 py-1 text-xs font-medium ${on ? "border-green-500 bg-green-50 text-green-800" : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300"}`}
+                                className={`rounded-lg border px-2.5 py-1 text-xs font-medium ${on ? "border-blue-500 bg-blue-50 text-blue-800" : "border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300"}`}
                               >
                                 {label}
                               </button>
@@ -220,13 +220,13 @@ export function ListModal({ contacts, tags, onClose, onCreated }: { contacts: Li
                 {preview ? (
                   <>
                     <p>
-                      <UiIcon name="sparkles" size={15} className="mr-1 inline-block align-[-3px] text-green-600" /><strong>{preview.count}</strong> contact{preview.count > 1 ? "s" : ""} correspond{preview.count > 1 ? "ent" : ""}
+                      <UiIcon name="sparkles" size={15} className="mr-1 inline-block align-[-3px] text-blue-600" /><strong>{preview.count}</strong> contact{preview.count > 1 ? "s" : ""} correspond{preview.count > 1 ? "ent" : ""}
                       {preview.whatsapp !== preview.count && <span className="text-zinc-500"> · {preview.whatsapp} joignable{preview.whatsapp > 1 ? "s" : ""} sur WhatsApp</span>}
                     </p>
                     {preview.sample.length > 0 && <p className="mt-0.5 truncate text-xs text-zinc-500">{preview.sample.join(", ")}…</p>}
                   </>
                 ) : (
-                  <p className="font-medium"><UiIcon name="sparkles" size={15} className="mr-1 inline-block align-[-3px] text-green-600" />Termine les règles ci-dessus pour voir combien de contacts correspondent.</p>
+                  <p className="font-medium"><UiIcon name="sparkles" size={15} className="mr-1 inline-block align-[-3px] text-blue-600" />Termine les règles ci-dessus pour voir combien de contacts correspondent.</p>
                 )}
               </div>
             </div>
@@ -238,7 +238,7 @@ export function ListModal({ contacts, tags, onClose, onCreated }: { contacts: Li
           <button onClick={onClose} className="rounded-xl px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100">
             Annuler
           </button>
-          <button onClick={create} disabled={!canCreate || busy} className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40">
+          <button onClick={create} disabled={!canCreate || busy} className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-40">
             {busy ? "Création…" : "Créer la liste"}
           </button>
         </div>

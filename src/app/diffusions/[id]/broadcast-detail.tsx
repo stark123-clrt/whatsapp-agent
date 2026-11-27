@@ -20,7 +20,7 @@ function delivery(r: Recipient) {
   if (r.status === "pending") return { label: "En attente", cls: "text-zinc-400" };
   if (r.status === "skipped") return { label: r.reason ?? "Ignoré", cls: "text-zinc-400" };
   if (r.status === "failed") return { label: `Échec${r.reason ? ` : ${r.reason}` : ""}`, cls: "text-red-600" };
-  if (r.repliedAt) return { label: "A répondu", cls: "text-green-700 font-semibold" };
+  if (r.repliedAt) return { label: "A répondu", cls: "text-blue-700 font-semibold" };
   if (r.delivery >= 4) return { label: "Lu ✓✓", cls: "text-sky-600" };
   if (r.delivery >= 3) return { label: "Livré ✓✓", cls: "text-zinc-600" };
   return { label: "Envoyé ✓", cls: "text-zinc-600" };
@@ -60,7 +60,7 @@ export function BroadcastDetail({ id }: { id: number }) {
   }
 
   if (error) return <main className="p-8 text-sm text-red-600">{error}</main>;
-  if (!b) return <main className="min-h-full bg-zinc-50 p-8" />;
+  if (!b) return <main className="min-h-full bg-white p-8" />;
 
   const st = BROADCAST_STATUS[b.status];
   const s = b.settings;
@@ -78,7 +78,7 @@ export function BroadcastDetail({ id }: { id: number }) {
   ];
 
   return (
-    <main className="min-h-full bg-zinc-50 px-8 py-7">
+    <main className="min-h-full bg-white px-8 py-7">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm">
           <Link href="/diffusions" className="text-zinc-500 hover:text-zinc-800">
@@ -100,7 +100,7 @@ export function BroadcastDetail({ id }: { id: number }) {
             </button>
           )}
           {b.status === "paused" && (
-            <button onClick={() => act("resume")} disabled={busy} className="rounded-xl bg-green-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-green-700">
+            <button onClick={() => act("resume")} disabled={busy} className="rounded-xl bg-blue-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-blue-700">
               <UiIcon name="play" size={14} className="mr-1 inline-block align-[-3px]" />Reprendre
             </button>
           )}
@@ -117,10 +117,10 @@ export function BroadcastDetail({ id }: { id: number }) {
           {PHASES.map((p, i) => (
             <li key={p.id} className="flex flex-1 items-center last:flex-none">
               <div className="flex flex-col items-center gap-1">
-                <span className={`h-3 w-3 rounded-full ${i <= phaseIdx ? "bg-green-600" : "bg-zinc-300"}`} />
+                <span className={`h-3 w-3 rounded-full ${i <= phaseIdx ? "bg-blue-600" : "bg-zinc-300"}`} />
                 <span className={`text-xs font-semibold ${i <= phaseIdx ? "text-zinc-800" : "text-zinc-400"}`}>{b.status === "cancelled" && p.id === "done" ? "Annulée" : p.label}</span>
               </div>
-              {i < PHASES.length - 1 && <span className={`mx-2 h-px flex-1 ${i < phaseIdx ? "bg-green-600" : "bg-zinc-200"}`} />}
+              {i < PHASES.length - 1 && <span className={`mx-2 h-px flex-1 ${i < phaseIdx ? "bg-blue-600" : "bg-zinc-200"}`} />}
             </li>
           ))}
         </ol>
@@ -158,7 +158,7 @@ export function BroadcastDetail({ id }: { id: number }) {
             {b.stats.total ? (
               <>
                 <div className="mt-2 h-2 rounded-full bg-zinc-100">
-                  <div className="h-2 rounded-full bg-green-600 transition-all" style={{ width: `${pct}%` }} />
+                  <div className="h-2 rounded-full bg-blue-600 transition-all" style={{ width: `${pct}%` }} />
                 </div>
                 <div className="mt-4 max-h-[28rem] overflow-y-auto">
                   <table className="w-full text-left text-sm">

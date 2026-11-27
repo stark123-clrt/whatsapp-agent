@@ -73,7 +73,7 @@ export function ConversationMenu({ chat, knownTags, onChanged, onClose, notify }
   }
 
   const sections: Item[][] = [
-    [{ kind: "soon", label: "Tester dans le Playground", icon: "flask", color: "text-emerald-600" }],
+    [{ kind: "soon", label: "Tester dans le Playground", icon: "flask", color: "text-blue-600" }],
     [
       { kind: "action", label: "Marquer comme lu", icon: "mailOpen", color: "text-sky-600", run: () => patch({ read: true }, "Marquée comme lue.") },
       { kind: "action", label: "Marquer comme non lu", icon: "mail", color: "text-sky-600", run: () => patch({ unread: true }, "Marquée comme non lue.", true) },
@@ -89,7 +89,7 @@ export function ConversationMenu({ chat, knownTags, onChanged, onClose, notify }
     [
       { kind: "soon", label: "Assigner à un membre de l'équipe…", icon: "userPlus", color: "text-violet-500" },
       { kind: "soon", label: "Envoyer une diffusion…", icon: "megaphone", color: "text-cyan-600" },
-      { kind: "soon", label: "Ajouter à l'automatisation", icon: "bolt", color: "text-emerald-600" },
+      { kind: "soon", label: "Ajouter à l'automatisation", icon: "bolt", color: "text-blue-600" },
       { kind: "action", label: "Assigner un agent IA…", icon: "spark", color: "text-fuchsia-500", run: () => setModal("agent") },
       { kind: "action", label: "Modifier le contact…", icon: "pencil", color: "text-blue-600", run: () => setModal("contact") },
       { kind: "action", label: "Gérer les tags…", icon: "tag", color: "text-pink-500", run: () => setModal("tags") },
@@ -112,7 +112,7 @@ export function ConversationMenu({ chat, knownTags, onChanged, onClose, notify }
         kind: "action",
         label: "Exporter la transcription",
         icon: "download",
-        color: "text-teal-600",
+        color: "text-blue-600",
         run: () => {
           // Téléchargement du fichier texte via un lien temporaire.
           const a = document.createElement("a");
@@ -121,7 +121,7 @@ export function ConversationMenu({ chat, knownTags, onChanged, onClose, notify }
           a.click();
         },
       },
-      { kind: "action", label: "Envoyer la transcription par e-mail", icon: "mail", color: "text-teal-600", run: emailTranscript },
+      { kind: "action", label: "Envoyer la transcription par e-mail", icon: "mail", color: "text-blue-600", run: emailTranscript },
       {
         kind: "action",
         label: chat.archived ? "Désarchiver la discussion" : "Archiver la discussion",
@@ -273,7 +273,7 @@ function AgentModal({ current, onClose, onSave }: { current: number | null; onCl
         <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100">
           Annuler
         </button>
-        <button onClick={() => onSave(value ? Number(value) : null)} className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
+        <button onClick={() => onSave(value ? Number(value) : null)} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
           Enregistrer
         </button>
       </div>
@@ -338,7 +338,7 @@ export function ContactModal({
           <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100">
             Annuler
           </button>
-          <button type="submit" className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
+          <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
             Enregistrer
           </button>
         </div>
@@ -407,7 +407,7 @@ export function TagsModal({
         </button>
         <button
           onClick={() => onSave(input.trim() ? [...tags, input.trim().toLowerCase()] : tags)}
-          className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Enregistrer
         </button>

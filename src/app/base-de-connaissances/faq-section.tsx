@@ -100,10 +100,10 @@ export function FaqSection({
       <div className="flex flex-wrap items-center gap-3">
         <h2 className="flex items-center gap-2 text-lg font-semibold">
           Foire aux questions
-          <span className="rounded-md bg-green-50 px-2 py-0.5 text-sm font-semibold text-green-700">{faqs?.length ?? 0}</span>
+          <span className="rounded-md bg-blue-50 px-2 py-0.5 text-sm font-semibold text-blue-700">{faqs?.length ?? 0}</span>
         </h2>
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          {notice && <span className="rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700">{notice}</span>}
+          {notice && <span className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700">{notice}</span>}
           <button onClick={dedupe} className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50">
             <UiIcon name="sparkles" size={15} className="mr-1 inline-block align-[-3px]" />Dédupliquer
           </button>
@@ -152,7 +152,7 @@ export function FaqSection({
               }}
             />
           </div>
-          <button onClick={() => setCreating(true)} className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700">
+          <button onClick={() => setCreating(true)} className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
             ＋ Nouvelle FAQ
           </button>
         </div>
@@ -193,7 +193,7 @@ export function FaqSection({
         <div className="flex items-center gap-3 border-b border-zinc-100 px-5 py-3 text-sm">
           <input
             type="checkbox"
-            className="accent-green-600"
+            className="accent-blue-600"
             checked={allShownSelected}
             onChange={() =>
               setSelected((s) => {
@@ -304,7 +304,7 @@ function FaqRow({
 
   return (
     <li className="flex gap-4 border-b border-zinc-100 px-5 py-4 last:border-0">
-      <input type="checkbox" checked={selected} onChange={onSelect} className="mt-1 accent-green-600" aria-label="Sélectionner" />
+      <input type="checkbox" checked={selected} onChange={onSelect} className="mt-1 accent-blue-600" aria-label="Sélectionner" />
       <span className="w-6 shrink-0 pt-0.5 text-right text-sm text-zinc-400">{index}.</span>
       <div className="min-w-0 flex-1">
         {editing ? (
@@ -315,7 +315,7 @@ function FaqRow({
               <button onClick={() => setEditing(false)} className="rounded-lg px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-100">
                 Annuler
               </button>
-              <button onClick={save} className="rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700">
+              <button onClick={save} className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700">
                 Enregistrer
               </button>
             </div>
@@ -325,7 +325,7 @@ function FaqRow({
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-semibold">{faq.question}</p>
               {faq.pageId !== null ? (
-                <span className="rounded-md bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">Depuis la source</span>
+                <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">Depuis la source</span>
               ) : (
                 <span className="rounded-md bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">Ajoutée à la main</span>
               )}
@@ -391,7 +391,7 @@ function NewFaqModal({ agents, onClose, onCreated }: { agents: { id: number; nam
           <button onClick={onClose} className="rounded-xl px-4 py-2.5 text-sm text-zinc-600 hover:bg-zinc-100">
             Annuler
           </button>
-          <button onClick={create} disabled={!q.trim() || !a.trim()} className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300">
+          <button onClick={create} disabled={!q.trim() || !a.trim()} className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300">
             Ajouter
           </button>
         </div>

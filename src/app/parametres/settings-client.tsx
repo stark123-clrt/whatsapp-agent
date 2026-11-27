@@ -70,7 +70,7 @@ export function SettingsClient({ section }: { section: string }) {
                           : "text-zinc-400 hover:bg-zinc-50"
                     }`}
                   >
-                    <Icon name={s.icon} className={s.id === current.id ? "text-green-600" : s.ready ? "text-zinc-400" : "text-zinc-300"} />
+                    <Icon name={s.icon} className={s.id === current.id ? "text-blue-600" : s.ready ? "text-zinc-400" : "text-zinc-300"} />
                     <span className="flex-1">{s.label}</span>
                     {!s.ready && <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400">Bientôt</span>}
                   </Link>

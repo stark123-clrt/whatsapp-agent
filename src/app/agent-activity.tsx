@@ -11,7 +11,7 @@ type Data = {
 
 const KIND: Record<AgentLogEntry["kind"], { label: string; className: string }> = {
   in: { label: "Reçu", className: "text-zinc-500" },
-  out: { label: "Réponse IA", className: "text-green-700" },
+  out: { label: "Réponse IA", className: "text-blue-700" },
   skip: { label: "Ignoré", className: "text-amber-700" },
   error: { label: "Erreur", className: "text-red-600" },
 };

@@ -202,7 +202,7 @@ export function NewAgentModal({
                       <strong>{picked.size}</strong> page{picked.size > 1 ? "s" : ""} sur {pages.length} (25 max)
                     </span>
                     <span className="space-x-3 text-xs">
-                      <button className="text-green-700 hover:underline" onClick={() => setPicked(new Set(pages.slice(0, 25)))}>
+                      <button className="text-blue-700 hover:underline" onClick={() => setPicked(new Set(pages.slice(0, 25)))}>
                         Tout (25 max)
                       </button>
                       <button className="text-zinc-500 hover:underline" onClick={() => setPicked(new Set())}>
@@ -216,7 +216,7 @@ export function NewAgentModal({
                         <label className="flex cursor-pointer items-center gap-3 px-4 py-1.5 text-sm hover:bg-zinc-50">
                           <input
                             type="checkbox"
-                            className="accent-green-600"
+                            className="accent-blue-600"
                             checked={picked.has(p)}
                             disabled={!picked.has(p) && picked.size >= 25}
                             onChange={() =>
@@ -292,7 +292,7 @@ export function NewAgentModal({
             <p className="mt-1 text-xs text-zinc-500">
               La langue principale de l&apos;agent, utilisée pour ses instructions. Il répond automatiquement dans la langue du contact.
             </p>
-            <p className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+            <p className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
               <UiIcon name="info" size={15} className="mr-1.5 inline-block align-[-3px]" />Un agent répond aux personnes qui te contactent. Il n&apos;écrit jamais en premier.
             </p>
           </Block>
@@ -310,7 +310,7 @@ export function NewAgentModal({
           <button
             onClick={create}
             disabled={!canCreate}
-            className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300"
+            className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:bg-blue-300"
           >
             {saving ? (mode === "site" && pages === null ? "Recherche des pages…" : "Création…") : "Créer l'agent"}
           </button>
@@ -336,12 +336,12 @@ function Choice({ active, onClick, title, text }: { active: boolean; onClick: ()
       onClick={onClick}
       aria-pressed={active}
       className={`rounded-xl border px-4 py-3 text-left transition-colors ${
-        active ? "border-green-500 bg-green-50" : "border-zinc-200 bg-zinc-50 hover:bg-zinc-100"
+        active ? "border-blue-500 bg-blue-50" : "border-zinc-200 bg-zinc-50 hover:bg-zinc-100"
       }`}
     >
       <span className="flex items-center justify-between font-semibold text-zinc-900">
         {title}
-        {active && <span className="text-green-600">✓</span>}
+        {active && <span className="text-blue-600">✓</span>}
       </span>
       <span className="mt-1 block text-sm text-zinc-500">{text}</span>
     </button>

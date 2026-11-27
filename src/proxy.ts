@@ -1,18 +1,30 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { authEnabled, SESSION_COOKIE, verifySession } from "./lib/session";
+import { authEnabled, readSession, SESSION_COOKIE } from "./lib/session";
+import { sessionVersion } from "./lib/users";
 
 /**
- * Protège toute l'appli : sans session valide, les pages renvoient vers /login
- * et les API répondent 401. Seules la page de connexion et le test de santé sont publics.
+ * Protège toute l'appli : sans session valide d'un compte de l'équipe, les pages renvoient vers /login
+ * et les API répondent 401. Un compte retiré ou dont le mot de passe a changé perd l'accès aussitôt.
  */
-// Widget de site web : script, page du chat (iframe) et API visiteurs sont publics.
-const PUBLIC = [/^\/login$/, /^\/brand\//, /^\/(icon|apple-icon)\.png$/,/^\/api\/auth\//, /^\/api\/health$/, /^\/widget\//, /^\/w\//, /^\/api\/public\//];
+// Publics : connexion, invitation, widget de site web (script, iframe, API visiteurs), logo, santé.
+const PUBLIC = [
+  /^\/login$/,
+  /^\/invitation\//,
+  /^\/brand\//,
+  /^\/(icon|apple-icon)\.png$/,
+  /^\/api\/auth\//,
+  /^\/api\/health$/,
+  /^\/widget\//,
+  /^\/w\//,
+  /^\/api\/public\//,
+];
 
 export async function proxy(request: NextRequest) {
   if (!authEnabled()) return NextResponse.next();
   const { pathname, search } = request.nextUrl;
   if (PUBLIC.some((re) => re.test(pathname))) return NextResponse.next();
-  if (await verifySession(request.cookies.get(SESSION_COOKIE)?.value)) return NextResponse.next();
+  const s = await readSession(request.cookies.get(SESSION_COOKIE)?.value);
+  if (s && sessionVersion(s.userId) === s.version) return NextResponse.next();
 
   if (pathname.startsWith("/api/")) {
     return NextResponse.json({ error: "Connexion requise" }, { status: 401 });

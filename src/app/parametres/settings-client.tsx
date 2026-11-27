@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Icon, type IconName } from "../icons";
 import { ChannelsSection } from "./channels";
+import { ProfileSection } from "./profile-section";
+import { TeamSection } from "./team-section";
 
 type Section = { id: string; label: string; icon: IconName; ready?: boolean };
 
@@ -11,7 +13,7 @@ const GROUPS: { title: string; items: Section[] }[] = [
   {
     title: "Compte",
     items: [
-      { id: "profile", label: "Profil", icon: "user" },
+      { id: "profile", label: "Profil", icon: "user", ready: true },
       { id: "reply-name", label: "Nom de réponse", icon: "pen" },
       { id: "security", label: "Sécurité et général", icon: "lock" },
     ],
@@ -21,7 +23,7 @@ const GROUPS: { title: string; items: Section[] }[] = [
     items: [
       { id: "company", label: "Entreprise", icon: "building" },
       { id: "logo", label: "Ton logo", icon: "brush" },
-      { id: "team", label: "Équipe", icon: "users" },
+      { id: "team", label: "Équipe", icon: "users", ready: true },
       { id: "billing", label: "Facturation", icon: "card" },
       { id: "tags", label: "Tags", icon: "tag" },
     ],
@@ -84,6 +86,10 @@ export function SettingsClient({ section }: { section: string }) {
       <div className="min-w-0 flex-1 px-10 py-8">
         {current.id === "channels" ? (
           <ChannelsSection />
+        ) : current.id === "profile" ? (
+          <ProfileSection />
+        ) : current.id === "team" ? (
+          <TeamSection />
         ) : (
           <div>
             <h2 className="text-2xl font-bold">{current.label}</h2>

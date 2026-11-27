@@ -51,7 +51,7 @@ const SECTIONS: { title?: string; items: Item[] }[] = [
 export function Sidebar() {
   const pathname = usePathname();
   // Pages publiques (chat des visiteurs, connexion) : pas de menu d'administration.
-  if (pathname.startsWith("/w/") || pathname === "/login") return null;
+  if (pathname.startsWith("/w/") || pathname.startsWith("/invitation/") || pathname === "/login") return null;
   return <AdminSidebar pathname={pathname} />;
 }
 

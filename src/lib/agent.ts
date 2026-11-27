@@ -17,6 +17,7 @@ import pino from "pino";
 import { generateReply, transcribeAudio, type ChatMessage, type ContentPart } from "./ai";
 import { isOpenNow } from "./agent-settings";
 import { addTask, incAiCount, resetAiCounter, setChatAgent, setDraft, setFollowupStage, setPendingReply, updateChat } from "./db";
+import { notifyHandoff } from "./alerts";
 import { noteBroadcastReply } from "./broadcasts";
 import { agentMarketingContext } from "./campaign-context";
 import { dealsFromTags } from "./deals";
@@ -629,6 +630,7 @@ async function applyActions(sock: WASocket | null, jid: string, agent: Agent, ac
       setAiPaused(jid, true);
       addTask(jid, `Reprendre la discussion : ${a.value}`.slice(0, 500));
       addLog({ kind: "skip", who, text: `🙋 Passage à un humain : ${a.value}` });
+      void notifyHandoff(jid, a.value).catch(() => {}); // alerte WhatsApp / e-mail aux membres de l'équipe
     } else if (a.kind === "MEDIA") {
       const media = getAgentMedia(Number(a.value.replace(/\D/g, "")));
       if (sock && media && media.agentId === agent.id) await sendAgentMedia(sock, jid, agent.id, media.file, media.mime, media.name);

@@ -1,14 +1,13 @@
 /**
- * Session administrateur : cookie signé (HMAC-SHA256), sans base de données.
- * Fonctionne partout (proxy et routes) grâce à Web Crypto.
- * Si ADMIN_PASSWORD n'est pas défini (développement sur ton PC), l'appli reste ouverte.
+ * Sessions : cookie signé (HMAC-SHA256) qui contient le compte connecté et la « version » de sa session.
+ * Changer de mot de passe ou retirer quelqu'un de l'équipe invalide ses sessions (vérifié par le proxy).
+ * Si ADMIN_PASSWORD n'est pas défini (développement sur ton PC) et qu'aucun compte n'existe, l'appli reste ouverte.
  */
 
 export const SESSION_COOKIE = "session";
 export const SESSION_DAYS = 30;
 
-// En production, la connexion est TOUJOURS exigée : sans ADMIN_PASSWORD, l'appli reste verrouillée.
-// Sur ton PC (développement), sans ADMIN_PASSWORD, l'appli reste ouverte.
+// En production, la connexion est TOUJOURS exigée.
 export const authEnabled = () => Boolean(process.env.ADMIN_PASSWORD) || process.env.NODE_ENV === "production";
 
 const secret = () => process.env.AUTH_SECRET || `${process.env.ADMIN_PASSWORD ?? ""}::agent-whatsapp`;
@@ -28,14 +27,25 @@ export function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-export async function createSession(): Promise<string> {
+export async function createSession(userId: number, version: number): Promise<string> {
   const exp = Date.now() + SESSION_DAYS * 86_400_000;
-  return `${exp}.${await hmac(String(exp))}`;
+  const data = `${userId}.${version}.${exp}`;
+  return `${data}.${await hmac(data)}`;
 }
 
-export async function verifySession(value: string | undefined): Promise<boolean> {
-  if (!value) return false;
-  const [exp, sig] = value.split(".");
-  if (!exp || !sig || Number(exp) < Date.now()) return false;
-  return safeEqual(sig, await hmac(exp));
+/** Compte et version de session si le cookie est valide (signature et date), sinon null. */
+export async function readSession(value: string | undefined): Promise<{ userId: number; version: number } | null> {
+  if (!value) return null;
+  const parts = value.split(".");
+  if (parts.length !== 4) return null; // anciennes sessions (mot de passe unique) : reconnexion demandée
+  const [uid, ver, exp, sig] = parts;
+  if (Number(exp) < Date.now()) return null;
+  if (!safeEqual(sig, await hmac(`${uid}.${ver}.${exp}`))) return null;
+  return { userId: Number(uid), version: Number(ver) };
 }
+
+export function sessionCookie(value: string, secure: boolean, maxAgeDays = SESSION_DAYS) {
+  return [`${SESSION_COOKIE}=${value}`, "Path=/", "HttpOnly", "SameSite=Lax", `Max-Age=${maxAgeDays * 86_400}`, secure ? "Secure" : ""].filter(Boolean).join("; ");
+}
+
+export const isSecure = (req: Request) => new URL(req.url).protocol === "https:" || req.headers.get("x-forwarded-proto") === "https";

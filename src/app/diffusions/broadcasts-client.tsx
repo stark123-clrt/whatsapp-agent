@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { BROADCAST_STATUS, type Broadcast, type BroadcastStatus } from "@/lib/broadcast-types";
+import { Icon } from "../icons";
 
 type Quota = { day: number; totalDays: number; coldCap: number; coldLeft: number; dailyCap: number; dailyLeft: number };
 type Data = { broadcasts: Broadcast[]; quota: Quota; whatsapp: { connected: boolean } };
@@ -76,10 +77,10 @@ export function BroadcastsClient() {
   const count = (st: BroadcastStatus) => all.filter((b) => b.status === st).length;
   const shown = all.filter((b) => (tab === "all" || b.status === tab) && (!q.trim() || b.name.toLowerCase().includes(q.trim().toLowerCase())));
   const tiles = [
-    { label: "TOTAL", value: all.length, icon: "📣", cls: "bg-green-50" },
-    { label: "EN COURS D'ENVOI", value: count("sending"), icon: "⚡", cls: "bg-green-50" },
-    { label: "PROGRAMMÉES", value: count("scheduled"), icon: "🕑", cls: "bg-sky-50" },
-    { label: "BROUILLONS", value: count("draft"), icon: "✎", cls: "bg-zinc-100" },
+    { label: "TOTAL", value: all.length, icon: "megaphone" as const, cls: "bg-green-50 text-green-700" },
+    { label: "EN COURS D'ENVOI", value: count("sending"), icon: "spark" as const, cls: "bg-green-50 text-green-700" },
+    { label: "PROGRAMMÉES", value: count("scheduled"), icon: "calendar" as const, cls: "bg-sky-50 text-sky-700" },
+    { label: "BROUILLONS", value: count("draft"), icon: "pen" as const, cls: "bg-zinc-100 text-zinc-600" },
   ];
 
   return (
@@ -110,7 +111,9 @@ export function BroadcastsClient() {
               <p className="text-xs font-semibold tracking-wide text-zinc-500">{t.label}</p>
               <p className="mt-1 text-3xl font-bold tabular-nums">{t.value}</p>
             </div>
-            <span className={`flex h-11 w-11 items-center justify-center rounded-xl text-lg ${t.cls}`}>{t.icon}</span>
+            <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${t.cls}`}>
+              <Icon name={t.icon} size={20} />
+            </span>
           </div>
         ))}
       </div>

@@ -1,43 +1,44 @@
 "use client";
 
 import Link from "next/link";
+import { Icon, type IconName } from "../icons";
 import { ChannelsSection } from "./channels";
 
-type Section = { id: string; label: string; icon: string; ready?: boolean };
+type Section = { id: string; label: string; icon: IconName; ready?: boolean };
 
 // Les sections sans « ready » sont prévues mais pas encore construites.
 const GROUPS: { title: string; items: Section[] }[] = [
   {
     title: "Compte",
     items: [
-      { id: "profile", label: "Profil", icon: "👤" },
-      { id: "reply-name", label: "Nom de réponse", icon: "✏️" },
-      { id: "security", label: "Sécurité et général", icon: "🔒" },
+      { id: "profile", label: "Profil", icon: "user" },
+      { id: "reply-name", label: "Nom de réponse", icon: "pen" },
+      { id: "security", label: "Sécurité et général", icon: "lock" },
     ],
   },
   {
     title: "Espace de travail",
     items: [
-      { id: "company", label: "Entreprise", icon: "🏢" },
-      { id: "logo", label: "Ton logo", icon: "🖌️" },
-      { id: "team", label: "Équipe", icon: "👥" },
-      { id: "billing", label: "Facturation", icon: "💳" },
-      { id: "tags", label: "Tags", icon: "🏷️" },
+      { id: "company", label: "Entreprise", icon: "building" },
+      { id: "logo", label: "Ton logo", icon: "brush" },
+      { id: "team", label: "Équipe", icon: "users" },
+      { id: "billing", label: "Facturation", icon: "card" },
+      { id: "tags", label: "Tags", icon: "tag" },
     ],
   },
   {
     title: "Canaux",
     items: [
-      { id: "channels", label: "Canaux", icon: "🌐", ready: true },
-      { id: "short-links", label: "Liens courts", icon: "🔗" },
+      { id: "channels", label: "Canaux", icon: "globe", ready: true },
+      { id: "short-links", label: "Liens courts", icon: "link" },
     ],
   },
   {
     title: "Intégrations",
     items: [
-      { id: "bookings", label: "Réservations et calendrier", icon: "📅" },
-      { id: "webhooks", label: "Webhooks", icon: "🪝" },
-      { id: "api", label: "Accès API", icon: "🔑" },
+      { id: "bookings", label: "Réservations et calendrier", icon: "calendar" },
+      { id: "webhooks", label: "Webhooks", icon: "webhook" },
+      { id: "api", label: "Accès API", icon: "key" },
     ],
   },
 ];
@@ -48,9 +49,9 @@ export function SettingsClient({ section }: { section: string }) {
   const current = ALL.find((s) => s.id === section) ?? ALL.find((s) => s.id === "channels")!;
 
   return (
-    <div className="flex min-h-full">
-      <aside className="w-72 shrink-0 border-r border-zinc-200 bg-white px-5 py-8">
-        <h1 className="text-2xl font-bold">Paramètres ⚙️</h1>
+    <div className="flex min-h-full shrink-0">
+      <aside className="sticky top-0 h-svh w-72 shrink-0 self-start overflow-y-auto border-r border-zinc-200 bg-white px-5 py-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <h1 className="text-2xl font-bold">Paramètres</h1>
         <p className="mt-1 text-sm text-zinc-500">Configure ton espace de travail.</p>
         {GROUPS.map((g) => (
           <div key={g.title} className="mt-6">
@@ -60,17 +61,18 @@ export function SettingsClient({ section }: { section: string }) {
                 <li key={s.id}>
                   <Link
                     href={`/parametres?section=${s.id}`}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
+                    aria-current={s.id === current.id ? "page" : undefined}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                       s.id === current.id
-                        ? "bg-green-50 font-semibold text-green-800 ring-1 ring-green-200"
+                        ? "bg-zinc-100 font-medium text-zinc-900"
                         : s.ready
-                          ? "text-zinc-700 hover:bg-zinc-50"
+                          ? "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
                           : "text-zinc-400 hover:bg-zinc-50"
                     }`}
                   >
-                    <span aria-hidden>{s.icon}</span>
+                    <Icon name={s.icon} className={s.id === current.id ? "text-green-600" : s.ready ? "text-zinc-400" : "text-zinc-300"} />
                     <span className="flex-1">{s.label}</span>
-                    {!s.ready && <span className="text-[11px]">Bientôt</span>}
+                    {!s.ready && <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400">Bientôt</span>}
                   </Link>
                 </li>
               ))}

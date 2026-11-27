@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Icon, type IconName } from "./icons";
 
-type Item = { label: string; href?: string; icon: keyof typeof ICONS };
+type Item = { label: string; href?: string; icon: IconName };
 
 // Les entrées sans `href` sont les pages pas encore construites.
 const SECTIONS: { title?: string; items: Item[] }[] = [
@@ -95,16 +96,15 @@ function AdminSidebar({ pathname }: { pathname: string }) {
             )}
             <ul className={`space-y-0.5 ${section.title && closed.has(section.title) ? "hidden" : ""}`}>
               {section.items.map((item) => {
-                const Icon = ICONS[item.icon];
                 if (!item.href) {
                   return (
                     <li
                       key={item.label}
                       className="flex cursor-default items-center gap-3 rounded-lg px-3 py-2 text-sm text-zinc-400"
                     >
-                      <Icon />
+                      <Icon name={item.icon} className="text-zinc-300" />
                       <span className="flex-1">{item.label}</span>
-                      <span className="text-[11px]">Bientôt</span>
+                      <span className="rounded bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400">Bientôt</span>
                     </li>
                   );
                 }
@@ -119,13 +119,14 @@ function AdminSidebar({ pathname }: { pathname: string }) {
                   <li key={item.label}>
                     <Link
                       href={item.href}
-                      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm ${
+                      aria-current={active ? "page" : undefined}
+                      className={`relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                         active
-                          ? "bg-zinc-100 font-medium text-zinc-900"
+                          ? "bg-zinc-100 font-medium text-zinc-900 before:absolute before:top-2 before:bottom-2 before:-left-3 before:w-1 before:rounded-r-full before:bg-green-600"
                           : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
                       }`}
                     >
-                      <Icon />
+                      <Icon name={item.icon} className={active ? "text-green-600" : "text-zinc-400"} />
                       <span className="flex-1">{item.label}</span>
                       {item.href === "/" && unread > 0 && (
                         <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-green-600 px-1.5 text-xs font-medium text-white">
@@ -146,9 +147,10 @@ function AdminSidebar({ pathname }: { pathname: string }) {
           await fetch("/api/auth/logout", { method: "POST" });
           window.location.replace("/login"); // rechargement complet : plus aucune donnée en mémoire
         }}
-        className="mx-3 my-3 rounded-lg px-3 py-1.5 text-left text-xs text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"
+        className="mx-3 my-3 flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"
       >
-        ⎋ Se déconnecter
+        <Icon name="logout" className="text-zinc-400" />
+        Se déconnecter
       </button>
     </nav>
   );
@@ -174,32 +176,3 @@ function useLiveCounts() {
   }, []);
   return counts;
 }
-
-const svg = (d: string) =>
-  function Icon() {
-    return (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <path d={d} />
-      </svg>
-    );
-  };
-
-const ICONS = {
-  grid: svg("M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"),
-  chat: svg("M4 5h16v11H8l-4 3V5z"),
-  megaphone: svg("M4 10v4h3l7 4V6l-7 4H4zM18 9a4 4 0 0 1 0 6"),
-  sparkles: svg("M12 3l1.8 4.7L18.5 9l-4.7 1.8L12 15.5l-1.8-4.7L5.5 9l4.7-1.3zM19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z"),
-  calendar: svg("M4 6h16v14H4zM4 10h16M9 3v4M15 3v4"),
-  users: svg("M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20a6 6 0 0 1 12 0M16 5a3 3 0 0 1 0 6M21 20a6 6 0 0 0-4-5.6"),
-  briefcase: svg("M4 8h16v11H4zM9 8V5h6v3M4 13h16"),
-  plug: svg("M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0V8zM12 17v4"),
-  spark: svg("M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"),
-  chip: svg("M7 7h10v10H7zM10 10h4v4h-4zM9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4"),
-  robot: svg("M5 9h14v10H5zM12 5v4M9 13h.01M15 13h.01M9 16h6M3 12v3M21 12v3"),
-  book: svg("M3 5a2 2 0 0 1 2-1h5a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H3zM21 5a2 2 0 0 0-2-1h-5a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h7z"),
-  file: svg("M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"),
-  image: svg("M4 5h16v14H4zM4 16l5-5 4 4 2-2 5 5M15 9h.01"),
-  code: svg("M9 7l-5 5 5 5M15 7l5 5-5 5"),
-  server: svg("M4 5h16v6H4zM4 13h16v6H4zM8 8h.01M8 16h.01"),
-  gear: svg("M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"),
-};

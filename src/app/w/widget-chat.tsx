@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useEffect, useRef, useState } from "react";
 import { FONTS, RADIUS, labelsFor, type ActionButton, type WidgetSettings } from "@/lib/widget-settings";
 
@@ -643,7 +645,7 @@ export function WidgetChat(props: Props) {
               <p className="mt-2 text-center text-[10.5px]" style={{ color: muted }}>
                 {s.footer.enabled && s.footer.text ? s.footer.text : null}
                 {s.footer.enabled && s.footer.text && s.poweredBy ? " · " : null}
-                {s.poweredBy ? <span>⚡ {t.poweredBy}</span> : null}
+                {s.poweredBy ? <span><UiIcon name="spark" size={11} className="mr-0.5 inline-block align-[-1px]" />{t.poweredBy}</span> : null}
               </p>
             ) : null}
           </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -84,7 +86,7 @@ export function CampaignDetail({ id }: { id: number }) {
     const d = (await r.json().catch(() => ({}))) as { error?: string };
     setBusy(null);
     if (!r.ok) flash(d.error ?? "Action impossible.", true);
-    else flash({ approve: "Validé : il sera publié à l'heure prévue.", publish: "Publié sur Instagram 🎉", regenerate: "Nouvelle version prête.", reject: "Contenu écarté.", restore: "Contenu remis à valider.", edit: "Modifications enregistrées." }[action] ?? "OK");
+    else flash({ approve: "Validé : il sera publié à l'heure prévue.", publish: "Publié sur Instagram.", regenerate: "Nouvelle version prête.", reject: "Contenu écarté.", restore: "Contenu remis à valider.", edit: "Modifications enregistrées." }[action] ?? "OK");
     void load();
   }
 
@@ -137,12 +139,12 @@ export function CampaignDetail({ id }: { id: number }) {
           </button>
           {c.status === "active" ? (
             <button onClick={() => setStatus("paused")} disabled={busy === "status"} className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800 hover:bg-amber-100">
-              ⏸ Mettre en pause
+              <UiIcon name="pause" size={14} className="mr-1 inline-block align-[-3px]" />Mettre en pause
             </button>
           ) : (
             c.status !== "ended" && (
               <button onClick={() => setStatus("active")} disabled={busy === "status"} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-violet-700">
-                ▶ {c.status === "draft" ? "Activer la campagne" : "Reprendre"}
+                <UiIcon name="play" size={14} className="mr-1 inline-block align-[-3px]" />{c.status === "draft" ? "Activer la campagne" : "Reprendre"}
               </button>
             )
           )}
@@ -151,7 +153,7 @@ export function CampaignDetail({ id }: { id: number }) {
 
       {!data.instagram.connected && (
         <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <span>📸 Instagram n&apos;est pas connecté : les contenus se préparent, mais ne seront publiés qu&apos;une fois le compte connecté.</span>
+          <span><UiIcon name="instagram" size={15} className="mr-1 inline-block align-[-3px]" />Instagram n&apos;est pas connecté : les contenus se préparent, mais ne seront publiés qu&apos;une fois le compte connecté.</span>
           <Link href="/parametres?section=channels" className="shrink-0 font-semibold underline">
             Connecter
           </Link>
@@ -175,7 +177,7 @@ export function CampaignDetail({ id }: { id: number }) {
           <h2 className="text-lg font-semibold">Calendrier des contenus</h2>
           {data.plan ? (
             <p className="text-xs text-zinc-600">
-              🤖 Aujourd&apos;hui, l&apos;agent prévoit <strong>{data.plan.posts} publication{data.plan.posts > 1 ? "s" : ""}</strong> et{" "}
+              <UiIcon name="robot" size={15} className="mr-1 inline-block align-[-3px]" />Aujourd&apos;hui, l&apos;agent prévoit <strong>{data.plan.posts} publication{data.plan.posts > 1 ? "s" : ""}</strong> et{" "}
               <strong>{data.plan.stories} stor{data.plan.stories > 1 ? "ies" : "y"}</strong>
               {data.plan.engage > 0 && (
                 <>
@@ -198,40 +200,40 @@ export function CampaignDetail({ id }: { id: number }) {
         </div>
         <div className="relative">
           <button onClick={() => setMenu(!menu)} disabled={Boolean(busy)} className="rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-sm font-medium hover:bg-zinc-50 disabled:opacity-50">
-            {busy?.startsWith("new:") ? "Préparation…" : "✨ Préparer un contenu ▾"}
+            {busy?.startsWith("new:") ? "Préparation…" : "Préparer un contenu ▾"}
           </button>
           {menu && (
             <div className="absolute right-0 z-20 mt-2 w-64 rounded-xl border border-zinc-200 bg-white py-1 text-sm shadow-xl" onMouseLeave={() => setMenu(false)}>
               <p className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-zinc-400 uppercase">Vendre</p>
               {c.settings.formats.post && (
                 <button onClick={() => prepareNow("post")} className="block w-full px-3 py-2 text-left hover:bg-zinc-50">
-                  🛍️ Publication {c.settings.objective === "sales" ? "produit" : "de marque"}
+                  <UiIcon name="bag" size={15} className="mr-1 inline-block align-[-3px] text-zinc-400" />Publication {c.settings.objective === "sales" ? "produit" : "de marque"}
                 </button>
               )}
               {c.settings.formats.story && (
                 <button onClick={() => prepareNow("story")} className="block w-full px-3 py-2 text-left hover:bg-zinc-50">
-                  🛍️ Story {c.settings.objective === "sales" ? "produit" : "de marque"}
+                  <UiIcon name="bag" size={15} className="mr-1 inline-block align-[-3px] text-zinc-400" />Story {c.settings.objective === "sales" ? "produit" : "de marque"}
                 </button>
               )}
               <p className="px-3 pt-2 pb-1 text-[11px] font-semibold tracking-wide text-zinc-400 uppercase">Attirer</p>
               {c.settings.formats.post && (
                 <>
                   <button onClick={() => prepareNow("post", "question")} className="block w-full px-3 py-2 text-left hover:bg-zinc-50">
-                    💬 Question (publication)
+                    <UiIcon name="chat" size={15} className="mr-1 inline-block align-[-3px] text-zinc-400" />Question (publication)
                   </button>
                   <button onClick={() => prepareNow("post", "tip")} className="block w-full px-3 py-2 text-left hover:bg-zinc-50">
-                    💡 Conseil (publication)
+                    <UiIcon name="bulb" size={15} className="mr-1 inline-block align-[-3px] text-zinc-400" />Conseil (publication)
                   </button>
                 </>
               )}
               {c.settings.formats.story && (
                 <>
                   <button onClick={() => prepareNow("story", "poll")} className="block w-full px-3 py-2 text-left hover:bg-zinc-50">
-                    📊 Sondage (story)
+                    <UiIcon name="chart" size={15} className="mr-1 inline-block align-[-3px] text-zinc-400" />Sondage (story)
                   </button>
                   {c.settings.objective === "sales" && (
                     <button onClick={() => prepareNow("story", "versus")} className="block w-full px-3 py-2 text-left hover:bg-zinc-50">
-                      ⚖️ Ceci ou cela (story, 2 produits)
+                      <UiIcon name="scale" size={15} className="mr-1 inline-block align-[-3px] text-zinc-400" />Ceci ou cela (story, 2 produits)
                     </button>
                   )}
                 </>
@@ -362,10 +364,10 @@ function PostCard({ post: p, busy, onAct, onEdit }: { post: CampaignPost; busy: 
         </div>
         {p.intent === "engage" ? (
           <p className="mt-1.5 text-xs font-medium text-fuchsia-700">
-            {{ question: "💬 Question — pour attirer", tip: "💡 Conseil — pour attirer", poll: "📊 Sondage — pour attirer", versus: "⚖️ Ceci ou cela — pour attirer" }[p.engageType ?? "question"]}
+            {{ question: "Question — pour attirer", tip: "Conseil — pour attirer", poll: "Sondage — pour attirer", versus: "Ceci ou cela — pour attirer" }[p.engageType ?? "question"]}
           </p>
         ) : (
-          p.productTitle && <p className="mt-1.5 truncate text-xs font-medium text-violet-700">🛍️ {p.productTitle}</p>
+          p.productTitle && <p className="mt-1.5 truncate text-xs font-medium text-violet-700"><UiIcon name="bag" size={13} className="mr-1 inline-block align-[-3px]" />{p.productTitle}</p>
         )}
         <p className="mt-1 font-semibold leading-snug">{p.headline ?? "L'IA rédige…"}</p>
         {p.caption && (
@@ -377,7 +379,7 @@ function PostCard({ post: p, busy, onAct, onEdit }: { post: CampaignPost; busy: 
           </div>
         )}
         {p.poll && p.poll.options.length >= 2 && <PollView poll={p.poll} results={p.pollResults} />}
-        {p.error && <p className="mt-1.5 text-xs text-red-600">⚠️ {p.error}</p>}
+        {p.error && <p className="mt-1.5 text-xs text-red-600"><UiIcon name="alert" size={13} className="mr-1 inline-block align-[-3px]" />{p.error}</p>}
 
         <div className="mt-3 flex flex-wrap gap-1.5">
           {(p.status === "pending" || p.status === "failed") && (

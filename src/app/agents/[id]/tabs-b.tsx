@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { TagRule } from "@/lib/agent-settings";
@@ -91,7 +93,7 @@ export function FaqTab({ agent, settings: s, update, notify }: TabProps) {
             <li key={src.id} className="rounded-xl border border-zinc-200">
               <div className="flex items-center justify-between px-4 py-2.5 text-sm">
                 <span className="font-medium">
-                  {src.kind === "site" ? "🌐" : "📄"} {src.name}
+                  <UiIcon name={src.kind === "site" ? "globe" : "file"} size={15} className="mr-1 inline-block align-[-3px] text-zinc-400" />{src.name}
                 </span>
                 <span className="flex items-center gap-3 text-xs">
                   <span className="text-zinc-500">
@@ -104,7 +106,7 @@ export function FaqTab({ agent, settings: s, update, notify }: TabProps) {
               </div>
               {src.pages.find((p) => p.status === "error")?.error && (
                 <p className="border-t border-red-100 bg-red-50 px-4 py-2 text-xs text-red-700">
-                  ⚠️ {src.pages.find((p) => p.status === "error")?.error}
+                  <UiIcon name="alert" size={14} className="mr-1 inline-block align-[-3px]" />{src.pages.find((p) => p.status === "error")?.error}
                 </p>
               )}
               <ul className="border-t border-zinc-100 px-4 py-2 text-xs text-zinc-600">
@@ -208,10 +210,10 @@ function FaqLine({ faq, onChanged }: { faq: Faq; onChanged: () => void }) {
       </div>
       <span className="flex shrink-0 gap-1 opacity-0 group-hover:opacity-100">
         <button onClick={() => setEditing(true)} aria-label="Modifier" className="rounded px-1 hover:bg-zinc-100">
-          ✏️
+          <UiIcon name="pen" size={15} />
         </button>
         <button onClick={remove} aria-label="Supprimer" className="rounded px-1 hover:bg-red-50">
-          🗑️
+          <UiIcon name="trash" size={15} />
         </button>
       </span>
     </li>
@@ -229,10 +231,10 @@ export function CapabilitiesTab({ settings: s, update }: TabProps) {
         <p className="text-sm text-zinc-500">Ce que l&apos;IA de cet agent a le droit de faire pendant une conversation.</p>
       </div>
       <Card title="Fonctions personnalisées" description="Permettre à l'IA d'appeler ta propre API pendant une discussion.">
-        <Empty icon="</>" title="Aucune fonction personnalisée pour le moment" text="Bientôt : crée une fonction pour que l'IA consulte un stock, une commande ou un devis dans ton système." />
+        <Empty icon="code" title="Aucune fonction personnalisée pour le moment" text="Bientôt : crée une fonction pour que l'IA consulte un stock, une commande ou un devis dans ton système." />
       </Card>
       <Card title="Outils connectés (serveurs MCP)" description="Outils externes que l'IA peut utiliser.">
-        <Empty icon="🗄️" title="Aucun serveur MCP pour le moment" text="Bientôt : branche des serveurs MCP dans les Paramètres, puis active-les ici." />
+        <Empty icon="server" title="Aucun serveur MCP pour le moment" text="Bientôt : branche des serveurs MCP dans les Paramètres, puis active-les ici." />
       </Card>
       <Card title="Réservations" description="Permettre à l'agent de prendre des rendez-vous selon tes disponibilités.">
         <Soon>Autoriser cet agent à réserver des rendez-vous</Soon>
@@ -336,10 +338,10 @@ export function TagsTab({ agent, settings: s, update, saveNow, notify }: TabProp
         action={
           <div className="flex shrink-0 flex-wrap gap-2">
             <button onClick={generate} disabled={busy !== null} className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs hover:bg-zinc-50 disabled:text-zinc-400">
-              {busy === "generate" ? "L'IA réfléchit…" : "✨ Générer avec l'IA"}
+              {busy === "generate" ? "L'IA réfléchit…" : "Générer avec l'IA"}
             </button>
             <button onClick={apply} disabled={busy !== null || !s.tagRules.length} className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs hover:bg-zinc-50 disabled:text-zinc-400">
-              {busy === "apply" ? "Analyse en cours…" : "🏷️ Appliquer aux conversations existantes"}
+              {busy === "apply" ? "Analyse en cours…" : "Appliquer aux conversations existantes"}
             </button>
             <button onClick={() => setRules((r) => [...r, newRule()])} className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs hover:bg-zinc-50">
               ＋ Ajouter un tag
@@ -355,9 +357,9 @@ export function TagsTab({ agent, settings: s, update, saveNow, notify }: TabProp
             return (
               <li key={rule.id} className="space-y-3 rounded-xl border border-zinc-200 p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold">🏷️ {rule.name || "Nouveau tag"}</span>
+                  <span className="text-sm font-semibold"><UiIcon name="tag" size={14} className="mr-1 inline-block align-[-3px] text-zinc-400" />{rule.name || "Nouveau tag"}</span>
                   <button onClick={() => setRules((r) => r.filter((x) => x.id !== rule.id))} className="text-zinc-400 hover:text-red-600" aria-label="Supprimer le tag">
-                    🗑️
+                    <UiIcon name="trash" size={15} />
                   </button>
                 </div>
                 <Field label="Nom *">

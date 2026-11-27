@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon, type IconName } from "@/app/icons";
+
 import { useCallback, useEffect, useState } from "react";
 import type { WhatsAppState } from "@/lib/whatsapp";
 import { AgentActivity } from "../agent-activity";
@@ -64,7 +66,7 @@ export function ChannelsSection() {
           description="La connexion officielle Meta, via Facebook : messages privés, réponses aux commentaires par message privé et réponses aux Stories."
           action={<SoonButton label="Connecter" />}
         >
-          <Row icon="📸" name="Meta" badge="NON CONNECTÉ" text="Pas encore connecté." />
+          <Row icon="instagram" name="Meta" badge="NON CONNECTÉ" text="Pas encore connecté." />
         </Card>
 
         <Card
@@ -84,7 +86,7 @@ export function ChannelsSection() {
                 onClick={() => setConnecting(true)}
                 className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm font-medium hover:bg-zinc-50"
               >
-                🟢 Connecter
+                Connecter
               </button>
             )
           }
@@ -92,7 +94,7 @@ export function ChannelsSection() {
           {connected ? (
             <>
               <div className="flex items-center gap-4">
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-green-50 text-xl">💬</span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-green-50 text-green-700"><UiIcon name="chat" size={20} className="" /></span>
                 <div className="flex-1">
                   <p className="flex items-center gap-2 font-semibold">
                     {wa?.me?.name ?? "WhatsApp"}
@@ -100,7 +102,7 @@ export function ChannelsSection() {
                   </p>
                   <p className="font-mono text-sm text-zinc-500">
                     +{phone}
-                    {wa?.expectedPhone === phone && <span className="ml-2 font-sans text-xs text-green-700">🔒 numéro autorisé</span>}
+                    {wa?.expectedPhone === phone && <span className="ml-2 font-sans text-xs text-green-700"><UiIcon name="lock" size={12} className="mr-1 inline-block align-[-3px]" />numéro autorisé</span>}
                   </p>
                 </div>
                 <button onClick={disconnect} className="rounded-lg border border-zinc-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50">
@@ -119,7 +121,7 @@ export function ChannelsSection() {
             </>
           ) : (
             <p className="text-sm text-zinc-500">
-              {wa?.lastError && <span className="mb-1 block text-amber-700">⚠️ {wa.lastError}</span>}
+              {wa?.lastError && <span className="mb-1 block text-amber-700"><UiIcon name="alert" size={13} className="mr-1 inline-block align-[-3px]" />{wa.lastError}</span>}
               {wa?.status === "connecting" || wa?.status === "idle" || !wa
                 ? "Préparation de la connexion…"
                 : "Aucun numéro WhatsApp Web associé. Clique sur Connecter pour scanner un code QR."}
@@ -144,7 +146,7 @@ export function ChannelsSection() {
           description="Pour les SMS et les numéros WhatsApp gérés via Twilio."
           action={<SoonButton label="Gérer" />}
         >
-          <Row icon="🔑" name="Compte Twilio" badge="NON CONFIGURÉ" text="Aucun compte Twilio connecté pour l'instant." />
+          <Row icon="key" name="Compte Twilio" badge="NON CONFIGURÉ" text="Aucun compte Twilio connecté pour l'instant." />
         </Card>
 
         <Card
@@ -152,7 +154,7 @@ export function ChannelsSection() {
           description="Requis par Twilio pour les numéros SMS/voix dans certaines régions (numéros gratuits aux États-Unis, mobiles au Royaume-Uni…)."
           action={<SoonButton label="Démarrer" />}
         >
-          <Row icon="🛡️" name="Dossier réglementaire" badge="NON DÉMARRÉ" text="Uniquement requis pour les numéros SMS/voix réglementés." />
+          <Row icon="shield" name="Dossier réglementaire" badge="NON DÉMARRÉ" text="Uniquement requis pour les numéros SMS/voix réglementés." />
         </Card>
 
         <Card
@@ -195,7 +197,7 @@ function ConnectModal({ wa, onClose, onChanged }: { wa: WhatsAppState | null; on
         <h3 className="text-center text-lg font-semibold">Connecter WhatsApp Web</h3>
 
         {wa?.status === "open" ? (
-          <p className="mt-6 text-center font-medium text-green-700">✅ Connecté !</p>
+          <p className="mt-6 text-center font-medium text-green-700"><UiIcon name="checkCircle" size={16} className="mr-1 inline-block align-[-3px]" />Connecté !</p>
         ) : step === "form" ? (
           <>
             <label className="mt-5 block text-sm font-medium text-zinc-700">
@@ -210,7 +212,7 @@ function ConnectModal({ wa, onClose, onChanged }: { wa: WhatsAppState | null; on
               />
             </label>
             <p className="mt-1.5 text-xs text-zinc-500">
-              🔒 Seul ce numéro pourra se connecter. Si un autre compte scanne, il sera déconnecté immédiatement.
+              <UiIcon name="lock" size={13} className="mr-1 inline-block align-[-3px]" />Seul ce numéro pourra se connecter. Si un autre compte scanne, il sera déconnecté immédiatement.
             </p>
             <div className="mt-5 grid gap-2">
               <button
@@ -218,14 +220,14 @@ function ConnectModal({ wa, onClose, onChanged }: { wa: WhatsAppState | null; on
                 disabled={busy || phone.replace(/\D/g, "").length < 8}
                 className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:bg-green-300"
               >
-                📷 Scanner un QR code
+                <UiIcon name="qr" size={15} className="mr-1 inline-block align-[-3px]" />Scanner un QR code
               </button>
               <button
                 onClick={() => start("code")}
                 disabled={busy || phone.replace(/\D/g, "").length < 8}
                 className="rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-medium hover:bg-zinc-50 disabled:text-zinc-400"
               >
-                {busy ? "Préparation…" : "🔢 Recevoir un code de connexion"}
+                {busy ? "Préparation…" : "Recevoir un code de connexion"}
               </button>
             </div>
           </>
@@ -289,10 +291,10 @@ function Card({ title, description, action, children }: { title: string; descrip
   );
 }
 
-function Row({ icon, name, badge, text }: { icon: string; name: string; badge: string; text: string }) {
+function Row({ icon, name, badge, text }: { icon: IconName; name: string; badge: string; text: string }) {
   return (
     <div className="flex items-center gap-4">
-      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-zinc-100 text-xl">{icon}</span>
+      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-zinc-100 text-zinc-500"><UiIcon name={icon} size={20} className="" /></span>
       <div>
         <p className="flex items-center gap-2 font-semibold">
           {name}

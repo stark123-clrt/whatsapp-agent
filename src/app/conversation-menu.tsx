@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useEffect, useState } from "react";
 import type { Chat } from "@/lib/db";
 
@@ -216,7 +218,7 @@ export function ConversationMenu({ chat, knownTags, onChanged, onClose, notify }
           <p className="mt-2 text-sm text-zinc-600">Conseil : télécharge d&apos;abord la transcription pour garder une trace.</p>
           <div className="mt-5 flex flex-col gap-2">
             <button onClick={() => remove(true)} className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800">
-              ⬇️ Exporter la transcription puis supprimer
+              <UiIcon name="file" size={15} className="mr-1.5 inline-block align-[-3px]" />Exporter la transcription puis supprimer
             </button>
             <button onClick={() => remove(false)} className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
               Supprimer sans exporter

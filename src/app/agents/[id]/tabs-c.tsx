@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useEffect, useRef, useState } from "react";
 import type { EntryRule } from "@/lib/agent-settings";
 import type { TabProps } from "./editor";
@@ -105,7 +107,7 @@ export function EntryTab({ settings: s, update }: TabProps) {
                   </div>
                 ) : (
                   <div className="min-w-64 flex-1">
-                    <span className="rounded-md bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">🔑 Mots-clés</span>
+                    <span className="rounded-md bg-sky-50 px-2 py-0.5 text-xs font-medium text-sky-700">Mots-clés</span>
                     <input
                       value={rule.keywords}
                       onChange={(e) => set({ keywords: e.target.value })}
@@ -122,7 +124,7 @@ export function EntryTab({ settings: s, update }: TabProps) {
                   className="text-zinc-400 hover:text-red-600 disabled:opacity-30"
                   aria-label="Supprimer la règle"
                 >
-                  🗑️
+                  <UiIcon name="trash" size={15} />
                 </button>
               </li>
             );
@@ -250,7 +252,7 @@ export function TryTab({ agent, settings: s, update, saveNow }: TabProps) {
                       <div className="mt-1.5 flex flex-wrap gap-1">
                         {m.actions.map((a, j) => (
                           <span key={j} className="rounded bg-white/70 px-1.5 py-0.5 text-[11px] text-zinc-600">
-                            {{ TAG: "🏷️ Tag", TACHE: "✅ Tâche", NOM: "👤 Nom", INFO: "📝 Info", HUMAIN: "🙋 Humain", MEDIA: "📎 Média" }[a.kind] ?? a.kind} : {a.value}
+                            {{ TAG: "Tag", TACHE: "Tâche", NOM: "Nom", INFO: "Info", HUMAIN: "Humain", MEDIA: "Média" }[a.kind] ?? a.kind} : {a.value}
                           </span>
                         ))}
                       </div>

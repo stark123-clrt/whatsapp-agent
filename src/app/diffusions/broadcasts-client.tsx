@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -91,7 +93,7 @@ export function BroadcastsClient() {
           <p className="mt-1 text-zinc-500">Envois groupés sur WhatsApp : audience, message, réponses et planification au même endroit.</p>
         </div>
         <button onClick={create} disabled={busy} className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:opacity-60">
-          ＋ Nouvelle diffusion
+          <Icon name="plus" size={16} className="mr-1 inline-block align-[-3px]" />Nouvelle diffusion
         </button>
       </div>
 
@@ -174,10 +176,10 @@ export function BroadcastsClient() {
                   <td className="px-3 py-3 text-zinc-500">{now ? ago(b.updatedAt, now) : ""}</td>
                   <td className="px-5 py-3 text-right">
                     <button onClick={() => duplicate(b.id)} title="Dupliquer" className="rounded-lg px-2 py-1 text-zinc-500 hover:bg-zinc-100">
-                      ⧉
+                      <UiIcon name="copy" size={15} />
                     </button>
                     <button onClick={() => remove(b)} title="Supprimer" disabled={b.status === "sending"} className="rounded-lg px-2 py-1 text-red-500 hover:bg-red-50 disabled:opacity-30">
-                      🗑
+                      <UiIcon name="trash" size={15} />
                     </button>
                   </td>
                 </tr>

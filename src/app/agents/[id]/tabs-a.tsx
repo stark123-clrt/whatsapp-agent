@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DAYS, instructionsText, type AgentSettings } from "@/lib/agent-settings";
 import type { AgentMedia } from "@/lib/kb";
@@ -75,7 +77,7 @@ export function OverviewTab({
                 </button>
               </>
             ) : (
-              <p className="text-sm font-medium text-green-700">Tout est prêt 🎉</p>
+              <p className="text-sm font-medium text-green-700">Tout est prêt</p>
             )}
           </div>
         </div>
@@ -102,7 +104,7 @@ export function OverviewTab({
             {missing.map((i) => (
               <li key={i.label} className="flex items-start justify-between gap-4 text-sm">
                 <span>
-                  <span className="font-medium">⚠️ {i.label}</span>
+                  <span className="font-medium"><UiIcon name="alert" size={15} className="mr-1 inline-block align-[-3px] text-amber-600" />{i.label}</span>
                   <span className="block text-zinc-500">{i.detail}</span>
                 </span>
                 <button onClick={() => goTo(i.tab as TabId)} className="shrink-0 rounded-lg border border-zinc-200 px-3 py-1 text-xs hover:bg-zinc-50">
@@ -118,7 +120,7 @@ export function OverviewTab({
         <ul className="grid gap-3 sm:grid-cols-2">
           {working.map((i) => (
             <li key={i.label} className="text-sm">
-              <span className="font-medium">✅ {i.label}</span>
+              <span className="font-medium"><UiIcon name="checkCircle" size={15} className="mr-1 inline-block align-[-3px] text-green-600" />{i.label}</span>
               <span className="ml-1 text-xs text-zinc-400">
                 {i.points}/{i.max}
               </span>
@@ -162,7 +164,7 @@ export function OverviewTab({
               {overview.recent.map((r, i) => (
                 <li key={i} className="flex justify-between gap-3">
                   <span>
-                    {r.sender === "contact" ? "💬" : r.sender === "ai" ? "🤖" : "🧑"}{" "}
+                    <UiIcon name={r.sender === "contact" ? "chat" : r.sender === "ai" ? "robot" : "user"} size={14} className="mr-1 inline-block align-[-3px] text-zinc-400" />
                     {r.sender === "contact" ? `${r.who ?? "Contact"} a écrit` : r.sender === "ai" ? `L'IA a répondu à ${r.who ?? "un contact"}` : `Tu as répondu à ${r.who ?? "un contact"}`}
                   </span>
                   <span className="shrink-0 text-xs text-zinc-400">{new Date(r.ts).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" })}</span>
@@ -247,7 +249,7 @@ export function InstructionsTab({ agent, settings: s, update, reload, notify }: 
       {!s.transparency && (
         <div className="flex items-start gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
           <p className="flex-1">
-            ⚠️ <strong>La transparence de l&apos;IA est désactivée.</strong> Rien n&apos;indique aux contacts que les réponses sont rédigées par une IA. Tu confirmes que ton
+            <UiIcon name="alert" size={15} className="mr-1 inline-block align-[-3px]" /><strong>La transparence de l&apos;IA est désactivée.</strong> Rien n&apos;indique aux contacts que les réponses sont rédigées par une IA. Tu confirmes que ton
             utilisation est conforme aux lois sur la transparence applicables (par exemple l&apos;AI Act de l&apos;UE). Active l&apos;interrupteur pour l&apos;annoncer.
           </p>
           <Toggle checked={s.transparency} onChange={(v) => set("transparency", v)} label="Transparence de l'IA" />
@@ -288,7 +290,7 @@ export function InstructionsTab({ agent, settings: s, update, reload, notify }: 
         action={
           agent.website ? (
             <button onClick={writeFromSite} disabled={writing} className="shrink-0 rounded-lg border border-zinc-200 px-3 py-1.5 text-xs hover:bg-zinc-50 disabled:text-zinc-400">
-              {writing ? "L'IA rédige…" : "✨ Rédiger à partir du site"}
+              {writing ? "L'IA rédige…" : "Rédiger à partir du site"}
             </button>
           ) : undefined
         }
@@ -503,7 +505,7 @@ export function MediaTab({ agent, notify }: TabProps) {
         }
       >
         {media && media.length === 0 ? (
-          <Empty icon="✨" title="Aucun média pour l'instant" text="Importe des images, vidéos, fichiers audio ou PDF et indique à l'agent quand envoyer chacun d'eux.">
+          <Empty icon="sparkles" title="Aucun média pour l'instant" text="Importe des images, vidéos, fichiers audio ou PDF et indique à l'agent quand envoyer chacun d'eux.">
             <button onClick={() => setAdding(true)} className="rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">
               ＋ Ajouter un média
             </button>
@@ -517,18 +519,18 @@ export function MediaTab({ agent, notify }: TabProps) {
                     // eslint-disable-next-line @next/next/no-img-element -- fichier servi par l'API
                     <img src={`/api/agents/${agent.id}/media/${m.id}`} alt={m.name} className="h-full w-full object-cover" />
                   ) : m.mime.startsWith("video/") ? (
-                    "🎬"
+                    <UiIcon name="film" size={26} className="text-zinc-400" />
                   ) : m.mime.startsWith("audio/") ? (
-                    "🎵"
+                    <UiIcon name="music" size={26} className="text-zinc-400" />
                   ) : (
-                    "📄"
+                    <UiIcon name="file" size={26} className="text-zinc-400" />
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <p className="truncate text-sm font-medium">{m.name}</p>
                     <button onClick={() => remove(m)} className="text-zinc-400 hover:text-red-600" aria-label="Supprimer">
-                      🗑️
+                      <UiIcon name="trash" size={15} />
                     </button>
                   </div>
                   <textarea
@@ -641,7 +643,7 @@ function AddMediaModal({ agentId, onClose, onAdded }: { agentId: number; onClose
                   dragging ? "border-green-500 bg-green-50" : "border-zinc-300 hover:border-green-500 hover:bg-green-50/40"
                 }`}
               >
-                <span className="text-2xl">📎</span>
+                <UiIcon name="clip" size={28} className="text-zinc-400" />
                 <span className="text-sm font-semibold text-zinc-800">Clique pour choisir un fichier</span>
                 <span className="text-xs text-zinc-500">ou glisse-le ici · image, vidéo, audio ou PDF · 32 Mo max</span>
               </button>

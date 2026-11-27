@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon, type IconName } from "@/app/icons";
+
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CHANNELS } from "@/lib/channels";
@@ -9,12 +11,12 @@ import { Avatar } from "../avatar";
 
 const DAY = 86_400_000;
 
-const STATUS: Record<ContactStatus, { label: string; cls: string; icon?: string }> = {
-  engage: { label: "ENGAGÉ", cls: "bg-orange-50 text-orange-600", icon: "⚡" },
-  nouveau: { label: "NOUVEAU", cls: "bg-sky-50 text-sky-600", icon: "✦" },
+const STATUS: Record<ContactStatus, { label: string; cls: string; icon?: IconName }> = {
+  engage: { label: "ENGAGÉ", cls: "bg-orange-50 text-orange-600", icon: "spark" },
+  nouveau: { label: "NOUVEAU", cls: "bg-sky-50 text-sky-600", icon: "sparkles" },
   "a-relancer": { label: "À RELANCER", cls: "bg-amber-50 text-amber-700" },
   inactif: { label: "INACTIF", cls: "bg-zinc-100 text-zinc-500" },
-  client: { label: "CLIENT", cls: "bg-green-50 text-green-700", icon: "★" },
+  client: { label: "CLIENT", cls: "bg-green-50 text-green-700", icon: "star" },
   dnd: { label: "NE PAS DÉRANGER", cls: "bg-red-50 text-red-600" },
 };
 
@@ -477,7 +479,7 @@ export function ContactsClient() {
                   {has("status") && (
                     <td className="px-3 py-3">
                       <span className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-bold whitespace-nowrap ${STATUS[c.status].cls}`}>
-                        {STATUS[c.status].icon} {STATUS[c.status].label}
+                        {STATUS[c.status].icon && <UiIcon name={STATUS[c.status].icon!} size={12} className="mr-0.5 inline-block align-[-2px]" />}{STATUS[c.status].label}
                       </span>
                     </td>
                   )}
@@ -506,7 +508,7 @@ export function ContactsClient() {
                             {c.lastText}
                           </>
                         ) : c.lastType && c.lastType !== "text" ? (
-                          <span className="text-zinc-400">{c.lastType === "image" ? "📷 Photo" : c.lastType === "audio" ? "🎤 Vocal" : c.lastType === "video" ? "🎬 Vidéo" : "📄 Document"}</span>
+                          <span className="text-zinc-400">{c.lastType === "image" ? "Photo" : c.lastType === "audio" ? "Vocal" : c.lastType === "video" ? "Vidéo" : "Document"}</span>
                         ) : (
                           <Dash />
                         )}
@@ -535,7 +537,7 @@ export function ContactsClient() {
 
         {contacts && !shown.length && (
           <div className="flex flex-col items-center px-6 py-14 text-center">
-            <span className="text-3xl">🔎</span>
+            <UiIcon name="search" size={30} className="text-zinc-300" />
             <p className="mt-3 font-semibold">{list.length ? "Aucun contact ne correspond" : "Aucun contact pour l'instant"}</p>
             <p className="mt-1 max-w-sm text-sm text-zinc-500">
               {list.length

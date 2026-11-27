@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon, type IconName } from "@/app/icons";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -57,7 +59,7 @@ export function AgentsClient() {
     <main className="mx-auto w-full max-w-6xl px-8 py-10">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Agents IA 🧠</h1>
+          <h1 className="text-3xl font-bold">Agents IA</h1>
           <p className="mt-1 text-zinc-600">Tes agents IA : leurs instructions, leurs connaissances et leur façon de répondre.</p>
         </div>
         <button onClick={() => setCreating(true)} className="rounded-xl bg-green-600 px-5 py-2.5 font-semibold text-white shadow-sm hover:bg-green-700">
@@ -66,9 +68,9 @@ export function AgentsClient() {
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        <Card label="Total" value={agents?.length ?? 0} icon="🤖" />
-        <Card label="Actif" value={agents?.filter((a) => a.status === "active").length ?? 0} icon="⚡" />
-        <Card label="En pause" value={agents?.filter((a) => a.status === "paused").length ?? 0} icon="⏸️" />
+        <Card label="Total" value={agents?.length ?? 0} icon="robot" />
+        <Card label="Actif" value={agents?.filter((a) => a.status === "active").length ?? 0} icon="spark" />
+        <Card label="En pause" value={agents?.filter((a) => a.status === "paused").length ?? 0} icon="pause" />
       </div>
 
       {agents && <WhoAnswers agents={agents} />}
@@ -121,7 +123,7 @@ export function AgentsClient() {
               <tr key={a.id} className="border-b border-zinc-50 last:border-0 hover:bg-zinc-50/60">
                 <td className="px-5 py-4">
                   <button onClick={() => router.push(`/agents/${a.id}`)} className="flex items-center gap-3 text-left">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-50 text-lg">{a.role === "sales" ? "🛍️" : "🛟"}</span>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-50 text-green-700"><UiIcon name={a.role === "sales" ? "bag" : "lifebuoy"} size={18} className="" /></span>
                     <span>
                       <span className="block font-semibold hover:underline">{a.name}</span>
                       <span className="text-xs text-zinc-500">
@@ -143,7 +145,7 @@ export function AgentsClient() {
                       a.status === "active" ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"
                     }`}
                   >
-                    {a.status === "active" ? "● ACTIF" : "⏸ EN PAUSE"}
+                    {a.status === "active" ? "● ACTIF" : "EN PAUSE"}
                   </span>
                 </td>
                 <td className="px-3 py-4">
@@ -157,13 +159,13 @@ export function AgentsClient() {
                       label={a.status === "active" ? "Mettre en pause" : "Activer"}
                       onClick={() => patch(a.id, { status: a.status === "active" ? "paused" : "active" })}
                     >
-                      {a.status === "active" ? "⏸" : "▶"}
+                      <UiIcon name={a.status === "active" ? "pause" : "play"} size={15} className="" />
                     </IconBtn>
                     <IconBtn label="Modifier" onClick={() => router.push(`/agents/${a.id}`)}>
-                      ✏️
+                      <UiIcon name="pen" size={15} />
                     </IconBtn>
                     <IconBtn label="Supprimer" onClick={() => remove(a)} danger>
-                      🗑️
+                      <UiIcon name="trash" size={15} />
                     </IconBtn>
                   </div>
                 </td>
@@ -240,7 +242,7 @@ function DeleteAgentModal({
       <div className="w-full max-w-lg rounded-2xl bg-white p-7 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold">Supprimer l&apos;agent « {agent.name} » ?</h2>
         <div className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
-          💡 <strong>Tu peux plutôt le désactiver</strong> : il ne répond plus, mais tu gardes ses instructions et ses connaissances pour le réactiver plus tard.
+          <UiIcon name="bulb" size={15} className="mr-1 inline-block align-[-3px]" /><strong>Tu peux plutôt le désactiver</strong> : il ne répond plus, mais tu gardes ses instructions et ses connaissances pour le réactiver plus tard.
           <button onClick={deactivate} disabled={busy} className="mt-2 block rounded-lg bg-white px-3 py-1.5 font-medium ring-1 ring-green-300 hover:bg-green-100">
             Désactiver plutôt
           </button>
@@ -292,14 +294,14 @@ function Preparation({ a }: { a: AgentWithStats }) {
 }
 
 
-function Card({ label, value, icon }: { label: string; value: number; icon: string }) {
+function Card({ label, value, icon }: { label: string; value: number; icon: IconName }) {
   return (
     <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-5 py-4">
       <div>
         <p className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">{label}</p>
         <p className="mt-1 text-2xl font-bold">{value}</p>
       </div>
-      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-50 text-xl">{icon}</span>
+      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-50 text-zinc-600"><UiIcon name={icon} size={20} className="" /></span>
     </div>
   );
 }
@@ -398,10 +400,10 @@ function WhoAnswers({ agents }: { agents: AgentWithStats[] }) {
                 {eff
                   ? eff.status === "active"
                     ? `✓ ${eff.name} répond`
-                    : `⏸ ${eff.name} est en pause : aucune réponse sur ce canal`
+                    : `${eff.name} est en pause : aucune réponse sur ce canal`
                   : value === 0
                     ? "Aucune réponse automatique"
-                    : "⚠ Aucun agent actif pour ce canal"}
+                    : "Aucun agent actif pour ce canal"}
               </span>
             </div>
           );

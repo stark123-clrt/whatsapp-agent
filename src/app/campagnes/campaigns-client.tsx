@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -50,7 +52,7 @@ export function CampaignsClient() {
 
       {data && !data.instagram.connected && (
         <div className="mt-5 flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <span>📸 Instagram n&apos;est pas connecté : tu peux préparer des campagnes, mais rien ne sera publié tant que le compte n&apos;est pas connecté.</span>
+          <span><UiIcon name="instagram" size={15} className="mr-1 inline-block align-[-3px]" />Instagram n&apos;est pas connecté : tu peux préparer des campagnes, mais rien ne sera publié tant que le compte n&apos;est pas connecté.</span>
           <Link href="/parametres?section=channels" className="shrink-0 font-semibold underline">
             Connecter
           </Link>
@@ -61,7 +63,7 @@ export function CampaignsClient() {
 
       {data && data.campaigns.length === 0 ? (
         <div className="mt-6 flex flex-col items-center rounded-2xl border border-zinc-200 bg-white px-6 py-16 text-center shadow-sm">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-50 text-2xl">✨</span>
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-50 text-violet-600"><UiIcon name="sparkles" size={26} className="" /></span>
           <p className="mt-4 text-lg font-semibold">Aucune campagne pour le moment</p>
           <p className="mt-1 max-w-md text-sm text-zinc-500">
             Crée ta première campagne : l&apos;IA, qui connaît déjà ton entreprise, prépare 1 à 3 contenus par jour avec leurs visuels. Tu valides, elle publie.

@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useEffect, useState } from "react";
 
 type Limits = { maxPosts: number; maxStories: number; postGapHours: number; storyGapMinutes: number };
@@ -105,7 +107,7 @@ export function InstagramRhythm() {
           </select>
         </label>
       </div>
-      {risky && <p className="mt-2 text-xs text-amber-700">⚠️ Au-dessus des valeurs conseillées : Instagram peut limiter un compte qui publie beaucoup par la méthode non officielle. Augmente progressivement.</p>}
+      {risky && <p className="mt-2 text-xs text-amber-700"><UiIcon name="alert" size={13} className="mr-1 inline-block align-[-3px]" />Au-dessus des valeurs conseillées : Instagram peut limiter un compte qui publie beaucoup par la méthode non officielle. Augmente progressivement.</p>}
       {(dirty || flash) && (
         <div className="mt-3 flex justify-end">
           <button onClick={save} disabled={busy || !dirty} className="rounded-lg bg-zinc-900 px-3.5 py-1.5 text-xs font-semibold text-white disabled:opacity-60">

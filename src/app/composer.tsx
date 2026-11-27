@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useEffect, useRef, useState } from "react";
 
 const EMOJIS = [
@@ -97,7 +99,7 @@ export function Composer({ text, setText, busy, drafting, onSendText, onSendFile
       )}
       {file && (
         <div className="mb-2 flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm">
-          <span className="truncate">📎 {file.name}</span>
+          <span className="truncate"><UiIcon name="clip" size={14} className="mr-1 inline-block align-[-3px]" />{file.name}</span>
           <span className="shrink-0 text-zinc-400">{formatSize(file.size)}</span>
           <span className="flex-1 text-xs text-zinc-500">Le texte saisi servira de légende.</span>
           <button onClick={() => setFile(null)} className="text-zinc-500 hover:text-zinc-900" aria-label="Retirer le fichier">

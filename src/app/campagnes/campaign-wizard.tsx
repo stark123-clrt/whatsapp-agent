@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useEffect, useState } from "react";
 import {
   DEFAULT_CAMPAIGN,
@@ -252,7 +254,7 @@ export function CampaignWizard({
                 </div>
                 {s.rhythm === "auto" ? (
                   <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm leading-relaxed text-violet-900">
-                    🤖 <strong>L&apos;agent décide</strong> combien publier chaque jour, sous les plafonds du compte (par défaut jusqu&apos;à 3 publications et 10 stories) : il
+                    <UiIcon name="robot" size={15} className="mr-1 inline-block align-[-3px]" /><strong>L&apos;agent décide</strong> combien publier chaque jour, sous les plafonds du compte (par défaut jusqu&apos;à 3 publications et 10 stories) : il
                     démarre doucement les 2 premières semaines, publie plus quand l&apos;engagement est bon, ralentit quand l&apos;audience décroche. Publications aux heures de forte
                     audience, stories réparties de 9 h à 21 h 30.
                   </div>
@@ -309,7 +311,7 @@ export function CampaignWizard({
                   </div>
                 ) : (
                   <div className="rounded-xl border border-zinc-200 bg-zinc-50/60 px-4 py-3 text-sm text-zinc-600">
-                    🎨 Visuels : <strong>cartes aux couleurs de ta marque</strong>, avec ton logo. (Choisis l&apos;objectif « Vendre » pour montrer tes vrais produits.)
+                    <UiIcon name="palette" size={15} className="mr-1 inline-block align-[-3px]" />Visuels : <strong>cartes aux couleurs de ta marque</strong>, avec ton logo. (Choisis l&apos;objectif « Vendre » pour montrer tes vrais produits.)
                   </div>
                 )}
                 <div>
@@ -400,7 +402,7 @@ export function CampaignWizard({
             {step === 2 && (
               <>
                 <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-900">
-                  💬 L&apos;IA lit les commentaires sous tes publications (toutes les 3 minutes), répond en public et écrit en privé avec le lien. Avec « Je valide chaque contenu », chaque réponse attend aussi ta validation.
+                  <UiIcon name="chat" size={15} className="mr-1 inline-block align-[-3px]" />L&apos;IA lit les commentaires sous tes publications (toutes les 3 minutes), répond en public et écrit en privé avec le lien. Avec « Je valide chaque contenu », chaque réponse attend aussi ta validation.
                 </div>
                 <Line title="Répondre aux commentaires" text="L'IA répond publiquement, avec le contexte de l'entreprise." checked={s.interactions.replyComments} onChange={(v) => set({ interactions: { ...s.interactions, replyComments: v } })} />
                 <Line title="Écrire en privé aux personnes qui commentent" text="Un message privé avec la réponse détaillée et le lien du site." checked={s.interactions.dmCommenters} onChange={(v) => set({ interactions: { ...s.interactions, dmCommenters: v } })} />

@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -277,7 +279,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                     LISTE DE CONTACTS <span className="text-red-500">*</span>
                   </Label>
                   <button onClick={() => setListModal(true)} className="rounded-xl border border-zinc-200 px-3 py-1.5 text-sm font-medium hover:bg-zinc-50">
-                    ＋ {lists.length ? "Nouvelle liste" : "Créer ta première liste"}
+                    {lists.length ? "Nouvelle liste" : "Créer ta première liste"}
                   </button>
                 </div>
                 {lists.length ? (
@@ -289,7 +291,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                         className={`rounded-xl border p-3 text-left ${s.listId === l.id ? "border-green-400 bg-green-50" : "border-zinc-200 hover:border-zinc-300"}`}
                       >
                         <p className="text-sm font-semibold">
-                          {l.kind === "smart" ? "✦ " : ""}
+                          {l.kind === "smart" && <UiIcon name="sparkles" size={14} className="mr-1 inline-block align-[-2px] text-green-600" />}
                           {l.name}
                         </p>
                         <p className="text-xs text-zinc-500">
@@ -323,7 +325,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                   />
                   <div className="mt-1.5 flex items-center justify-between text-xs text-zinc-500">
                     <div className="flex flex-wrap gap-1.5">
-                      <span className="py-1">＋ Variable :</span>
+                      <span className="py-1">Variable :</span>
                       {VARIABLES.map((v) => (
                         <button key={v.key} onClick={() => insertVariable(v.key)} className="rounded-lg border border-zinc-200 px-2 py-1 font-medium text-zinc-700 hover:bg-zinc-50">
                           {v.label}
@@ -335,10 +337,10 @@ export function BroadcastWizard({ id }: { id: number }) {
                 </div>
                 <div>
                   <div className="flex items-center justify-between">
-                    <Label>✦ PRÉVISUALISATION</Label>
+                    <Label>PRÉVISUALISATION</Label>
                     {versions > 1 && (
                       <button onClick={() => setSeed(seed + 1)} className="text-xs font-medium text-green-700 hover:underline">
-                        ↻ Autre version
+                        Autre version
                       </button>
                     )}
                   </div>
@@ -363,7 +365,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={`/api/broadcasts/media?file=${s.media.file}`} alt="" className="h-16 w-16 rounded-lg object-cover" />
                     ) : (
-                      <span className="flex h-16 w-16 items-center justify-center rounded-lg bg-zinc-100 text-xl">🎬</span>
+                      <span className="flex h-16 w-16 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500"><UiIcon name="film" size={24} className="" /></span>
                     )}
                     <p className="flex-1 truncate text-sm">{s.media.name}</p>
                     <button onClick={() => setS({ ...s, media: null })} className="text-sm text-red-600 hover:underline">
@@ -373,11 +375,11 @@ export function BroadcastWizard({ id }: { id: number }) {
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     <label className="cursor-pointer rounded-xl border border-zinc-200 px-3.5 py-2 text-sm font-medium hover:bg-zinc-50">
-                      {busy === "media" ? "Envoi…" : "⇪ Envoyer une photo ou une vidéo"}
+                      {busy === "media" ? "Envoi…" : "Envoyer une photo ou une vidéo"}
                       <input type="file" accept="image/jpeg,image/png,image/webp,video/mp4" className="hidden" onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
                     </label>
                     <button onClick={openCatalog} className="rounded-xl border border-zinc-200 px-3.5 py-2 text-sm font-medium hover:bg-zinc-50">
-                      🛍 Choisir un produit du catalogue
+                      <UiIcon name="bag" size={15} className="mr-1 inline-block align-[-3px]" />Choisir un produit du catalogue
                     </button>
                   </div>
                 )}
@@ -410,7 +412,7 @@ export function BroadcastWizard({ id }: { id: number }) {
               <Section title="Variantes de message (spintax)" hint="Chaque contact reçoit une version légèrement différente : les envois ne ressemblent plus à un même texte répété, ce qui évite que ton numéro soit signalé ou bloqué.">
                 {!s.identical && versions < 2 && (
                   <p className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm text-amber-800">
-                    ⚠ Requis avant le lancement : ce message partirait identique à chaque contact. C&apos;est ce qui fait restreindre les numéros WhatsApp.
+                    <UiIcon name="alert" size={15} className="mr-1 inline-block align-[-3px]" />Requis avant le lancement : ce message partirait identique à chaque contact. C&apos;est ce qui fait restreindre les numéros WhatsApp.
                   </p>
                 )}
                 <p className="mt-3 text-sm text-zinc-600">
@@ -418,7 +420,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                 </p>
                 {versions > 1 && <p className="mt-2 text-sm font-semibold text-green-700">Ce message peut être envoyé sous {versions.toLocaleString("fr-FR")} versions différentes.</p>}
                 <button onClick={variants} disabled={busy === "variants" || !s.message.trim()} className="mt-3 rounded-xl border border-zinc-200 px-3.5 py-2 text-sm font-medium hover:bg-zinc-50 disabled:opacity-50">
-                  {busy === "variants" ? "L'IA ajoute des variantes…" : "✦ Ajouter des variantes avec l'IA"}
+                  {busy === "variants" ? "L'IA ajoute des variantes…" : "Ajouter des variantes avec l'IA"}
                 </button>
                 <div className="mt-4 flex items-center justify-between gap-4 border-t border-zinc-100 pt-4">
                   <div>
@@ -440,19 +442,19 @@ export function BroadcastWizard({ id }: { id: number }) {
               <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
                 <div className="grid gap-3 md:grid-cols-2">
                   <button onClick={() => setS({ ...s, agentId: null })} className={`rounded-xl border p-4 text-left ${s.agentId === null ? "border-green-400 bg-green-50" : "border-zinc-200 hover:border-zinc-300"}`}>
-                    <p className="font-semibold">👥 L&apos;équipe gère les réponses</p>
+                    <p className="font-semibold"><UiIcon name="users" size={16} className="mr-1 inline-block align-[-3px] text-zinc-500" />L&apos;équipe gère les réponses</p>
                     <p className="mt-0.5 text-sm text-zinc-500">Pas d&apos;IA : les réponses arrivent dans Discussions.</p>
                   </button>
                   {agents.map((a) => (
                     <button key={a.id} onClick={() => setS({ ...s, agentId: a.id })} className={`rounded-xl border p-4 text-left ${s.agentId === a.id ? "border-green-400 bg-green-50" : "border-zinc-200 hover:border-zinc-300"}`}>
                       <p className="font-semibold">
-                        🤖 {a.name} {a.paused && <span className="ml-1 text-xs font-bold text-amber-600">EN PAUSE</span>}
+                        <UiIcon name="robot" size={16} className="mr-1 inline-block align-[-3px] text-zinc-500" />{a.name} {a.paused && <span className="ml-1 text-xs font-bold text-amber-600">EN PAUSE</span>}
                       </p>
                       <p className="mt-0.5 text-sm text-zinc-500">L&apos;agent répond, connaît ce message et ton catalogue.</p>
                     </button>
                   ))}
                 </div>
-                {agent?.paused && <p className="mt-3 text-sm text-amber-700">⚠ Cet agent est en pause : les réponses ne seront pas traitées tant que tu ne l&apos;auras pas réactivé.</p>}
+                {agent?.paused && <p className="mt-3 text-sm text-amber-700"><UiIcon name="alert" size={14} className="mr-1 inline-block align-[-3px]" />Cet agent est en pause : les réponses ne seront pas traitées tant que tu ne l&apos;auras pas réactivé.</p>}
                 <div className="mt-5 flex items-center justify-between gap-4 border-t border-zinc-100 pt-4">
                   <div>
                     <p className="text-sm font-medium">Relancer les personnes qui ne répondent pas</p>
@@ -588,7 +590,7 @@ export function BroadcastWizard({ id }: { id: number }) {
               </div>
               <Section title="Audience">
                 <p className="text-sm">
-                  👥 {list ? `${list.count} contact${list.count > 1 ? "s" : ""} · ${list.name}` : "Aucune liste"}
+                  <UiIcon name="users" size={15} className="mr-1 inline-block align-[-3px] text-zinc-500" />{list ? `${list.count} contact${list.count > 1 ? "s" : ""} · ${list.name}` : "Aucune liste"}
                 </p>
                 <p className="mt-1 text-xs text-zinc-500">Seuls les contacts WhatsApp sont joints ; ceux qui ont écrit STOP ou sont en « Ne pas déranger » sont exclus automatiquement.</p>
               </Section>
@@ -603,7 +605,7 @@ export function BroadcastWizard({ id }: { id: number }) {
               </Section>
               <Section title="Message d'ouverture">
                 <p className="whitespace-pre-wrap text-sm">{s.message}</p>
-                {s.media && <p className="mt-2 text-xs text-zinc-500">📎 {s.media.name}</p>}
+                {s.media && <p className="mt-2 text-xs text-zinc-500"><UiIcon name="clip" size={13} className="mr-1 inline-block align-[-3px]" />{s.media.name}</p>}
               </Section>
               <Section title="Réponses">
                 <p className="text-sm">{agent ? agent.name : "L'équipe (sans IA)"}</p>
@@ -614,7 +616,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                   <div className="space-y-2">
                     {problems.map((p) => (
                       <p key={p} className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700">
-                        ⚠ {p}{" "}
+                        <UiIcon name="alert" size={14} className="mr-1 inline-block align-[-3px]" />{p}{" "}
                         <button onClick={() => setStep(p.includes("liste") ? 0 : p.includes("relance") ? 2 : p.includes("date") ? 3 : 1)} className="font-semibold underline">
                           Corriger
                         </button>
@@ -626,7 +628,7 @@ export function BroadcastWizard({ id }: { id: number }) {
                 )}
                 {!connected && <p className="mt-2 text-sm text-amber-700">WhatsApp n&apos;est pas connecté : la diffusion partira dès la reconnexion.</p>}
                 <button onClick={launch} disabled={problems.length > 0 || busy !== null} className="mt-4 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-green-700 disabled:opacity-40">
-                  🚀 {busy === "launch" ? "Lancement…" : s.schedule.mode === "later" ? "Programmer la diffusion" : "Lancer la diffusion"}
+                  <UiIcon name="rocket" size={15} className="mr-1 inline-block align-[-3px]" />{busy === "launch" ? "Lancement…" : s.schedule.mode === "later" ? "Programmer la diffusion" : "Lancer la diffusion"}
                 </button>
               </Section>
             </>

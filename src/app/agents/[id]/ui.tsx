@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon, type IconName } from "@/app/icons";
+
 /** Petits composants partagés par les onglets de la page agent. */
 
 export function Card({
@@ -81,17 +83,29 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
 export const inputClass = "w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-zinc-400";
 
 export function Warning({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">⚠️ {children}</div>;
+  return (
+    <div className="flex gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+      <UiIcon name="alert" size={16} className="mt-0.5 shrink-0 text-amber-600" />
+      <div>{children}</div>
+    </div>
+  );
 }
 
 export function Info({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">ℹ️ {children}</div>;
+  return (
+    <div className="flex gap-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+      <UiIcon name="info" size={16} className="mt-0.5 shrink-0 text-green-700" />
+      <div>{children}</div>
+    </div>
+  );
 }
 
-export function Empty({ icon, title, text, children }: { icon: string; title: string; text: string; children?: React.ReactNode }) {
+export function Empty({ icon, title, text, children }: { icon: IconName; title: string; text: string; children?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center py-8 text-center">
-      <span className="text-3xl">{icon}</span>
+      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-500">
+        <UiIcon name={icon} size={26} />
+      </span>
       <p className="mt-3 font-semibold">{title}</p>
       <p className="mt-1 max-w-md text-sm text-zinc-500">{text}</p>
       {children && <div className="mt-4">{children}</div>}

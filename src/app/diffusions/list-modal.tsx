@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useEffect, useMemo, useState } from "react";
 import { CHANNEL_LABELS, RULE_FIELDS, RULE_OPS, STATUS_LABELS, type ContactList, type ListRule, type RuleField } from "@/lib/broadcast-types";
 
@@ -61,7 +63,7 @@ export function ListModal({ contacts, tags, onClose, onCreated }: { contacts: Li
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/30 p-4 backdrop-blur-sm" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="flex max-h-[90vh] w-full max-w-xl flex-col rounded-2xl bg-white shadow-xl">
         <div className="flex items-start gap-3 border-b border-zinc-100 p-5">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-lg">👥</span>
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-700"><UiIcon name="users" size={20} className="" /></span>
           <div className="flex-1">
             <p className="font-semibold">{kind === "smart" ? "Nouvelle liste intelligente" : "Nouvelle liste de contacts"}</p>
             <p className="text-sm text-zinc-500">{kind === "smart" ? "Les contacts sont ajoutés et retirés automatiquement, selon des règles." : "Regroupe des contacts pour leur envoyer une diffusion."}</p>
@@ -77,8 +79,8 @@ export function ListModal({ contacts, tags, onClose, onCreated }: { contacts: Li
             <div className="mt-2 grid grid-cols-2 gap-3">
               {(
                 [
-                  ["static", "☰ Liste statique", "Tu choisis les contacts toi-même."],
-                  ["smart", "✦ Liste intelligente", "Les contacts sont ajoutés et retirés automatiquement, selon des règles."],
+                  ["static", "Liste statique", "Tu choisis les contacts toi-même."],
+                  ["smart", "Liste intelligente", "Les contacts sont ajoutés et retirés automatiquement, selon des règles."],
                 ] as const
               ).map(([k, t, d]) => (
                 <button key={k} onClick={() => setKind(k)} className={`rounded-xl border p-3 text-left ${kind === k ? "border-green-400 bg-green-50" : "border-zinc-200 hover:border-zinc-300"}`}>
@@ -218,13 +220,13 @@ export function ListModal({ contacts, tags, onClose, onCreated }: { contacts: Li
                 {preview ? (
                   <>
                     <p>
-                      ✦ <strong>{preview.count}</strong> contact{preview.count > 1 ? "s" : ""} correspond{preview.count > 1 ? "ent" : ""}
+                      <UiIcon name="sparkles" size={15} className="mr-1 inline-block align-[-3px] text-green-600" /><strong>{preview.count}</strong> contact{preview.count > 1 ? "s" : ""} correspond{preview.count > 1 ? "ent" : ""}
                       {preview.whatsapp !== preview.count && <span className="text-zinc-500"> · {preview.whatsapp} joignable{preview.whatsapp > 1 ? "s" : ""} sur WhatsApp</span>}
                     </p>
                     {preview.sample.length > 0 && <p className="mt-0.5 truncate text-xs text-zinc-500">{preview.sample.join(", ")}…</p>}
                   </>
                 ) : (
-                  <p className="font-medium">✦ Termine les règles ci-dessus pour voir combien de contacts correspondent.</p>
+                  <p className="font-medium"><UiIcon name="sparkles" size={15} className="mr-1 inline-block align-[-3px] text-green-600" />Termine les règles ci-dessus pour voir combien de contacts correspondent.</p>
                 )}
               </div>
             </div>

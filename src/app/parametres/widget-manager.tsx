@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useEffect, useRef, useState } from "react";
 import { FONTS, LAUNCHER_ICONS, THEMES, type ActionButton, type LauncherIcon, type ThemeId, type WidgetSettings } from "@/lib/widget-settings";
 import { Soon, inputClass } from "../agents/[id]/ui";
@@ -376,7 +378,7 @@ export function WidgetManager({
                     </Labeled>
                   </div>
                   <p className="rounded-lg bg-white px-3 py-2 text-xs leading-relaxed text-zinc-600">
-                    💡 <strong>Pour la tester</strong> : enregistre, attends 1 minute, puis ouvre ton site en ajoutant <code className="rounded bg-zinc-100 px-1">?aw_test</code> à la fin de l&apos;adresse (ex. : votre-site.fr<strong>?aw_test</strong>). Le widget te voit alors comme un nouveau visiteur.
+                    <UiIcon name="bulb" size={15} className="mr-1 inline-block align-[-3px]" /><strong>Pour la tester</strong> : enregistre, attends 1 minute, puis ouvre ton site en ajoutant <code className="rounded bg-zinc-100 px-1">?aw_test</code> à la fin de l&apos;adresse (ex. : votre-site.fr<strong>?aw_test</strong>). Le widget te voit alors comme un nouveau visiteur.
                   </p>
                   <Labeled label={`Apparaît après ${s.proactive.delay} s`}>
                     <input type="range" min={0} max={60} value={s.proactive.delay} onChange={(e) => set({ proactive: { ...s.proactive, delay: Number(e.target.value) } })} className="w-full accent-green-600" />

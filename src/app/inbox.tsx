@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CHANNELS } from "@/lib/channels";
@@ -446,7 +448,7 @@ function Conversation({
 
         {chat.draft && !readOnly && (
           <div className="border-t border-green-200 bg-green-50 px-5 py-3">
-            <p className="text-xs font-semibold text-green-800">✍️ Brouillon proposé par l&apos;IA</p>
+            <p className="text-xs font-semibold text-green-800"><UiIcon name="pen" size={13} className="mr-1.5 inline-block align-[-3px]" />Brouillon proposé par l&apos;IA</p>
             <p className="mt-1 text-sm whitespace-pre-wrap text-zinc-800">{chat.draft}</p>
             <div className="mt-2 flex gap-2">
               <button
@@ -480,7 +482,7 @@ function Conversation({
 
         {readOnly ? (
           <footer className="flex items-center gap-3 border-t border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
-            <span aria-hidden>🔒</span>
+            <UiIcon name="lock" size={14} className="shrink-0" />
             <span className="flex-1">{readOnly}</span>
             <Link href="/parametres?section=channels" className="shrink-0 font-medium underline">
               Paramètres → Canaux
@@ -524,10 +526,10 @@ function Conversation({
 
 
 function preview(type: Message["type"] | null, text: string | null) {
-  if (type === "image") return `📷 ${text || "Photo"}`;
-  if (type === "audio") return "🎤 Message vocal";
-  if (type === "video") return `🎬 ${text || "Vidéo"}`;
-  if (type === "document") return `📄 ${text || "Document"}`;
+  if (type === "image") return text ? `Photo · ${text}` : "Photo";
+  if (type === "audio") return "Message vocal";
+  if (type === "video") return text ? `Vidéo · ${text}` : "Vidéo";
+  if (type === "document") return text || "Document";
   return text || "";
 }
 

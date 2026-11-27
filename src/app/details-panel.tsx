@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon, type IconName } from "@/app/icons";
+
 import Link from "next/link";
 import { useState } from "react";
 import { CHANNELS } from "@/lib/channels";
@@ -239,7 +241,7 @@ export function DetailsPanel({
                   rel="noreferrer"
                   className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-zinc-50"
                 >
-                  <span aria-hidden>{{ image: "📷", audio: "🎤", video: "🎬", document: "📄", text: "📎" }[f.type]}</span>
+                  <UiIcon name={({ image: "camera", audio: "music", video: "film", document: "file" } as Record<string, IconName>)[f.type] ?? "clip"} size={16} className="shrink-0 text-zinc-400" />
                   <span className="flex-1 truncate">
                     {f.type === "document" ? f.text : { image: "Photo", audio: "Message vocal", video: "Vidéo", text: "Fichier" }[f.type]}
                   </span>

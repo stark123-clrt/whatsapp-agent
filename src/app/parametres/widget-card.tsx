@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useCallback, useEffect, useState } from "react";
 import { DEFAULT_WIDGET, LAUNCHER_ICONS, RADIUS, THEMES, type WidgetSettings } from "@/lib/widget-settings";
 import { Toggle, inputClass } from "../agents/[id]/ui";
@@ -107,7 +109,7 @@ export function WidgetCard() {
           </>
         ) : (
           <div className="flex items-center gap-4">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-zinc-100 text-xl">💬</span>
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-zinc-100 text-zinc-500"><UiIcon name="chat" size={20} className="" /></span>
             <div>
               <p className="flex items-center gap-2 font-semibold">
                 Web widget
@@ -179,7 +181,7 @@ function CreateModal({ onClose, onCreated, onCustomize }: { onClose: () => void;
       <div className="flex max-h-[92vh] w-full max-w-5xl overflow-hidden rounded-2xl bg-white shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
         <div className="flex w-full flex-col md:w-[440px] md:shrink-0">
           <div className="border-b border-zinc-100 px-7 py-5">
-            <h3 className="text-lg font-semibold">{created ? "Ton widget est prêt 🎉" : "Connecter le widget de chat"}</h3>
+            <h3 className="text-lg font-semibold">{created ? "Ton widget est prêt" : "Connecter le widget de chat"}</h3>
             <p className="mt-0.5 text-sm text-zinc-500">
               {created ? "Colle ce code juste avant </body> sur chaque page où le chat doit apparaître." : "L'essentiel pour commencer. Tout le reste se règle ensuite dans « Gérer »."}
             </p>

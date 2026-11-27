@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useCallback, useEffect, useState } from "react";
 import { ToggleRow } from "@/app/agents/[id]/ui";
 
@@ -102,7 +104,7 @@ export function InstagramGrowth() {
 
       {o.paused && (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-          <span>⏸ En pause jusqu&apos;à {time(o.paused.until)} pour protéger le compte. {o.paused.reason}</span>
+          <span><UiIcon name="pause" size={13} className="mr-1 inline-block align-[-3px]" />En pause jusqu&apos;à {time(o.paused.until)} pour protéger le compte. {o.paused.reason}</span>
           <button onClick={() => save({ resume: true })} disabled={busy} className="rounded-md border border-amber-300 bg-white px-2 py-1 font-semibold">
             Reprendre maintenant
           </button>

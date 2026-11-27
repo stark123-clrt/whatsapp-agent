@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useCallback, useEffect, useState } from "react";
 
 export type CatalogProduct = {
@@ -122,7 +124,7 @@ export function CatalogPicker({
         </div>
       </div>
 
-      {(error || job?.state === "error") && <p className="px-4 pt-3 text-xs text-red-600">⚠️ {error ?? job?.message}</p>}
+      {(error || job?.state === "error") && <p className="px-4 pt-3 text-xs text-red-600"><UiIcon name="alert" size={13} className="mr-1 inline-block align-[-3px]" />{error ?? job?.message}</p>}
       {running && <div className="h-1 overflow-hidden bg-violet-100"><div className="h-full w-1/3 animate-pulse bg-violet-500" /></div>}
 
       {adding && (

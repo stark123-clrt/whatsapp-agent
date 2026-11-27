@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { BROADCAST_STATUS, type Broadcast } from "@/lib/broadcast-types";
@@ -89,17 +91,17 @@ export function BroadcastDetail({ id }: { id: number }) {
         <div className="flex gap-2">
           {b.status === "draft" && (
             <Link href={`/diffusions/${id}/modifier`} className="rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-sm font-medium hover:bg-zinc-50">
-              ✎ Continuer la configuration
+              <UiIcon name="pen" size={14} className="mr-1 inline-block align-[-3px]" />Continuer la configuration
             </Link>
           )}
           {b.status === "sending" && (
             <button onClick={() => act("pause")} disabled={busy} className="rounded-xl border border-zinc-200 bg-white px-3.5 py-2 text-sm font-medium hover:bg-zinc-50">
-              ⏸ Mettre en pause
+              <UiIcon name="pause" size={14} className="mr-1 inline-block align-[-3px]" />Mettre en pause
             </button>
           )}
           {b.status === "paused" && (
             <button onClick={() => act("resume")} disabled={busy} className="rounded-xl bg-green-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-green-700">
-              ▶ Reprendre
+              <UiIcon name="play" size={14} className="mr-1 inline-block align-[-3px]" />Reprendre
             </button>
           )}
           {["scheduled", "sending", "paused"].includes(b.status) && (
@@ -141,7 +143,7 @@ export function BroadcastDetail({ id }: { id: number }) {
           <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-semibold tracking-wide text-zinc-500">MESSAGE D&apos;OUVERTURE</p>
             <p className="mt-2 whitespace-pre-wrap text-sm">{s.message || "—"}</p>
-            {s.media && <p className="mt-2 text-xs text-zinc-500">📎 {s.media.name}</p>}
+            {s.media && <p className="mt-2 text-xs text-zinc-500"><UiIcon name="clip" size={13} className="mr-1 inline-block align-[-3px]" />{s.media.name}</p>}
           </section>
 
           <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
@@ -229,8 +231,9 @@ export function BroadcastDetail({ id }: { id: number }) {
           </section>
           <section className="rounded-2xl border border-zinc-200 bg-white p-5 text-sm shadow-sm">
             <p className="text-xs font-semibold tracking-wide text-zinc-500">RÉPONSES</p>
-            <p className="mt-2 font-medium">{agent ? `🤖 ${agent.name} gère les réponses` : "👥 L'équipe gère les réponses (sans IA)"}</p>
-            {agent?.paused && <p className="mt-1 text-xs text-amber-700">⚠ Cet agent est en pause : les réponses ne seront pas traitées tant que tu ne l&apos;auras pas réactivé.</p>}
+            <p className="mt-2 font-medium"><UiIcon name={agent ? "robot" : "users"} size={15} className="mr-1.5 inline-block align-[-3px] text-zinc-500" />
+              {agent ? `${agent.name} gère les réponses` : "L'équipe gère les réponses (sans IA)"}</p>
+            {agent?.paused && <p className="mt-1 text-xs text-amber-700"><UiIcon name="alert" size={13} className="mr-1 inline-block align-[-3px]" />Cet agent est en pause : les réponses ne seront pas traitées tant que tu ne l&apos;auras pas réactivé.</p>}
             <p className="mt-2 text-xs text-zinc-500">{s.followup.enabled ? `Relance unique après ${s.followup.afterHours / 24} jour(s) sans réponse.` : "Pas de relance."}</p>
             <p className="mt-2 text-xs text-zinc-500">Un contact qui répond « STOP » ne reçoit plus aucune diffusion.</p>
           </section>

@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useCallback, useEffect, useState } from "react";
 import type { Faq, KbPage, KbSource } from "@/lib/kb";
 import { FaqSection } from "./faq-section";
@@ -46,7 +48,7 @@ export function KbClient() {
 
   return (
     <main className="mx-auto w-full max-w-6xl px-8 py-10">
-      <h1 className="text-3xl font-bold">Base de connaissances 📖</h1>
+      <h1 className="text-3xl font-bold">Base de connaissances</h1>
       <p className="mt-1 text-zinc-600">Tout ce que ton IA utilise pour répondre : sources importées et bibliothèque de FAQ.</p>
 
       <div className="mt-8 flex items-end justify-between gap-4">
@@ -100,13 +102,13 @@ export function KbClient() {
                   className="flex flex-1 items-center gap-2 text-left"
                 >
                   <span className={`text-zinc-400 transition-transform ${open ? "rotate-90" : ""}`}>›</span>
-                  <span>{s.kind === "site" ? "🌐" : "📄"}</span>
+                  <UiIcon name={s.kind === "site" ? "globe" : "file"} size={16} className="shrink-0 text-zinc-400" />
                   <span className="font-semibold">{s.name}</span>
                   <span className="text-sm text-zinc-500">
                     {s.pages.length} page{s.pages.length > 1 ? "s" : ""} · {faqs} FAQ
                   </span>
                 </button>
-                {agentName(s.agentId) && <span className="text-xs font-medium text-green-700">🔗 {agentName(s.agentId)}</span>}
+                {agentName(s.agentId) && <span className="text-xs font-medium text-green-700"><UiIcon name="link" size={13} className="mr-1 inline-block align-[-3px]" />{agentName(s.agentId)}</span>}
                 {s.kind === "site" && (
                   <button onClick={() => act(`/api/kb/sources/${s.id}`, "POST")} className="rounded-lg px-2 py-1 text-sm text-zinc-600 hover:bg-zinc-100">
                     ↻ Actualiser
@@ -117,7 +119,7 @@ export function KbClient() {
                   className="rounded-lg px-2 py-1 hover:bg-red-50"
                   aria-label="Supprimer la source"
                 >
-                  🗑️
+                  <UiIcon name="trash" size={15} />
                 </button>
               </div>
               {open && (
@@ -205,7 +207,7 @@ function PageRow({
         </button>
         {isSite && (
           <a href={page.url} target="_blank" rel="noreferrer" className="rounded-lg px-1.5 py-1 hover:bg-zinc-100" aria-label="Ouvrir la page">
-            🔗
+            <UiIcon name="link" size={15} />
           </a>
         )}
         <button onClick={() => onAction(`/api/kb/pages/${page.id}`, "POST")} className="rounded-lg px-1.5 py-1 hover:bg-zinc-100" aria-label="Relire la page">
@@ -216,7 +218,7 @@ function PageRow({
           className="rounded-lg px-1.5 py-1 hover:bg-red-50"
           aria-label="Supprimer la page"
         >
-          🗑️
+          <UiIcon name="trash" size={15} />
         </button>
       </div>
       {open && faqs && (
@@ -338,7 +340,7 @@ function AddSourceModal({ agents, onClose, onAdded }: { agents: { id: number; na
         <div className="mt-4 flex gap-2">
           <input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="monsite.com" className="flex-1 rounded-xl border border-zinc-200 px-4 py-2.5 font-mono text-sm outline-none focus:border-zinc-400" />
           <button onClick={find} disabled={!website.trim() || busy} className="rounded-xl border border-zinc-200 px-4 text-sm hover:bg-zinc-50 disabled:text-zinc-400">
-            🔍 Trouver des pages
+            <UiIcon name="search" size={15} className="mr-1 inline-block align-[-3px]" />Trouver des pages
           </button>
         </div>
         {pages && (

@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useCallback, useEffect, useState } from "react";
 import type { InstagramState } from "@/lib/instagram";
 import { InstagramGrowth } from "./instagram-growth";
@@ -83,14 +85,14 @@ export function InstagramCard() {
           </>
         ) : (
           <div className="flex items-center gap-4">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-zinc-100 text-xl">📸</span>
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-zinc-100 text-zinc-500"><UiIcon name="instagram" size={20} className="" /></span>
             <div>
               <p className="flex items-center gap-2 font-semibold">
                 Instagram
                 <span className="rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] font-bold text-zinc-500">● {busy ? "CONNEXION…" : "NON CONNECTÉ"}</span>
               </p>
               <p className="text-sm text-zinc-500">
-                {s?.disabled ? "Instagram est désactivé sur ce serveur." : s?.error ? <span className="text-amber-700">⚠️ {s.error}</span> : "Pas encore connecté."}
+                {s?.disabled ? "Instagram est désactivé sur ce serveur." : s?.error ? <span className="text-amber-700"><UiIcon name="alert" size={13} className="mr-1 inline-block align-[-3px]" />{s.error}</span> : "Pas encore connecté."}
               </p>
             </div>
           </div>
@@ -147,7 +149,7 @@ function ConnectInstagram({ state, onClose, onChanged }: { state: State | null; 
 
         {status === "connected" ? (
           <div className="mt-6 text-center">
-            <p className="font-medium text-green-700">✅ Connecté : @{state?.username}</p>
+            <p className="font-medium text-green-700"><UiIcon name="checkCircle" size={16} className="mr-1 inline-block align-[-3px]" />Connecté : @{state?.username}</p>
             <p className="mt-2 text-sm text-zinc-500">Les messages privés arrivent dans Discussions. Choisis l&apos;agent d&apos;Instagram dans Agents IA → Qui répond.</p>
             <button onClick={onClose} className="mt-5 rounded-xl bg-zinc-900 px-5 py-2 text-sm font-medium text-white">
               Fermer
@@ -173,7 +175,7 @@ function ConnectInstagram({ state, onClose, onChanged }: { state: State | null; 
         ) : (
           <form onSubmit={login} className="mt-5 space-y-4">
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
-              ⚠️ Connexion <strong>non officielle</strong> : Instagram peut limiter un compte trop automatisé. Commence avec un <strong>compte de test</strong>, et laisse l&apos;IA répondre seulement aux personnes qui t&apos;écrivent.
+              <UiIcon name="alert" size={15} className="mr-1 inline-block align-[-3px]" />Connexion <strong>non officielle</strong> : Instagram peut limiter un compte trop automatisé. Commence avec un <strong>compte de test</strong>, et laisse l&apos;IA répondre seulement aux personnes qui t&apos;écrivent.
             </div>
             <div className="grid grid-cols-2 gap-1 rounded-xl bg-zinc-100 p-1 text-sm">
               {(
@@ -247,7 +249,7 @@ function ConnectInstagram({ state, onClose, onChanged }: { state: State | null; 
               </div>
             )}
             <p className="text-xs text-zinc-500">
-              🔒 {method === "password" ? "Le mot de passe sert uniquement à la connexion et n'est jamais enregistré" : "La session n'est jamais affichée ni partagée"} : seule la session Instagram est conservée, sur ton serveur.
+              <UiIcon name="lock" size={13} className="mr-1 inline-block align-[-3px]" />{method === "password" ? "Le mot de passe sert uniquement à la connexion et n'est jamais enregistré" : "La session n'est jamais affichée ni partagée"} : seule la session Instagram est conservée, sur ton serveur.
             </p>
             {(error || state?.error) && <p className="text-sm text-red-600">{error ?? state?.error}</p>}
             <button disabled={sending || (method === "password" ? !username.trim() || !password : sessionid.trim().length < 20)} className="w-full rounded-xl bg-gradient-to-r from-amber-500 via-pink-500 to-violet-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50">

@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useState } from "react";
 import type { Message } from "@/lib/db";
 
@@ -62,7 +64,7 @@ export function Bubble({ m, quoted, contactName, onReply, onChanged, notify }: P
           )}
 
           {m.deleted ? (
-            <p className="text-zinc-500 italic">🚫 Ce message a été supprimé</p>
+            <p className="text-zinc-500 italic"><UiIcon name="ban" size={14} className="mr-1 inline-block align-[-3px]" />Ce message a été supprimé</p>
           ) : (
             <>
               {m.replyTo && (
@@ -105,7 +107,7 @@ export function Bubble({ m, quoted, contactName, onReply, onChanged, notify }: P
                   download={m.text ?? undefined}
                   className="mb-1 flex items-center gap-2 rounded-lg bg-black/5 px-3 py-2 hover:bg-black/10"
                 >
-                  <span aria-hidden>📄</span>
+                  <UiIcon name="file" size={18} className="shrink-0 text-zinc-500" />
                   <span className="truncate font-medium">{m.text ?? "Document"}</span>
                 </a>
               )}
@@ -259,9 +261,9 @@ function MenuItem({ label, onClick, path, danger }: { label: string; onClick: ()
 
 export function preview(m: Message) {
   if (m.deleted) return "Message supprimé";
-  if (m.type === "image") return `📷 ${m.text || "Photo"}`;
-  if (m.type === "audio") return "🎤 Message vocal";
-  if (m.type === "video") return `🎬 ${m.text || "Vidéo"}`;
-  if (m.type === "document") return `📄 ${m.text || "Document"}`;
+  if (m.type === "image") return m.text ? `Photo · ${m.text}` : "Photo";
+  if (m.type === "audio") return "Message vocal";
+  if (m.type === "video") return m.text ? `Vidéo · ${m.text}` : "Vidéo";
+  if (m.type === "document") return m.text || "Document";
   return m.text ?? "";
 }

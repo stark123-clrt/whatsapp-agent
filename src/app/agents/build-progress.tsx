@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useEffect, useRef, useState } from "react";
 
 type Progress = {
@@ -107,7 +109,7 @@ export function BuildProgress({
       <div className="relative flex h-20 w-20 items-center justify-center">
         {!finished && <span className="absolute inset-0 animate-ping rounded-full bg-green-200 opacity-60" />}
         <span className={`relative flex h-20 w-20 items-center justify-center rounded-full text-4xl ${finished ? "bg-green-100" : "bg-green-50"}`}>
-          {finished ? "✅" : "🧠"}
+          <UiIcon name={finished ? "checkCircle" : "sparkles"} size={36} className="text-green-700" />
         </span>
       </div>
       <h2 className="mt-5 text-xl font-semibold">

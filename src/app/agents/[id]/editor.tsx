@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -174,7 +176,7 @@ export function AgentEditor({ id }: { id: number }) {
           title="Cliquer pour changer"
           className={`rounded-full px-3 py-1 text-xs font-bold ${agent.status === "active" ? "bg-green-50 text-green-700 ring-1 ring-green-200" : "bg-amber-50 text-amber-700 ring-1 ring-amber-200"}`}
         >
-          {agent.status === "active" ? "● ACTIF" : "⏸ EN PAUSE"}
+          {agent.status === "active" ? "● ACTIF" : "EN PAUSE"}
         </button>
         <span
           className={`rounded-full px-3 py-1 text-xs font-bold ring-1 ${
@@ -185,10 +187,10 @@ export function AgentEditor({ id }: { id: number }) {
         </span>
         <div className="ml-auto flex gap-2">
           <button onClick={() => setVersionsOpen(true)} className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50">
-            🕓 Historique des versions
+            <UiIcon name="clock" size={15} className="mr-1 inline-block align-[-3px]" />Historique des versions
           </button>
           <button onClick={optimize} disabled={optimizing} className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50 disabled:text-zinc-400">
-            {optimizing ? "L'IA optimise…" : "✨ Optimiser avec l'IA"}
+            {optimizing ? "L'IA optimise…" : "Optimiser avec l'IA"}
           </button>
         </div>
       </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FaqWithSource } from "@/lib/kb";
 
@@ -103,7 +105,7 @@ export function FaqSection({
         <div className="ml-auto flex flex-wrap items-center gap-2">
           {notice && <span className="rounded-lg bg-green-50 px-3 py-2 text-sm font-medium text-green-700">{notice}</span>}
           <button onClick={dedupe} className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50">
-            ✨ Dédupliquer
+            <UiIcon name="sparkles" size={15} className="mr-1 inline-block align-[-3px]" />Dédupliquer
           </button>
           <div className="relative">
             <button onClick={() => setIoOpen((o) => !o)} className="rounded-xl border border-zinc-200 bg-white px-4 py-2 text-sm hover:bg-zinc-50">
@@ -124,7 +126,7 @@ export function FaqSection({
                     }}
                     className="block w-full px-4 py-2 text-left hover:bg-zinc-50"
                   >
-                    ⬇️ Exporter en CSV (Excel)
+                    <UiIcon name="file" size={15} className="mr-1.5 inline-block align-[-3px]" />Exporter en CSV (Excel)
                   </button>
                   <button
                     onClick={() => {
@@ -133,7 +135,7 @@ export function FaqSection({
                     }}
                     className="block w-full px-4 py-2 text-left hover:bg-zinc-50"
                   >
-                    ⬆️ Importer un CSV ou JSON
+                    <UiIcon name="plus" size={15} className="mr-1.5 inline-block align-[-3px]" />Importer un CSV ou JSON
                     <span className="block text-xs text-zinc-500">Colonnes : question ; reponse</span>
                   </button>
                 </div>
@@ -207,7 +209,7 @@ export function FaqSection({
           <span className="text-zinc-600">Tout sélectionner sur cette page</span>
           {selected.size > 0 && (
             <button onClick={bulkDelete} className="ml-auto rounded-lg bg-red-50 px-3 py-1.5 font-medium text-red-700 hover:bg-red-100">
-              🗑️ Supprimer {selected.size} FAQ
+              <UiIcon name="trash" size={15} className="mr-1 inline-block align-[-3px]" />Supprimer {selected.size} FAQ
             </button>
           )}
         </div>
@@ -340,14 +342,14 @@ function FaqRow({
         <div className="flex shrink-0 items-start gap-1">
           {faq.sourceUrl && /^https?:/.test(faq.sourceUrl) && (
             <a href={faq.sourceUrl} target="_blank" rel="noreferrer" title={faq.sourceUrl} className="rounded-lg px-1.5 py-1 hover:bg-zinc-100">
-              🔗
+              <UiIcon name="link" size={15} />
             </a>
           )}
           <button onClick={() => setEditing(true)} title="Modifier" className="rounded-lg px-1.5 py-1 hover:bg-zinc-100">
-            ✏️
+            <UiIcon name="pen" size={15} />
           </button>
           <button onClick={remove} title="Supprimer" className="rounded-lg px-1.5 py-1 hover:bg-red-50">
-            🗑️
+            <UiIcon name="trash" size={15} />
           </button>
         </div>
       )}

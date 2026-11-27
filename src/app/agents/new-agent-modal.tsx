@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon as UiIcon } from "@/app/icons";
+
 import { useState } from "react";
 import { BuildProgress } from "./build-progress";
 
@@ -155,14 +157,14 @@ export function NewAgentModal({
         <div className="flex-1 space-y-7 overflow-y-auto px-7 py-6">
           <Block title="Quel sera le rôle de cet agent ?">
             <div className="grid gap-3 sm:grid-cols-2">
-              <Choice active={role === "sales"} onClick={() => setRole("sales")} title="🛍️ Ventes" text="Aide les prospects à acheter ou réserver." />
-              <Choice active={role === "support"} onClick={() => setRole("support")} title="🛟 Support client" text="Répond aux questions et résout les problèmes des clients." />
+              <Choice active={role === "sales"} onClick={() => setRole("sales")} title="Ventes" text="Aide les prospects à acheter ou réserver." />
+              <Choice active={role === "support"} onClick={() => setRole("support")} title="Support client" text="Répond aux questions et résout les problèmes des clients." />
             </div>
           </Block>
 
           <Block title="De quelles sources cet agent doit-il apprendre ?" hint="Choisis un point de départ. Tu pourras tout modifier par la suite.">
             <div className="grid gap-3 sm:grid-cols-2">
-              <Choice active={mode === "site"} onClick={() => setMode("site")} title="🌐 Créer à partir de ton site web" text="Nous lisons tes pages et rédigeons l'agent pour toi." />
+              <Choice active={mode === "site"} onClick={() => setMode("site")} title="Créer à partir de ton site web" text="Nous lisons tes pages et rédigeons l'agent pour toi." />
               <Choice active={mode === "scratch"} onClick={() => setMode("scratch")} title="＋ Commencer de zéro" text="Rédige les instructions toi-même." />
             </div>
           </Block>
@@ -188,7 +190,7 @@ export function NewAgentModal({
                   disabled={!website.trim() || finding}
                   className="rounded-xl border border-zinc-200 px-4 text-sm text-zinc-700 hover:bg-zinc-50 disabled:text-zinc-400"
                 >
-                  {finding ? "Recherche…" : "🔍 Trouver des pages"}
+                  {finding ? "Recherche…" : "Trouver des pages"}
                 </button>
               </div>
               <p className="mt-1 text-xs text-zinc-500">L&apos;adresse suffit — inutile d&apos;ajouter https://</p>
@@ -255,7 +257,7 @@ export function NewAgentModal({
               <ul className="mt-2 space-y-1 text-sm">
                 {docs.map((d, i) => (
                   <li key={i} className="flex items-center gap-2">
-                    📄 <span className="flex-1 truncate">{d.name}</span>
+                    <UiIcon name="file" size={15} className="shrink-0 text-zinc-400" /> <span className="flex-1 truncate">{d.name}</span>
                     <button onClick={() => setDocs(docs.filter((_, j) => j !== i))} className="text-zinc-400 hover:text-red-600" aria-label="Retirer">
                       ✕
                     </button>
@@ -291,7 +293,7 @@ export function NewAgentModal({
               La langue principale de l&apos;agent, utilisée pour ses instructions. Il répond automatiquement dans la langue du contact.
             </p>
             <p className="mt-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
-              ℹ️ Un agent répond aux personnes qui te contactent. Il n&apos;écrit jamais en premier.
+              <UiIcon name="info" size={15} className="mr-1.5 inline-block align-[-3px]" />Un agent répond aux personnes qui te contactent. Il n&apos;écrit jamais en premier.
             </p>
           </Block>
         </div>

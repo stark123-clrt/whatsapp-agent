@@ -123,8 +123,7 @@ const emailOk = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 /** Premier compte de l'espace : protégé par le mot de passe d'installation (ADMIN_PASSWORD). */
 export async function createFirstAdmin(input: { email: string; name: string; password: string; setupCode: string }): Promise<User> {
   if (userCount() > 0) throw new Error("L'espace a déjà un administrateur : connecte-toi, ou demande une invitation.");
-  const expected = process.env.ADMIN_PASSWORD ?? "";
-  if (expected && input.setupCode !== expected) throw new Error("Code d'installation incorrect.");
+  if (!setupCodeOk(input.setupCode)) throw new Error("Code d'installation incorrect.");
   return createUser({ email: input.email, name: input.name, password: input.password, role: "admin" });
 }
 
@@ -150,6 +149,18 @@ export async function loginWithPassword(email: string, password: string): Promis
   if (!r || !(await checkPassword(password, r.password_hash))) return null;
   db.prepare(`UPDATE users SET last_login_at = ? WHERE id = ?`).run(Date.now(), r.id);
   return toUser(r);
+}
+
+/** Code d'installation valide ? (sert au premier compte, par e-mail ou par Google). */
+export function setupCodeOk(code: string) {
+  const expected = process.env.ADMIN_PASSWORD ?? "";
+  return !expected || code === expected;
+}
+
+/** Premier compte de l'espace créé avec Google (le code d'installation a été vérifié avant d'aller chez Google). */
+export async function createFirstAdminGoogle(p: { sub: string; email: string; name: string; picture: string | null }): Promise<User> {
+  if (userCount() > 0) throw new Error("L'espace a déjà un administrateur : connecte-toi avec ton compte.");
+  return createUser({ email: p.email, name: p.name, role: "admin", googleSub: p.sub, avatar: p.picture });
 }
 
 /** Connexion Google : compte existant (même adresse), ou invitation en attente pour cette adresse. */

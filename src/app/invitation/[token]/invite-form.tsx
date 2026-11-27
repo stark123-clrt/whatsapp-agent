@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { GoogleButton } from "../../login/login-form";
+import { GoogleButton, PasswordField } from "../../login/login-form";
 
 type Info = { email: string; role: "admin" | "member"; google: boolean };
 
@@ -38,7 +38,7 @@ export function InviteForm({ token }: { token: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
+    <form onSubmit={submit} className="w-full max-w-md rounded-3xl border border-zinc-200 bg-white p-8 shadow-xl shadow-blue-900/5 sm:p-10">
       <Image src="/brand/logo.png" alt="Stark Marketing" width={96} height={44} priority className="h-11 w-auto" />
       <h1 className="mt-5 text-xl font-semibold">Rejoindre l&apos;équipe</h1>
       {info ? (
@@ -61,11 +61,7 @@ export function InviteForm({ token }: { token: string }) {
             Ton nom
             <input autoFocus autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} className={input} />
           </label>
-          <label className="mt-4 block text-sm font-medium text-zinc-700">
-            Mot de passe
-            <input type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={input} />
-            <span className="mt-1 block text-xs font-normal text-zinc-500">8 caractères minimum, avec au moins une lettre et un chiffre.</span>
-          </label>
+          <PasswordField value={password} onChange={setPassword} create />
           {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
           <button
             type="submit"

@@ -4,6 +4,7 @@
  */
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs" || process.env.NEXT_PHASE === "phase-production-build") return;
+  await resetIfRequested();
   const { ensureWhatsApp } = await import("./lib/whatsapp");
   // Sans attendre : le serveur doit pouvoir répondre pendant que WhatsApp se connecte.
   void ensureWhatsApp().catch(() => {});
@@ -25,4 +26,25 @@ export async function register() {
   // Diffusions WhatsApp : envoi au compte-gouttes, programmation, relances.
   const { startBroadcastScheduler } = await import("./lib/broadcasts");
   startBroadcastScheduler();
+}
+
+/**
+ * Remise à zéro complète, une seule fois, demandée par l'administrateur via la variable RESET_ALL_DATA
+ * (valeur unique, par exemple une date). Efface la base, les médias, la session Instagram et la session
+ * WhatsApp AVANT que quoi que ce soit ne les ouvre. Un témoin empêche de recommencer au redémarrage suivant.
+ */
+async function resetIfRequested() {
+  const token = (process.env.RESET_ALL_DATA ?? "").trim().replace(/[^\w-]/g, "");
+  if (!token) return;
+  const { existsSync, readdirSync, rmSync, writeFileSync } = await import("node:fs");
+  const path = await import("node:path");
+  const dataDir = path.join(process.cwd(), "data");
+  const marker = path.join(dataDir, `.reset-${token}`);
+  if (existsSync(marker)) return;
+  for (const dir of [dataDir, path.join(process.cwd(), ".wa-auth")]) {
+    if (!existsSync(dir)) continue;
+    for (const f of readdirSync(dir)) rmSync(path.join(dir, f), { recursive: true, force: true });
+  }
+  writeFileSync(marker, new Date().toISOString());
+  console.log(`[remise à zéro] données effacées (${token})`);
 }

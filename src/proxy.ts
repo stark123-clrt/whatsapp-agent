@@ -6,7 +6,7 @@ import { authEnabled, SESSION_COOKIE, verifySession } from "./lib/session";
  * et les API répondent 401. Seules la page de connexion et le test de santé sont publics.
  */
 // Widget de site web : script, page du chat (iframe) et API visiteurs sont publics.
-const PUBLIC = [/^\/login$/, /^\/api\/auth\//, /^\/api\/health$/, /^\/widget\//, /^\/w\//, /^\/api\/public\//];
+const PUBLIC = [/^\/login$/, /^\/brand\//, /^\/(icon|apple-icon)\.png$/,/^\/api\/auth\//, /^\/api\/health$/, /^\/widget\//, /^\/w\//, /^\/api\/public\//];
 
 export async function proxy(request: NextRequest) {
   if (!authEnabled()) return NextResponse.next();

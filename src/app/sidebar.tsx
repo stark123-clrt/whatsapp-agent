@@ -8,7 +8,7 @@ type Item = { label: string; href?: string; icon: keyof typeof ICONS };
 
 // Les entrées sans `href` sont les pages pas encore construites.
 const SECTIONS: { title?: string; items: Item[] }[] = [
-  { items: [{ label: "Tableau de bord", icon: "grid" }] },
+  { items: [{ label: "Tableau de bord", href: "/tableau-de-bord", icon: "grid" }] },
   {
     title: "Interagir",
     items: [

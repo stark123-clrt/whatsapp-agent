@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -68,7 +69,9 @@ function AdminSidebar({ pathname }: { pathname: string }) {
 
   return (
     <nav className="flex w-60 shrink-0 flex-col border-r border-zinc-200 bg-white">
-      <p className="px-6 pt-6 pb-4 text-base font-semibold">Stark Marketing</p>
+      <Link href="/tableau-de-bord" className="flex items-center px-6 pt-6 pb-4" aria-label="Stark Marketing — tableau de bord">
+        <Image src="/brand/logo.png" alt="Stark Marketing" width={70} height={32} priority className="h-8 w-auto" />
+      </Link>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {SECTIONS.map((section, i) => (

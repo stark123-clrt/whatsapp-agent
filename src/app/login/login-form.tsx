@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -28,7 +29,8 @@ export function LoginForm() {
 
   return (
     <form onSubmit={submit} className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-      <h1 className="text-xl font-semibold">Stark Marketing</h1>
+      <Image src="/brand/logo.png" alt="Stark Marketing" width={96} height={44} priority className="h-11 w-auto" />
+      <h1 className="mt-5 text-xl font-semibold">Connexion</h1>
       <p className="mt-1 text-sm text-zinc-500">Connecte-toi pour accéder à tes discussions.</p>
       <label className="mt-6 block text-sm font-medium text-zinc-700">
         Mot de passe

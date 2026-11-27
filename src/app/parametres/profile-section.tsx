@@ -94,6 +94,19 @@ export function ProfileSection() {
           </span>
           <input type="checkbox" checked={me.alertEmail} onChange={(e) => save({ alertEmail: e.target.checked }, e.target.checked ? "Alertes e-mail activées." : "Alertes e-mail désactivées.")} className="mt-1 h-4 w-4 accent-blue-600" />
         </label>
+        {emailOn && (
+          <button
+            onClick={async () => {
+              setMsg(null);
+              const r = await fetch("/api/auth/test-email", { method: "POST" });
+              const d = (await r.json().catch(() => ({}))) as { to?: string; error?: string };
+              setMsg(r.ok ? { ok: true, text: `E-mail de test envoyé à ${d.to}. Regarde ta boîte (et les spams).` } : { ok: false, text: d.error ?? "Envoi impossible." });
+            }}
+            className="mt-4 rounded-xl border border-zinc-200 px-3.5 py-2 text-sm font-medium hover:bg-zinc-50"
+          >
+            M&apos;envoyer un e-mail de test
+          </button>
+        )}
       </Box>
 
       <Box title={me.hasPassword ? "Changer de mot de passe" : "Créer un mot de passe"} hint={me.hasPassword ? "Tes autres sessions ouvertes seront déconnectées." : "Pour pouvoir aussi te connecter sans Google."}>

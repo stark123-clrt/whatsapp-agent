@@ -10,6 +10,7 @@ import {
   type Campaign,
   type CampaignSettings,
   type Objective,
+  SLOT_DEFAULTS,
 } from "@/lib/campaign-types";
 import { Toggle } from "../agents/[id]/ui";
 import { CatalogPicker, usable, type CatalogProduct } from "./catalog-picker";
@@ -17,7 +18,7 @@ import { CatalogPicker, usable, type CatalogProduct } from "./catalog-picker";
 export type AgentLite = { id: number; name: string; status: "active" | "paused"; website: string | null };
 
 const STEPS = ["L'essentiel", "Le contenu", "Les interactions", "La validation"];
-const field = "w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-violet-500 focus:ring-2 focus:ring-violet-500/15";
+const field = "w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15";
 const label = "mb-1.5 block text-[11px] font-semibold tracking-wide text-zinc-500 uppercase";
 /** « ubfparis.com » → « https://ubfparis.com » */
 const withScheme = (v: string | null | undefined) => {
@@ -51,7 +52,7 @@ export function CampaignWizard({
     agentId: campaign?.agentId ?? agents.find((a) => a.status === "active")?.id ?? agents[0]?.id ?? null,
     startsOn: campaign?.startsOn ?? today(),
     endsOn: campaign?.endsOn ?? plus(today(), 30),
-    settings: campaign?.settings ?? { ...DEFAULT_CAMPAIGN, link: withScheme(agents.find((a) => a.status === "active")?.website ?? agents[0]?.website) },
+    settings: campaign?.settings ?? { ...DEFAULT_CAMPAIGN, SLOT_DEFAULTS, link: withScheme(agents.find((a) => a.status === "active")?.website ?? agents[0]?.website) },
   }));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -114,10 +115,10 @@ export function CampaignWizard({
                   key={t}
                   onClick={() => (i < step || !check(step) ? setStep(i) : setError(check(step)))}
                   className={`flex flex-1 items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition ${
-                    i === step ? "bg-violet-50 font-semibold text-violet-700" : i < step ? "text-zinc-700 hover:bg-zinc-50" : "text-zinc-400 hover:bg-zinc-50"
+                    i === step ? "bg-blue-50 font-semibold text-blue-700" : i < step ? "text-zinc-700 hover:bg-zinc-50" : "text-zinc-400 hover:bg-zinc-50"
                   }`}
                 >
-                  <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${i <= step ? "bg-violet-600 text-white" : "bg-zinc-200 text-zinc-500"}`}>
+                  <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${i <= step ? "bg-blue-600 text-white" : "bg-zinc-200 text-zinc-500"}`}>
                     {i < step ? "✓" : i + 1}
                   </span>
                   {t}
@@ -165,7 +166,7 @@ export function CampaignWizard({
                         key={o}
                         type="button"
                         onClick={() => set({ objective: o })}
-                        className={`rounded-xl border px-3 py-2.5 text-sm transition ${s.objective === o ? "border-violet-600 bg-violet-50 font-semibold text-violet-700" : "border-zinc-200 hover:border-zinc-300"}`}
+                        className={`rounded-xl border px-3 py-2.5 text-sm transition ${s.objective === o ? "border-blue-600 bg-blue-50 font-semibold text-blue-700" : "border-zinc-200 hover:border-zinc-300"}`}
                       >
                         {OBJECTIVES[o]}
                       </button>
@@ -228,7 +229,7 @@ export function CampaignWizard({
                           key={k}
                           type="button"
                           onClick={() => set({ formats: { ...s.formats, [k]: !s.formats[k] } })}
-                          className={`flex-1 rounded-xl border px-3 py-2.5 text-sm transition ${s.formats[k] ? "border-violet-600 bg-violet-50 font-semibold text-violet-700" : "border-zinc-200 text-zinc-500"}`}
+                          className={`flex-1 rounded-xl border px-3 py-2.5 text-sm transition ${s.formats[k] ? "border-blue-600 bg-blue-50 font-semibold text-blue-700" : "border-zinc-200 text-zinc-500"}`}
                         >
                           {s.formats[k] ? "✓ " : ""}
                           {t}
@@ -253,7 +254,7 @@ export function CampaignWizard({
                   </div>
                 </div>
                 {s.rhythm === "auto" ? (
-                  <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm leading-relaxed text-violet-900">
+                  <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm leading-relaxed text-blue-900">
                     <UiIcon name="robot" size={15} className="mr-1 inline-block align-[-3px]" /><strong>L&apos;agent décide</strong> combien publier chaque jour, sous les plafonds du compte (par défaut jusqu&apos;à 3 publications et 10 stories) : il
                     démarre doucement les 2 premières semaines, publie plus quand l&apos;engagement est bon, ralentit quand l&apos;audience décroche. Publications aux heures de forte
                     audience, stories réparties de 9 h à 21 h 30.
@@ -262,28 +263,28 @@ export function CampaignWizard({
                   <>
                     <div>
                       <span className={label}>Contenus par jour</span>
-                      <div className="grid w-48 grid-cols-3 gap-1 rounded-xl bg-zinc-100 p-1">
-                        {[1, 2, 3].map((n) => (
+                      <div className="grid w-80 grid-cols-8 gap-1 rounded-xl bg-zinc-100 p-1">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
                           <button key={n} type="button" onClick={() => set({ perDay: n })} className={`rounded-lg py-1.5 text-sm ${s.perDay === n ? "bg-white font-semibold shadow-sm" : "text-zinc-500"}`}>
                             {n}
                           </button>
                         ))}
                       </div>
-                      <p className="mt-1 text-xs text-zinc-500">La première semaine : 1 par jour, pour habituer Instagram.</p>
+                      <p className="mt-1 text-xs text-zinc-500">Conseillé : 1 à 3 par jour (1 par jour la première semaine, pour habituer Instagram).</p>
                     </div>
                 <div>
                   <span className={label}>Heures de publication (heure de Paris)</span>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {Array.from({ length: s.perDay }, (_, i) => (
                       <input
                         key={i}
                         type="time"
                         className={`${field} max-w-36`}
-                        value={s.slots[i] ?? DEFAULT_CAMPAIGN.slots[i]}
+                        value={s.slots[i] ?? SLOT_DEFAULTS[i]}
                         onChange={(e) => {
-                          const slots = [...DEFAULT_CAMPAIGN.slots.map((d, j) => s.slots[j] ?? d)];
+                          const slots = SLOT_DEFAULTS.map((d, j) => s.slots[j] ?? d);
                           slots[i] = e.target.value;
-                          set({ slots: slots.slice(0, 3) });
+                          set({ slots: slots.slice(0, 8) });
                         }}
                       />
                     ))}
@@ -382,7 +383,7 @@ export function CampaignWizard({
                     placeholder="#mamarque #paris"
                   />
                   <label className="mt-2 flex items-center gap-2 text-sm text-zinc-600">
-                    <input type="checkbox" checked={s.autoHashtags} onChange={(e) => set({ autoHashtags: e.target.checked })} className="accent-violet-600" />
+                    <input type="checkbox" checked={s.autoHashtags} onChange={(e) => set({ autoHashtags: e.target.checked })} className="accent-blue-600" />
                     L&apos;IA ajoute aussi des hashtags adaptés à chaque contenu
                   </label>
                 </div>
@@ -401,7 +402,7 @@ export function CampaignWizard({
 
             {step === 2 && (
               <>
-                <div className="rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-900">
+                <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
                   <UiIcon name="chat" size={15} className="mr-1 inline-block align-[-3px]" />L&apos;IA lit les commentaires sous tes publications (toutes les 3 minutes), répond en public et écrit en privé avec le lien. Avec « Je valide chaque contenu », chaque réponse attend aussi ta validation.
                 </div>
                 <Line title="Répondre aux commentaires" text="L'IA répond publiquement, avec le contexte de l'entreprise." checked={s.interactions.replyComments} onChange={(v) => set({ interactions: { ...s.interactions, replyComments: v } })} />
@@ -439,9 +440,9 @@ export function CampaignWizard({
                       key={k}
                       type="button"
                       onClick={() => set({ approval: k })}
-                      className={`rounded-xl border p-4 text-left transition ${s.approval === k ? "border-violet-600 bg-violet-50" : "border-zinc-200 hover:border-zinc-300"}`}
+                      className={`rounded-xl border p-4 text-left transition ${s.approval === k ? "border-blue-600 bg-blue-50" : "border-zinc-200 hover:border-zinc-300"}`}
                     >
-                      <p className={`font-semibold ${s.approval === k ? "text-violet-700" : ""}`}>
+                      <p className={`font-semibold ${s.approval === k ? "text-blue-700" : ""}`}>
                         {s.approval === k ? "● " : "○ "}
                         {t}
                       </p>
@@ -457,7 +458,7 @@ export function CampaignWizard({
                   <p>
                     {s.rhythm === "auto"
                       ? `Rythme automatique : l'agent décide chaque jour combien de ${[s.formats.post && "publications", s.formats.story && "stories"].filter(Boolean).join(" et ")} publier, selon l'engagement.`
-                      : `${s.perDay} contenu${s.perDay > 1 ? "s" : ""} par jour (${[s.formats.post && "publications", s.formats.story && "stories"].filter(Boolean).join(" et ")}), 1 par jour la première semaine.`}
+                      : `${s.perDay} contenu${s.perDay > 1 ? "s" : ""} par jour (${[s.formats.post && "publications", s.formats.story && "stories"].filter(Boolean).join(" et ")}).`}
                   </p>
                   <p>La campagne est créée en brouillon : tu l&apos;actives quand tu veux, depuis sa page.</p>
                 </div>
@@ -471,11 +472,11 @@ export function CampaignWizard({
               {step === 0 ? "Annuler" : "← Retour"}
             </button>
             {step < STEPS.length - 1 ? (
-              <button onClick={next} className="rounded-xl bg-violet-600 px-5 py-2 text-sm font-semibold text-white hover:bg-violet-700">
+              <button onClick={next} className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700">
                 Suivant →
               </button>
             ) : (
-              <button onClick={save} disabled={busy} className="rounded-xl bg-violet-600 px-5 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-60">
+              <button onClick={save} disabled={busy} className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
                 {busy ? "Enregistrement…" : campaign ? "Enregistrer" : "Créer la campagne"}
               </button>
             )}

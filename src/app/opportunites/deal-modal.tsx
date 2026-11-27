@@ -332,9 +332,9 @@ export function Tags({ values, onChange, placeholder = "+ Ajouter des étiquette
   return (
     <div className="flex min-h-[44px] flex-wrap items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-2 py-1.5 focus-within:border-blue-500">
       {values.map((v) => (
-        <span key={v} className="inline-flex items-center gap-1 rounded-lg border border-indigo-100 bg-indigo-50 py-0.5 pr-1 pl-2 text-xs font-medium text-indigo-700">
+        <span key={v} className="inline-flex items-center gap-1 rounded-lg border border-blue-100 bg-blue-50 py-0.5 pr-1 pl-2 text-xs font-medium text-blue-700">
           {v}
-          <button type="button" onClick={() => onChange(values.filter((x) => x !== v))} aria-label={`Retirer ${v}`} className="px-1 text-indigo-300 hover:text-red-600">
+          <button type="button" onClick={() => onChange(values.filter((x) => x !== v))} aria-label={`Retirer ${v}`} className="px-1 text-blue-300 hover:text-red-600">
             ✕
           </button>
         </span>

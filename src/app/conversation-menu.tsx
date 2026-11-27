@@ -87,14 +87,14 @@ export function ConversationMenu({ chat, knownTags, onChanged, onClose, notify }
       },
     ],
     [
-      { kind: "soon", label: "Assigner à un membre de l'équipe…", icon: "userPlus", color: "text-violet-500" },
+      { kind: "soon", label: "Assigner à un membre de l'équipe…", icon: "userPlus", color: "text-blue-500" },
       { kind: "soon", label: "Envoyer une diffusion…", icon: "megaphone", color: "text-cyan-600" },
       { kind: "soon", label: "Ajouter à l'automatisation", icon: "bolt", color: "text-blue-600" },
-      { kind: "action", label: "Assigner un agent IA…", icon: "spark", color: "text-fuchsia-500", run: () => setModal("agent") },
+      { kind: "action", label: "Assigner un agent IA…", icon: "spark", color: "text-blue-500", run: () => setModal("agent") },
       { kind: "action", label: "Modifier le contact…", icon: "pencil", color: "text-blue-600", run: () => setModal("contact") },
       { kind: "action", label: "Gérer les tags…", icon: "tag", color: "text-pink-500", run: () => setModal("tags") },
       { kind: "action", label: "Étiquetage automatique par IA", icon: "spark", color: "text-amber-500", run: autoTag },
-      { kind: "soon", label: "Prendre rendez-vous…", icon: "calendar", color: "text-indigo-500" },
+      { kind: "soon", label: "Prendre rendez-vous…", icon: "calendar", color: "text-blue-500" },
       {
         kind: "action",
         label: "Copier le lien",

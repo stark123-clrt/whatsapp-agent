@@ -45,7 +45,7 @@ export function CampaignsClient() {
           <h1 className="text-3xl font-bold tracking-tight">Campagnes</h1>
           <p className="mt-1 text-zinc-500">L&apos;IA publie pour ta marque sur Instagram : publications et stories, à ton rythme.</p>
         </div>
-        <button onClick={() => setCreating(true)} disabled={!data} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-violet-700">
+        <button onClick={() => setCreating(true)} disabled={!data} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
           ＋ Nouvelle campagne
         </button>
       </div>
@@ -63,12 +63,12 @@ export function CampaignsClient() {
 
       {data && data.campaigns.length === 0 ? (
         <div className="mt-6 flex flex-col items-center rounded-2xl border border-zinc-200 bg-white px-6 py-16 text-center shadow-sm">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-50 text-violet-600"><UiIcon name="sparkles" size={26} className="" /></span>
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600"><UiIcon name="sparkles" size={26} className="" /></span>
           <p className="mt-4 text-lg font-semibold">Aucune campagne pour le moment</p>
           <p className="mt-1 max-w-md text-sm text-zinc-500">
-            Crée ta première campagne : l&apos;IA, qui connaît déjà ton entreprise, prépare 1 à 3 contenus par jour avec leurs visuels. Tu valides, elle publie.
+            Crée ta première campagne : l&apos;IA, qui connaît déjà ton entreprise, prépare tes contenus chaque jour avec leurs visuels. Tu valides, elle publie.
           </p>
-          <button onClick={() => setCreating(true)} className="mt-5 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-violet-700">
+          <button onClick={() => setCreating(true)} className="mt-5 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
             ＋ Créer une campagne
           </button>
         </div>
@@ -83,7 +83,7 @@ export function CampaignsClient() {
               <Link key={c.id} href={`/campagnes/${c.id}`} className="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-lg font-semibold group-hover:text-violet-700">{c.name}</p>
+                    <p className="truncate text-lg font-semibold group-hover:text-blue-700">{c.name}</p>
                     <p className="text-sm text-zinc-500">
                       {agent?.name ?? "Sans agent"} · {OBJECTIVES[c.settings.objective]}
                     </p>

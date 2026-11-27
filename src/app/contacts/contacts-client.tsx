@@ -488,7 +488,7 @@ export function ContactsClient() {
                       {c.tags.length ? (
                         <span className="flex max-w-[200px] flex-wrap gap-1">
                           {c.tags.slice(0, 3).map((t) => (
-                            <span key={t} className="rounded-md border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                            <span key={t} className="rounded-md border border-blue-100 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
                               {t}
                             </span>
                           ))}
@@ -525,7 +525,7 @@ export function ContactsClient() {
                       <span className="flex items-center gap-2">
                         <Flag on={!c.aiPaused && !c.dnd} title={c.aiPaused ? "IA en pause" : "IA active"} d="M8 8h8v8H8zM12 4v4M4 12h4M16 12h4M9 20h6" color="text-blue-600" />
                         <Flag on={c.dnd} title="Ne pas déranger" d="M20 14A8 8 0 0 1 10 4a8 8 0 1 0 10 10z" color="text-red-500" />
-                        <Flag on={c.testContact} title="Contact de test" d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3" color="text-violet-500" />
+                        <Flag on={c.testContact} title="Contact de test" d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3" color="text-blue-500" />
                       </span>
                     </td>
                   )}
@@ -752,7 +752,7 @@ function TagModal({ allTags, count, onClose, onSave }: { allTags: string[]; coun
         {allTags.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {allTags.slice(0, 12).map((t) => (
-              <button type="button" key={t} onClick={() => setTag(t)} className="rounded-md border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100">
+              <button type="button" key={t} onClick={() => setTag(t)} className="rounded-md border border-blue-100 bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 hover:bg-blue-100">
                 {t}
               </button>
             ))}

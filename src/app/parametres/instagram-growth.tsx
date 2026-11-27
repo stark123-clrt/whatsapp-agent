@@ -13,6 +13,16 @@ type Settings = {
   maxFollowsPerDay: number;
   maxWelcomesPerDay: number;
   skipSuspicious: boolean;
+  scanHours: number;
+  followDelay: [number, number];
+  welcomeDelay: [number, number];
+  followGap: number;
+  welcomeGap: number;
+  quiet: { enabled: boolean; start: number; end: number };
+  warmup: boolean;
+  pauseHours: number;
+  maxFollowing: number;
+  followExisting: boolean;
 };
 type Overview = {
   settings: Settings;
@@ -119,7 +129,7 @@ export function InstagramGrowth() {
       <div className="mt-3 grid gap-2">
         <ToggleRow
           title="Suivre en retour les nouveaux abonnés"
-          description="Entre 10 min et 3 h après leur abonnement, pour paraître naturel."
+          description={`Entre ${fmtMin(s.followDelay[0])} et ${fmtMin(s.followDelay[1])} après leur abonnement, pour paraître naturel.`}
           checked={s.followBack}
           onChange={(v) => save({ followBack: v })}
         />
@@ -137,7 +147,7 @@ export function InstagramGrowth() {
         />
         <ToggleRow
           title="Message de bienvenue aux nouveaux abonnés"
-          description="Un message privé, envoyé 5 à 90 min après l'abonnement. La conversation apparaît dans Discussions et l'agent répond s'ils écrivent."
+          description={`Un message privé, envoyé ${fmtMin(s.welcomeDelay[0])} à ${fmtMin(s.welcomeDelay[1])} après l'abonnement. La conversation apparaît dans Discussions et l'agent répond s'ils écrivent.`}
           checked={s.welcome}
           onChange={(v) => save({ welcome: v })}
         />
@@ -172,7 +182,7 @@ export function InstagramGrowth() {
         <label className="flex flex-col gap-1 text-xs text-zinc-600">
           Abonnements par jour (maximum)
           <select className={select} value={s.maxFollowsPerDay} onChange={(e) => save({ maxFollowsPerDay: Number(e.target.value) })}>
-            {[5, 10, 15, 20, 30, 40].map((n) => (
+            {[5, 10, 15, 20, 30, 40, 60, 80, 100, 150, 200].map((n) => (
               <option key={n} value={n}>
                 Jusqu&apos;à {n}
                 {n === 20 ? " (conseillé)" : ""}
@@ -183,7 +193,7 @@ export function InstagramGrowth() {
         <label className="flex flex-col gap-1 text-xs text-zinc-600">
           Messages de bienvenue par jour (maximum)
           <select className={select} value={s.maxWelcomesPerDay} onChange={(e) => save({ maxWelcomesPerDay: Number(e.target.value) })}>
-            {[3, 5, 10, 15, 20, 25].map((n) => (
+            {[3, 5, 10, 15, 20, 25, 40, 60, 80, 100].map((n) => (
               <option key={n} value={n}>
                 Jusqu&apos;à {n}
                 {n === 10 ? " (conseillé)" : ""}
@@ -195,6 +205,61 @@ export function InstagramGrowth() {
       {(o.today.followCap < s.maxFollowsPerDay || o.today.welcomeCap < s.maxWelcomesPerDay) && (
         <p className="mt-2 text-xs text-zinc-500">Montée en douceur : les plafonds augmentent chaque jour pendant les 2 premières semaines (aujourd&apos;hui {o.today.followCap} abonnements, {o.today.welcomeCap} bienvenues).</p>
       )}
+
+      <details className="mt-4 rounded-xl border border-zinc-200 bg-white">
+        <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-zinc-700">Réglages avancés (rythme, délais, heures de repos)</summary>
+        <div className="grid gap-4 border-t border-zinc-100 p-4 text-sm sm:grid-cols-2">
+          <NumField label="Relevé des nouveaux abonnés toutes les" unit="h" step={0.25} value={s.scanHours} hint="2 h" onCommit={(v) => save({ scanHours: v })} />
+          <NumField label="Pause si Instagram demande de ralentir" unit="h" value={s.pauseHours} hint="24 h" onCommit={(v) => save({ pauseHours: v })} />
+          <RangeField label="Délai avant de suivre un nouvel abonné" value={s.followDelay} hint="10 à 180 min" onCommit={(v) => save({ followDelay: v })} />
+          <RangeField label="Délai avant le message de bienvenue" value={s.welcomeDelay} hint="5 à 90 min" onCommit={(v) => save({ welcomeDelay: v })} />
+          <NumField label="Écart minimum entre deux abonnements" unit="min" value={s.followGap} hint="4 min" onCommit={(v) => save({ followGap: v })} />
+          <NumField label="Écart minimum entre deux bienvenues" unit="min" value={s.welcomeGap} hint="6 min" onCommit={(v) => save({ welcomeGap: v })} />
+          <NumField label="Faux compte s'il suit plus de" unit="comptes" value={s.maxFollowing} hint="3 000" onCommit={(v) => save({ maxFollowing: v })} />
+          <div>
+            <label className="flex items-center justify-between gap-3 text-xs text-zinc-600">
+              Heures de repos (aucune action)
+              <input type="checkbox" checked={s.quiet.enabled} onChange={(e) => save({ quiet: { ...s.quiet, enabled: e.target.checked } })} className="h-4 w-4 accent-blue-600" />
+            </label>
+            <div className="mt-1 flex items-center gap-2">
+              <select className={select} disabled={!s.quiet.enabled} value={s.quiet.start} onChange={(e) => save({ quiet: { ...s.quiet, start: Number(e.target.value) } })}>
+                {HOURS.map((h) => (
+                  <option key={h} value={h}>
+                    {h} h
+                  </option>
+                ))}
+              </select>
+              à
+              <select className={select} disabled={!s.quiet.enabled} value={s.quiet.end} onChange={(e) => save({ quiet: { ...s.quiet, end: Number(e.target.value) } })}>
+                {HOURS.map((h) => (
+                  <option key={h} value={h}>
+                    {h} h
+                  </option>
+                ))}
+              </select>
+            </div>
+            <p className="mt-1 text-[11px] text-zinc-400">Conseillé : 0 h à 7 h</p>
+          </div>
+          <label className="flex items-start justify-between gap-3 text-xs text-zinc-600">
+            <span>
+              Montée en douceur sur 14 jours
+              <span className="mt-1 block text-[11px] text-zinc-400">Conseillé : activée (les plafonds montent progressivement)</span>
+            </span>
+            <input type="checkbox" checked={s.warmup} onChange={(e) => save({ warmup: e.target.checked })} className="mt-0.5 h-4 w-4 accent-blue-600" />
+          </label>
+          <label className="flex items-start justify-between gap-3 text-xs text-zinc-600">
+            <span>
+              Suivre aussi les abonnés déjà présents au départ
+              <span className="mt-1 block text-[11px] text-zinc-400">Ils passent dans la file, au même rythme que les nouveaux.</span>
+            </span>
+            <input type="checkbox" checked={s.followExisting} onChange={(e) => save({ followExisting: e.target.checked })} className="mt-0.5 h-4 w-4 accent-blue-600" />
+          </label>
+        </div>
+        <p className="border-t border-zinc-100 px-4 py-3 text-xs leading-relaxed text-zinc-500">
+          Tout est réglable. Les valeurs « conseillé » sont celles qui ressemblent le plus à une personne réelle : au-delà, Instagram peut ralentir le compte (l&apos;agent se met alors en pause tout seul).
+          Limites techniques d&apos;Instagram : {o.caps.follows} abonnements et {o.caps.welcomes} messages de bienvenue par jour.
+        </p>
+      </details>
 
       <div className="mt-4 grid gap-3 lg:grid-cols-2">
         <div className="rounded-xl border border-zinc-200 bg-white p-3">
@@ -244,6 +309,61 @@ export function InstagramGrowth() {
         30 derniers jours : <strong>{o.totals.followBacks}</strong> suivis en retour · <strong>{o.totals.engagedFollows}</strong> personnes engagées suivies · <strong>{o.totals.welcomes}</strong> bienvenues ·{" "}
         <strong>{o.totals.skipped}</strong> faux comptes écartés
       </p>
+    </div>
+  );
+}
+
+const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const fmtMin = (m: number) => (m >= 60 && m % 60 === 0 ? `${m / 60} h` : m >= 60 ? `${Math.floor(m / 60)} h ${m % 60}` : `${m} min`);
+
+/** Champ nombre enregistré quand on quitte le champ (ou Entrée), avec la valeur conseillée en dessous. */
+function NumField({ label, unit, value, hint, step = 1, onCommit }: { label: string; unit: string; value: number; hint: string; step?: number; onCommit: (v: number) => void }) {
+  const [v, setV] = useState(String(value));
+  const commit = () => {
+    const n = Number(v.replace(",", "."));
+    if (Number.isFinite(n) && n !== value) onCommit(n);
+    else setV(String(value));
+  };
+  return (
+    <label className="flex flex-col gap-1 text-xs text-zinc-600">
+      {label}
+      <span className="flex items-center gap-2">
+        <input
+          type="number"
+          min={0}
+          step={step}
+          value={v}
+          onChange={(e) => setV(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => e.key === "Enter" && commit()}
+          className="w-28 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-zinc-400"
+        />
+        <span className="text-zinc-500">{unit}</span>
+      </span>
+      <span className="text-[11px] text-zinc-400">Conseillé : {hint}</span>
+    </label>
+  );
+}
+
+function RangeField({ label, value, hint, onCommit }: { label: string; value: [number, number]; hint: string; onCommit: (v: [number, number]) => void }) {
+  const [a, setA] = useState(String(value[0]));
+  const [b, setB] = useState(String(value[1]));
+  const commit = () => {
+    const x = Number(a);
+    const y = Number(b);
+    if (Number.isFinite(x) && Number.isFinite(y) && (x !== value[0] || y !== value[1])) onCommit([x, y]);
+  };
+  const input = "w-20 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-zinc-400";
+  return (
+    <div className="flex flex-col gap-1 text-xs text-zinc-600">
+      {label}
+      <span className="flex items-center gap-2">
+        <input type="number" min={0} value={a} onChange={(e) => setA(e.target.value)} onBlur={commit} className={input} aria-label={`${label} (minimum)`} />
+        à
+        <input type="number" min={0} value={b} onChange={(e) => setB(e.target.value)} onBlur={commit} className={input} aria-label={`${label} (maximum)`} />
+        <span className="text-zinc-500">min</span>
+      </span>
+      <span className="text-[11px] text-zinc-400">Conseillé : {hint}</span>
     </div>
   );
 }

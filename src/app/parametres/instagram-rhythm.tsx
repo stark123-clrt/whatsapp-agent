@@ -1,6 +1,5 @@
 "use client";
 
-import { Icon as UiIcon } from "@/app/icons";
 
 import { useEffect, useState } from "react";
 
@@ -46,7 +45,6 @@ export function InstagramRhythm() {
 
   if (!limits) return null;
   const dirty = JSON.stringify(limits) !== JSON.stringify(saved);
-  const risky = limits.maxPosts > RECOMMENDED.maxPosts || limits.maxStories > RECOMMENDED.maxStories;
   const select = "rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-zinc-400";
   const range = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => i + from);
 
@@ -67,7 +65,7 @@ export function InstagramRhythm() {
         <label className="flex flex-col gap-1 text-xs text-zinc-600">
           Publications par jour
           <select className={select} value={limits.maxPosts} onChange={(e) => setLimits({ ...limits, maxPosts: Number(e.target.value) })}>
-            {range(0, 5).map((n) => (
+            {range(0, 25).map((n) => (
               <option key={n} value={n}>
                 {n === 0 ? "Aucune" : `Jusqu'à ${n}`}
                 {n === RECOMMENDED.maxPosts ? " (conseillé)" : ""}
@@ -78,7 +76,7 @@ export function InstagramRhythm() {
         <label className="flex flex-col gap-1 text-xs text-zinc-600">
           Stories par jour
           <select className={select} value={limits.maxStories} onChange={(e) => setLimits({ ...limits, maxStories: Number(e.target.value) })}>
-            {range(0, 20).map((n) => (
+            {range(0, 50).map((n) => (
               <option key={n} value={n}>
                 {n === 0 ? "Aucune" : `Jusqu'à ${n}`}
                 {n === RECOMMENDED.maxStories ? " (conseillé)" : ""}
@@ -107,7 +105,10 @@ export function InstagramRhythm() {
           </select>
         </label>
       </div>
-      {risky && <p className="mt-2 text-xs text-amber-700"><UiIcon name="alert" size={13} className="mr-1 inline-block align-[-3px]" />Au-dessus des valeurs conseillées : Instagram peut limiter un compte qui publie beaucoup par la méthode non officielle. Augmente progressivement.</p>}
+      <p className="mt-3 text-xs leading-relaxed text-zinc-500">
+        Conseillé : {RECOMMENDED.maxPosts} publications et {RECOMMENDED.maxStories} stories par jour, 2 h entre deux publications, 30 min entre deux contenus. Tu peux aller au-delà
+        (jusqu&apos;à 25 publications et 50 stories, la limite d&apos;Instagram) : augmente progressivement, un compte qui publie soudain beaucoup peut être ralenti par Instagram.
+      </p>
       {(dirty || flash) && (
         <div className="mt-3 flex justify-end">
           <button onClick={save} disabled={busy || !dirty} className="rounded-lg bg-zinc-900 px-3.5 py-1.5 text-xs font-semibold text-white disabled:opacity-60">

@@ -409,7 +409,7 @@ export function Segmented<T extends string>({ value, onChange, options }: { valu
   );
 }
 
-export function Sparkline({ values, color = "#a855f7" }: { values: number[]; color?: string }) {
+export function Sparkline({ values, color = "#2a6cdc" }: { values: number[]; color?: string }) {
   const max = Math.max(1, ...values);
   const w = 600;
   const h = 60;

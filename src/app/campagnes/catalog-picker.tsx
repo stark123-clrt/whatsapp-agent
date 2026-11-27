@@ -91,7 +91,7 @@ export function CatalogPicker({
     const next = base.includes(id) ? base.filter((x) => x !== id) : [...base, id];
     onChange(next.length === ok.length ? [] : next);
   };
-  const field = "w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-violet-500";
+  const field = "w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500";
 
   if (!agentId) return <p className="text-sm text-zinc-500">Choisis d&apos;abord l&apos;agent (étape 1).</p>;
 
@@ -117,7 +117,7 @@ export function CatalogPicker({
             onClick={startImport}
             disabled={running || !/^https?:\/\/\S+\.\S+/.test(site)}
             title={site ? `Lire ${site}` : "Indique le lien du site à l'étape 1"}
-            className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700 disabled:opacity-50"
+            className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {running ? "Import en cours…" : info ? "↻ Actualiser" : "Importer les produits du site"}
           </button>
@@ -125,7 +125,7 @@ export function CatalogPicker({
       </div>
 
       {(error || job?.state === "error") && <p className="px-4 pt-3 text-xs text-red-600"><UiIcon name="alert" size={13} className="mr-1 inline-block align-[-3px]" />{error ?? job?.message}</p>}
-      {running && <div className="h-1 overflow-hidden bg-violet-100"><div className="h-full w-1/3 animate-pulse bg-violet-500" /></div>}
+      {running && <div className="h-1 overflow-hidden bg-blue-100"><div className="h-full w-1/3 animate-pulse bg-blue-500" /></div>}
 
       {adding && (
         <div className="grid grid-cols-2 gap-2 border-b border-zinc-100 bg-zinc-50/60 p-4">
@@ -146,7 +146,7 @@ export function CatalogPicker({
           <div className="flex items-center justify-between px-4 pt-3 text-xs text-zinc-500">
             <span>{all ? `Tous les produits disponibles (${ok.length})` : `${selected.length} produit${selected.length > 1 ? "s" : ""} sélectionné${selected.length > 1 ? "s" : ""}`}</span>
             {!all && (
-              <button type="button" onClick={() => onChange([])} className="font-medium text-violet-700 hover:underline">
+              <button type="button" onClick={() => onChange([])} className="font-medium text-blue-700 hover:underline">
                 Tout sélectionner
               </button>
             )}
@@ -162,7 +162,7 @@ export function CatalogPicker({
                   disabled={!can}
                   onClick={() => toggle(p.id)}
                   title={can ? p.title : "Indisponible, sans photo ou sans prix"}
-                  className={`relative overflow-hidden rounded-lg border text-left transition ${on ? "border-violet-600 ring-1 ring-violet-600" : "border-zinc-200"} ${can ? "hover:border-violet-400" : "opacity-40"}`}
+                  className={`relative overflow-hidden rounded-lg border text-left transition ${on ? "border-blue-600 ring-1 ring-blue-600" : "border-zinc-200"} ${can ? "hover:border-blue-400" : "opacity-40"}`}
                 >
                   <div className="aspect-square bg-zinc-100">
                     {p.imageFile && (
@@ -174,7 +174,7 @@ export function CatalogPicker({
                     <p className="truncate text-[11px] font-medium">{p.title}</p>
                     <p className="text-[11px] text-zinc-500">{price(p.priceCents, p.currency)}</p>
                   </div>
-                  <span className={`absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold ${on ? "bg-violet-600 text-white" : "bg-white/90 text-zinc-300"}`}>✓</span>
+                  <span className={`absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold ${on ? "bg-blue-600 text-white" : "bg-white/90 text-zinc-300"}`}>✓</span>
                 </button>
               );
             })}

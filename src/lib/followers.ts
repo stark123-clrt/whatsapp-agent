@@ -62,6 +62,16 @@ export type GrowthSettings = {
   maxFollowsPerDay: number;
   maxWelcomesPerDay: number;
   skipSuspicious: boolean; // filtre anti-faux comptes
+  scanHours: number; // relevé des nouveaux abonnés toutes les N heures
+  followDelay: [number, number]; // délai avant de suivre (minutes, min et max)
+  welcomeDelay: [number, number]; // délai avant le message de bienvenue (minutes)
+  followGap: number; // écart minimum entre deux abonnements (minutes)
+  welcomeGap: number; // écart minimum entre deux messages de bienvenue (minutes)
+  quiet: { enabled: boolean; start: number; end: number }; // heures de repos (heure de Paris)
+  warmup: boolean; // montée en douceur sur 14 jours
+  pauseHours: number; // pause si Instagram demande de ralentir
+  maxFollowing: number; // faux compte : suit plus de N comptes sans être suivi
+  followExisting: boolean; // suivre aussi les abonnés déjà présents au départ
 };
 
 export const DEFAULT_GROWTH: GrowthSettings = {
@@ -72,9 +82,21 @@ export const DEFAULT_GROWTH: GrowthSettings = {
   maxFollowsPerDay: 20,
   maxWelcomesPerDay: 10,
   skipSuspicious: true,
+  scanHours: 2,
+  followDelay: [10, 180],
+  welcomeDelay: [5, 90],
+  followGap: 4,
+  welcomeGap: 6,
+  quiet: { enabled: true, start: 0, end: 7 },
+  warmup: true,
+  pauseHours: 24,
+  maxFollowing: 3000,
+  followExisting: false,
 };
 
-export const GROWTH_CAPS = { follows: 40, welcomes: 25 }; // au-delà, Instagram bloque vite un compte personnel
+/** Limites techniques (au-delà, Instagram refuse de toute façon). Les valeurs conseillées sont affichées dans l'interface. */
+export const GROWTH_CAPS = { follows: 200, welcomes: 100 };
+export const GROWTH_RECOMMENDED = { follows: 20, welcomes: 10, scanHours: 2, followDelay: "10 min à 3 h", followGap: 4, welcomeGap: 6, quiet: "0 h – 7 h", pauseHours: 24 };
 
 type GrowthState = { startedAt: number | null; pausedUntil: number | null; pauseReason: string | null; lastScanAt: number | null; lastFollowAt: number | null; lastWelcomeAt: number | null };
 
@@ -91,12 +113,17 @@ function writeKey(key: string, value: unknown) {
 }
 
 export function getGrowth(): GrowthSettings {
-  return readKey("ig_growth", DEFAULT_GROWTH);
+  const g = readKey("ig_growth", DEFAULT_GROWTH);
+  return { ...DEFAULT_GROWTH, ...g, quiet: { ...DEFAULT_GROWTH.quiet, ...g.quiet } };
 }
 
 export function setGrowth(raw: Partial<GrowthSettings>): GrowthSettings {
   const cur = getGrowth();
   const int = (v: unknown, d: number, max: number) => Math.min(max, Math.max(0, Math.round(Number(v ?? d)) || 0));
+  const range = (v: unknown, lo: number, hi: number): [number, number] => {
+    const a = Array.isArray(v) ? v.map((x) => Math.min(hi, Math.max(lo, Math.round(Number(x) || 0)))) : [10, 180];
+    return [Math.min(a[0], a[1]), Math.max(a[0], a[1])];
+  };
   const next: GrowthSettings = {
     followBack: raw.followBack ?? cur.followBack,
     followEngaged: raw.followEngaged ?? cur.followEngaged,
@@ -105,7 +132,28 @@ export function setGrowth(raw: Partial<GrowthSettings>): GrowthSettings {
     maxFollowsPerDay: int(raw.maxFollowsPerDay, cur.maxFollowsPerDay, GROWTH_CAPS.follows),
     maxWelcomesPerDay: int(raw.maxWelcomesPerDay, cur.maxWelcomesPerDay, GROWTH_CAPS.welcomes),
     skipSuspicious: raw.skipSuspicious ?? cur.skipSuspicious,
+    scanHours: Math.min(24, Math.max(0.25, Number(raw.scanHours ?? cur.scanHours) || 2)),
+    followDelay: range(raw.followDelay ?? cur.followDelay, 0, 24 * 60),
+    welcomeDelay: range(raw.welcomeDelay ?? cur.welcomeDelay, 0, 24 * 60),
+    followGap: int(raw.followGap, cur.followGap, 240),
+    welcomeGap: int(raw.welcomeGap, cur.welcomeGap, 240),
+    quiet: {
+      enabled: raw.quiet?.enabled ?? cur.quiet.enabled,
+      start: int(raw.quiet?.start, cur.quiet.start, 23),
+      end: int(raw.quiet?.end, cur.quiet.end, 23),
+    },
+    warmup: raw.warmup ?? cur.warmup,
+    pauseHours: int(raw.pauseHours, cur.pauseHours, 168),
+    maxFollowing: Math.max(100, int(raw.maxFollowing, cur.maxFollowing, 100_000)),
+    followExisting: raw.followExisting ?? cur.followExisting,
   };
+  // Suivre aussi les anciens abonnés : ils passent dans la file, au même rythme que les nouveaux.
+  if (next.followExisting && !cur.followExisting) {
+    const rows = db.prepare(`SELECT user_id FROM ig_people WHERE baseline = 1 AND i_follow = 0 AND follow_status IS NULL`).all() as { user_id: string }[];
+    const now = Date.now();
+    rows.forEach((r, i) => db.prepare(`UPDATE ig_people SET follow_status = 'due', follow_due = ?, follow_reason = 'follower' WHERE user_id = ?`).run(now + (i + 1) * rand(15 * MIN, 45 * MIN), r.user_id));
+  }
+  if (!next.followExisting && cur.followExisting) db.prepare(`UPDATE ig_people SET follow_status = NULL, follow_due = NULL WHERE baseline = 1 AND follow_status = 'due'`).run();
   // Réactiver le message de bienvenue ne doit pas inonder d'anciens abonnés : seuls les suivants le recevront.
   if (next.welcome && !cur.welcome) db.prepare(`UPDATE ig_people SET welcome_status = 'skipped' WHERE welcome_status IS NULL AND is_follower = 1`).run();
   if (!next.welcome) db.prepare(`UPDATE ig_people SET welcome_status = NULL, welcome_due = NULL WHERE welcome_status = 'due'`).run();
@@ -133,7 +181,8 @@ export function growthToday(now = Date.now()): GrowthToday {
   const st = getState();
   const follows = (db.prepare(`SELECT COUNT(*) AS n FROM ig_people WHERE followed_at >= ?`).get(start) as { n: number }).n;
   const welcomes = (db.prepare(`SELECT COUNT(*) AS n FROM ig_people WHERE welcomed_at >= ?`).get(start) as { n: number }).n;
-  return { follows, welcomes, followCap: warmCap(g.maxFollowsPerDay, st.startedAt, now), welcomeCap: warmCap(g.maxWelcomesPerDay, st.startedAt, now) };
+  const cap = (max: number) => (g.warmup ? warmCap(max, st.startedAt, now) : max);
+  return { follows, welcomes, followCap: cap(g.maxFollowsPerDay), welcomeCap: cap(g.maxWelcomesPerDay) };
 }
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a);
@@ -159,7 +208,7 @@ export function noteInteraction(who: Who, via: "dm" | "comment") {
     ).run(who.userId, who.username, who.fullName, who.picture, now, via, now);
     if (!getGrowth().followEngaged) return;
     db.prepare(`UPDATE ig_people SET follow_status = 'due', follow_due = ?, follow_reason = ? WHERE user_id = ? AND i_follow = 0 AND follow_status IS NULL`).run(
-      now + rand(20 * MIN, 3 * HOUR),
+      now + rand(getGrowth().followDelay[0] * MIN, getGrowth().followDelay[1] * MIN),
       via,
       who.userId,
     );
@@ -204,10 +253,10 @@ async function scan() {
     ).run(u.pk, u.username, u.fullName, u.picture, baseline ? 1 : 0, baseline ? null : now, u.following ? 1 : 0, now);
     if (baseline) continue;
     if (g.followBack && !u.following && !row?.follow_status) {
-      db.prepare(`UPDATE ig_people SET follow_status = 'due', follow_due = ?, follow_reason = 'follower' WHERE user_id = ?`).run(now + rand(10 * MIN, 3 * HOUR), u.pk);
+      db.prepare(`UPDATE ig_people SET follow_status = 'due', follow_due = ?, follow_reason = 'follower' WHERE user_id = ?`).run(now + rand(g.followDelay[0] * MIN, g.followDelay[1] * MIN), u.pk);
     }
     if (g.welcome && !row?.welcome_status) {
-      db.prepare(`UPDATE ig_people SET welcome_status = 'due', welcome_due = ? WHERE user_id = ?`).run(now + rand(5 * MIN, 90 * MIN), u.pk);
+      db.prepare(`UPDATE ig_people SET welcome_status = 'due', welcome_due = ? WHERE user_id = ?`).run(now + rand(g.welcomeDelay[0] * MIN, g.welcomeDelay[1] * MIN), u.pk);
     }
   }
   patchState({ lastScanAt: now, startedAt: st.startedAt ?? now });
@@ -218,9 +267,9 @@ async function scan() {
 // ---------- Actions (suivre, bienvenue) ----------
 
 /** Faux compte probable : pas de photo et aucune publication, ou « suit tout le monde » sans être suivi. */
-function suspicious(p: { posts: number; followers: number; following: number; picture: string | null }, noPicture: boolean) {
+function suspicious(p: { posts: number; followers: number; following: number; picture: string | null }, noPicture: boolean, maxFollowing: number) {
   if (noPicture && p.posts === 0) return "Pas de photo ni de publication";
-  if (p.following > 3000 && p.followers < p.following / 20) return "Suit des milliers de comptes (robot probable)";
+  if (p.following > maxFollowing && p.followers < p.following / 20) return `Suit plus de ${maxFollowing} comptes (robot probable)`;
   if (p.posts === 0 && p.following > 500 && p.followers < 20) return "Compte vide qui suit beaucoup";
   return null;
 }
@@ -234,7 +283,8 @@ function isBlock(err: unknown) {
 async function doFollow() {
   const now = Date.now();
   const st = getState();
-  if (st.lastFollowAt && now - st.lastFollowAt < rand(4, 9) * MIN) return; // jamais en rafale
+  const gap = getGrowth().followGap;
+  if (st.lastFollowAt && now - st.lastFollowAt < rand(gap, gap + 5) * MIN) return; // jamais en rafale
   const t = growthToday(now);
   if (t.follows >= t.followCap) return;
   const p = db.prepare(`SELECT user_id, username, picture FROM ig_people WHERE follow_status = 'due' AND follow_due <= ? ORDER BY follow_due LIMIT 1`).get(now) as
@@ -244,7 +294,7 @@ async function doFollow() {
   try {
     if (getGrowth().skipSuspicious) {
       const prof = await fetchProfile(p.user_id);
-      const why = suspicious(prof, !prof.picture || /44884218_345707102882519_2446069589734326272/.test(prof.picture));
+      const why = suspicious(prof, !prof.picture || /44884218_345707102882519_2446069589734326272/.test(prof.picture), getGrowth().maxFollowing);
       if (why) {
         db.prepare(`UPDATE ig_people SET follow_status = 'skipped', follow_due = NULL, follow_note = ? WHERE user_id = ?`).run(why, p.user_id);
         return;
@@ -258,8 +308,8 @@ async function doFollow() {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (isBlock(err)) {
-      patchState({ pausedUntil: Date.now() + DAY, pauseReason: `Instagram a demandé de ralentir : ${msg.slice(0, 160)}` });
-      console.error(`[croissance] pause 24 h : ${msg}`);
+      patchState({ pausedUntil: Date.now() + Math.max(1, getGrowth().pauseHours) * HOUR, pauseReason: `Instagram a demandé de ralentir : ${msg.slice(0, 160)}` });
+      console.error(`[croissance] pause ${getGrowth().pauseHours} h : ${msg}`);
     } else {
       db.prepare(`UPDATE ig_people SET follow_status = 'failed', follow_due = NULL, follow_note = ? WHERE user_id = ?`).run(msg.slice(0, 200), p.user_id);
     }
@@ -271,7 +321,7 @@ async function doWelcome() {
   if (!g.welcome) return;
   const now = Date.now();
   const st = getState();
-  if (st.lastWelcomeAt && now - st.lastWelcomeAt < rand(6, 12) * MIN) return;
+  if (st.lastWelcomeAt && now - st.lastWelcomeAt < rand(g.welcomeGap, g.welcomeGap + 6) * MIN) return;
   const t = growthToday(now);
   if (t.welcomes >= t.welcomeCap) return;
   const p = db.prepare(`SELECT user_id, username, full_name, engaged_via FROM ig_people WHERE welcome_status = 'due' AND welcome_due <= ? ORDER BY welcome_due LIMIT 1`).get(now) as
@@ -291,8 +341,8 @@ async function doWelcome() {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     if (isBlock(err)) {
-      patchState({ pausedUntil: Date.now() + DAY, pauseReason: `Instagram a demandé de ralentir : ${msg.slice(0, 160)}` });
-      console.error(`[croissance] pause 24 h : ${msg}`);
+      patchState({ pausedUntil: Date.now() + Math.max(1, getGrowth().pauseHours) * HOUR, pauseReason: `Instagram a demandé de ralentir : ${msg.slice(0, 160)}` });
+      console.error(`[croissance] pause ${getGrowth().pauseHours} h : ${msg}`);
     } else {
       db.prepare(`UPDATE ig_people SET welcome_status = 'failed', welcome_due = NULL WHERE user_id = ?`).run(p.user_id);
     }
@@ -318,7 +368,9 @@ export function startGrowthScheduler() {
       const st = getState();
       const now = Date.now();
       // Relevé des abonnés et des chiffres du compte toutes les 2 heures environ.
-      if (!st.lastScanAt || now - st.lastScanAt > rand(100, 140) * MIN) {
+      const gs = getGrowth();
+      const every = gs.scanHours * 60;
+      if (!st.lastScanAt || now - st.lastScanAt > rand(every * 0.85, every * 1.15) * MIN) {
         await snapshot().catch((e) => console.error(`[croissance] relevé : ${e instanceof Error ? e.message : e}`));
         await scan().catch((e) => {
           patchState({ lastScanAt: now }); // on réessaiera au prochain créneau, sans insister
@@ -327,9 +379,11 @@ export function startGrowthScheduler() {
         return;
       }
       if (st.pausedUntil && now < st.pausedUntil) return;
-      // Nuit (heure de Paris, 0 h – 7 h) : pas d'action, comme une vraie personne.
+      // Heures de repos (réglables, heure de Paris) : pas d action, comme une vraie personne.
       const hour = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", hour: "2-digit", hour12: false }).format(now)) % 24;
-      if (hour < 7) return;
+      const q = gs.quiet;
+      const resting = q.enabled && (q.start <= q.end ? hour >= q.start && hour < q.end : hour >= q.start || hour < q.end);
+      if (resting) return;
       await doFollow();
       await doWelcome();
     } finally {

@@ -11,14 +11,14 @@ import { db } from "./db";
 db.exec(`CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)`);
 
 export type PublishLimits = {
-  maxPosts: number; // publications par jour (0 à 5)
-  maxStories: number; // stories par jour (0 à 20)
+  maxPosts: number; // publications par jour (0 à 25)
+  maxStories: number; // stories par jour (0 à 50)
   postGapHours: number; // écart minimum entre deux publications
   storyGapMinutes: number; // écart minimum entre deux contenus, quels qu'ils soient
 };
 export const DEFAULT_LIMITS: PublishLimits = { maxPosts: 3, maxStories: 10, postGapHours: 2, storyGapMinutes: 30 };
-/** Au-delà, l'interface affiche un avertissement (risque pour le compte). */
-export const RECOMMENDED = { maxPosts: 3, maxStories: 10 };
+/** Valeurs conseillées, affichées sous les réglages (rien n'est bloqué en dessous des limites techniques d'Instagram). */
+export const RECOMMENDED = { maxPosts: 3, maxStories: 10, postGapHours: 2, storyGapMinutes: 30 };
 
 const clamp = (n: unknown, min: number, max: number, d: number, step = 1) => {
   const v = Number(n);
@@ -28,8 +28,8 @@ const clamp = (n: unknown, min: number, max: number, d: number, step = 1) => {
 function normalize(raw: Partial<PublishLimits> & { maxPerDay?: number; minGapHours?: number }): PublishLimits {
   const d = DEFAULT_LIMITS;
   return {
-    maxPosts: clamp(raw.maxPosts, 0, 5, d.maxPosts),
-    maxStories: clamp(raw.maxStories, 0, 20, d.maxStories),
+    maxPosts: clamp(raw.maxPosts, 0, 25, d.maxPosts),
+    maxStories: clamp(raw.maxStories, 0, 50, d.maxStories),
     postGapHours: clamp(raw.postGapHours ?? raw.minGapHours, 0, 12, d.postGapHours, 0.5),
     storyGapMinutes: clamp(raw.storyGapMinutes, 0, 240, d.storyGapMinutes, 5),
   };

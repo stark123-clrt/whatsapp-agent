@@ -16,6 +16,7 @@ import {
   type PostKind,
   type PostStatus,
   type VisualSource,
+  SLOT_DEFAULTS,
 } from "./campaign-types";
 import { pollInsights } from "./campaign-context";
 import { renderProductVisual, renderVersusVisual, renderVisual } from "./campaign-visuals";
@@ -380,10 +381,9 @@ export function planCampaign(c: Campaign): number {
     if (c.settings.rhythm !== "manual") {
       slots = autoSlots(autoPlan(c, day)); // rythme automatique : l'agent décide
     } else {
-      // Rythme manuel : nombre et heures choisis dans la campagne (1 par jour la première semaine).
-      const warm = day < addDays(c.startsOn, 7);
-      const perDay = warm ? 1 : c.settings.perDay;
-      const times = (c.settings.slots.length ? c.settings.slots : ["09:30", "13:00", "19:00"]).slice(0, perDay);
+      // Rythme manuel : nombre et heures choisis dans la campagne (c'est toi qui décides).
+      const perDay = c.settings.perDay;
+      const times = SLOT_DEFAULTS.map((d, i) => c.settings.slots[i] ?? d).slice(0, perDay);
       const dayIndex = Math.round((Date.parse(day) - Date.parse(c.startsOn)) / 86_400_000);
       const kinds: PostKind[] = [c.settings.formats.post ? "post" : null, c.settings.formats.story ? "story" : null].filter(Boolean) as PostKind[];
       if (!kinds.length) continue;

@@ -118,7 +118,7 @@ function CommentCard({ c, onDone }: { c: Comment; onDone: () => void }) {
     onDone();
   }
 
-  const field = "w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-violet-500";
+  const field = "w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500";
   return (
     <article className={`rounded-2xl border bg-white p-4 shadow-sm ${c.status === "alert" ? "border-red-200" : c.status === "pending" ? "border-amber-200" : "border-zinc-200"}`}>
       <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -146,7 +146,7 @@ function CommentCard({ c, onDone }: { c: Comment; onDone: () => void }) {
           </label>
           {error && <p className="text-xs text-red-600">{error}</p>}
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => act("approve")} disabled={busy || (!reply.trim() && !dm.trim() && !c.like)} className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-violet-700 disabled:opacity-50">
+            <button onClick={() => act("approve")} disabled={busy || (!reply.trim() && !dm.trim() && !c.like)} className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
               {busy ? "…" : "✓ Valider et envoyer"}
             </button>
             {c.status === "failed" && (
@@ -175,7 +175,7 @@ function CommentCard({ c, onDone }: { c: Comment; onDone: () => void }) {
               </p>
             )}
             {c.dmJid && (
-              <Link href={`/?c=${encodeURIComponent(c.dmJid)}`} className="inline-block text-xs font-semibold text-violet-700 hover:underline">
+              <Link href={`/?c=${encodeURIComponent(c.dmJid)}`} className="inline-block text-xs font-semibold text-blue-700 hover:underline">
                 Ouvrir la conversation →
               </Link>
             )}

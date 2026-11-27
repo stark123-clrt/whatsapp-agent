@@ -17,8 +17,8 @@ export type CampaignSettings = {
   formats: { post: boolean; story: boolean };
   rhythm: "auto" | "manual";
   engagement: "auto" | "off"; // contenus pour attirer (questions, sondages, conseils), dosés automatiquement // auto : l'agent décide combien publier chaque jour (sous les plafonds du compte)
-  perDay: number; // rythme manuel : 1 à 3
-  slots: string[]; // heures de publication (HH:MM, heure de Paris)
+  perDay: number; // rythme manuel : 1 à 8
+  slots: string[]; // heures de publication (HH:MM, heure de Paris), une par contenu
   visuals: VisualSource[]; // (ancien réglage : le visuel dépend maintenant de l'objectif)
   productIds: number[]; // campagne de vente : produits à mettre en avant (vide = tout le catalogue)
   brand: { color: string; textColor: string; logo: string | null };
@@ -88,11 +88,14 @@ export const POST_STATUS: Record<PostStatus, { label: string; cls: string }> = {
   generating: { label: "Préparation…", cls: "bg-zinc-100 text-zinc-500" },
   pending: { label: "À valider", cls: "bg-amber-50 text-amber-700" },
   scheduled: { label: "Programmé", cls: "bg-sky-50 text-sky-700" },
-  publishing: { label: "Publication…", cls: "bg-violet-50 text-violet-700" },
+  publishing: { label: "Publication…", cls: "bg-blue-50 text-blue-700" },
   published: { label: "Publié", cls: "bg-blue-50 text-blue-700" },
   failed: { label: "Échec", cls: "bg-red-50 text-red-600" },
   rejected: { label: "Écarté", cls: "bg-zinc-100 text-zinc-400" },
 };
+
+/** Heures proposées par défaut pour chaque contenu du rythme manuel (jusqu'à 8 par jour). */
+export const SLOT_DEFAULTS = ["09:30", "13:00", "19:00", "11:00", "16:30", "21:00", "08:00", "17:45"];
 
 export const DEFAULT_CAMPAIGN: CampaignSettings = {
   objective: "sales",
@@ -129,8 +132,8 @@ export function campaignWithDefaults(raw: unknown): CampaignSettings {
     interactions: { ...d.interactions, ...s.interactions },
     rhythm: s.rhythm === "manual" ? "manual" : "auto",
     engagement: s.engagement === "off" ? "off" : "auto",
-    perDay: Math.min(3, Math.max(1, Math.round(Number(s.perDay ?? d.perDay)))),
-    slots: (Array.isArray(s.slots) ? s.slots : d.slots).filter((x) => /^\d{2}:\d{2}$/.test(x)).slice(0, 3),
+    perDay: Math.min(8, Math.max(1, Math.round(Number(s.perDay ?? d.perDay)))),
+    slots: (Array.isArray(s.slots) ? s.slots : d.slots).filter((x) => /^\d{2}:\d{2}$/.test(x)).slice(0, 8),
     visuals: visuals.length ? visuals : d.visuals,
     productIds: Array.isArray(s.productIds) ? s.productIds.map(Number).filter((n) => Number.isInteger(n) && n > 0) : [],
     hashtags: Array.isArray(s.hashtags) ? s.hashtags.map((h) => h.replace(/^#/, "").trim()).filter(Boolean).slice(0, 15) : [],

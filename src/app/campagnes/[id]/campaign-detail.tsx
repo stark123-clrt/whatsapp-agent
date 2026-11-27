@@ -103,7 +103,7 @@ export function CampaignDetail({ id }: { id: number }) {
   if (missing) {
     return (
       <main className="p-10 text-sm text-zinc-500">
-        Cette campagne n&apos;existe plus. <Link href="/campagnes" className="font-medium text-violet-700 underline">Retour aux campagnes</Link>
+        Cette campagne n&apos;existe plus. <Link href="/campagnes" className="font-medium text-blue-700 underline">Retour aux campagnes</Link>
       </main>
     );
   }
@@ -143,7 +143,7 @@ export function CampaignDetail({ id }: { id: number }) {
             </button>
           ) : (
             c.status !== "ended" && (
-              <button onClick={() => setStatus("active")} disabled={busy === "status"} className="rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-violet-700">
+              <button onClick={() => setStatus("active")} disabled={busy === "status"} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
                 <UiIcon name="play" size={14} className="mr-1 inline-block align-[-3px]" />{c.status === "draft" ? "Activer la campagne" : "Reprendre"}
               </button>
             )
@@ -160,7 +160,7 @@ export function CampaignDetail({ id }: { id: number }) {
         </div>
       )}
       {c.status === "draft" && (
-        <div className="mt-4 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-900">
+        <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
           Brouillon : rien n&apos;est publié. Essaie « Préparer une publication » pour voir ce que l&apos;IA propose, puis active la campagne.
         </div>
       )}
@@ -192,7 +192,7 @@ export function CampaignDetail({ id }: { id: number }) {
           {rhythm && (
             <p className="text-xs text-zinc-500">
               Plafonds du compte (toutes campagnes) : {rhythm.maxPosts} publications et {rhythm.maxStories} stories par jour.{" "}
-              <Link href="/parametres?section=channels" className="font-medium text-violet-700 hover:underline">
+              <Link href="/parametres?section=channels" className="font-medium text-blue-700 hover:underline">
                 Modifier
               </Link>
             </p>
@@ -351,7 +351,7 @@ function PostCard({ post: p, busy, onAct, onEdit }: { post: CampaignPost; busy: 
           <img src={`/api/campaign-posts/${p.id}/image?v=${encodeURIComponent(p.imageFile)}`} alt="" className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full items-center justify-center">
-            <span className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-violet-500" />
+            <span className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-200 border-t-blue-500" />
           </div>
         )}
         <span className="absolute top-1.5 left-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white">{story ? "Story" : "Publication"}</span>
@@ -363,17 +363,17 @@ function PostCard({ post: p, busy, onAct, onEdit }: { post: CampaignPost; busy: 
           <span className="text-zinc-400">· {VISUALS[p.visual]?.label ?? "Visuel"}</span>
         </div>
         {p.intent === "engage" ? (
-          <p className="mt-1.5 text-xs font-medium text-fuchsia-700">
+          <p className="mt-1.5 text-xs font-medium text-blue-700">
             {{ question: "Question — pour attirer", tip: "Conseil — pour attirer", poll: "Sondage — pour attirer", versus: "Ceci ou cela — pour attirer" }[p.engageType ?? "question"]}
           </p>
         ) : (
-          p.productTitle && <p className="mt-1.5 truncate text-xs font-medium text-violet-700"><UiIcon name="bag" size={13} className="mr-1 inline-block align-[-3px]" />{p.productTitle}</p>
+          p.productTitle && <p className="mt-1.5 truncate text-xs font-medium text-blue-700"><UiIcon name="bag" size={13} className="mr-1 inline-block align-[-3px]" />{p.productTitle}</p>
         )}
         <p className="mt-1 font-semibold leading-snug">{p.headline ?? "L'IA rédige…"}</p>
         {p.caption && (
           <div className="mt-1">
             <p className={`text-xs leading-relaxed whitespace-pre-line text-zinc-600 ${open ? "" : "line-clamp-3"}`}>{p.caption}</p>
-            <button onClick={() => setOpen(!open)} className="mt-0.5 text-xs font-medium text-violet-700 hover:underline">
+            <button onClick={() => setOpen(!open)} className="mt-0.5 text-xs font-medium text-blue-700 hover:underline">
               {open ? "Réduire" : "Voir toute la légende"}
             </button>
           </div>
@@ -383,7 +383,7 @@ function PostCard({ post: p, busy, onAct, onEdit }: { post: CampaignPost; busy: 
 
         <div className="mt-3 flex flex-wrap gap-1.5">
           {(p.status === "pending" || p.status === "failed") && (
-            <button onClick={() => onAct(p, "approve")} disabled={Boolean(busy)} className={`${btn} bg-violet-600 text-white hover:bg-violet-700`}>
+            <button onClick={() => onAct(p, "approve")} disabled={Boolean(busy)} className={`${btn} bg-blue-600 text-white hover:bg-blue-700`}>
               {p.status === "failed" ? "Réessayer à l'heure prévue" : "✓ Valider"}
             </button>
           )}
@@ -424,7 +424,7 @@ function PostCard({ post: p, busy, onAct, onEdit }: { post: CampaignPost; busy: 
 function EditModal({ post, onClose, onSave }: { post: CampaignPost; onClose: () => void; onSave: (headline: string, caption: string) => void }) {
   const [headline, setHeadline] = useState(post.headline ?? "");
   const [caption, setCaption] = useState(post.caption ?? "");
-  const field = "w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm outline-none focus:border-violet-500";
+  const field = "w-full rounded-xl border border-zinc-200 px-3.5 py-2.5 text-sm outline-none focus:border-blue-500";
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/30 p-4" onMouseDown={onClose}>
       <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
@@ -442,7 +442,7 @@ function EditModal({ post, onClose, onSave }: { post: CampaignPost; onClose: () 
           <button onClick={onClose} className="rounded-xl px-4 py-2 text-sm text-zinc-600 hover:bg-zinc-100">
             Annuler
           </button>
-          <button onClick={() => onSave(headline, caption)} disabled={!headline.trim()} className="rounded-xl bg-violet-600 px-5 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50">
+          <button onClick={() => onSave(headline, caption)} disabled={!headline.trim()} className="rounded-xl bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
             Enregistrer
           </button>
         </div>
@@ -455,13 +455,13 @@ function EditModal({ post, onClose, onSave }: { post: CampaignPost; onClose: () 
 function PollView({ poll, results }: { poll: { question: string; options: string[] }; results: { text: string; count: number }[] | null }) {
   const total = (results ?? []).reduce((n, r) => n + r.count, 0);
   return (
-    <div className="mt-2 space-y-1 rounded-xl bg-fuchsia-50/60 p-2.5">
+    <div className="mt-2 space-y-1 rounded-xl bg-blue-50/60 p-2.5">
       {poll.options.map((o, i) => {
         const r = results?.find((x) => x.text === o) ?? results?.[i];
         const pct = total ? Math.round(((r?.count ?? 0) / total) * 100) : 0;
         return (
           <div key={o} className="relative overflow-hidden rounded-lg bg-white px-2.5 py-1.5 text-xs">
-            {total > 0 && <div className="absolute inset-y-0 left-0 bg-fuchsia-100" style={{ width: `${pct}%` }} />}
+            {total > 0 && <div className="absolute inset-y-0 left-0 bg-blue-100" style={{ width: `${pct}%` }} />}
             <span className="relative flex justify-between gap-2">
               <span className="font-medium">{o}</span>
               {total > 0 && <span className="text-zinc-500">{pct} %</span>}

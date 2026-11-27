@@ -240,7 +240,7 @@ export function DealsClient() {
       {/* Chiffres clés */}
       {deals.length > 0 && (
         <div className="mt-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
-          <Tile icon={ICONS.trend} tone="text-violet-600 bg-violet-50" title="Pipeline ouvert" value={eur(sum(openDeals))} sub={`${openDeals.length} opportunité${openDeals.length > 1 ? "s" : ""}`} />
+          <Tile icon={ICONS.trend} tone="text-blue-600 bg-blue-50" title="Pipeline ouvert" value={eur(sum(openDeals))} sub={`${openDeals.length} opportunité${openDeals.length > 1 ? "s" : ""}`} />
           <Tile icon={ICONS.target} tone="text-rose-600 bg-rose-50" title="Prévision pondérée" value={eur(weighted)} sub="valeur × probabilité" hint="Ce que le pipeline ouvert devrait rapporter, compte tenu des probabilités." />
           <Tile icon={ICONS.trophy} tone="text-amber-600 bg-amber-50" title="Gagnées ce mois-ci" value={eur(sum(wonMonth))} sub={`${wonMonth.length} opportunité${wonMonth.length > 1 ? "s" : ""}`} />
           <Tile icon={ICONS.coins} tone="text-blue-600 bg-blue-50" title="Total gagné" value={eur(sum(wonDeals))} sub={`${wonDeals.length} opportunité${wonDeals.length > 1 ? "s" : ""} au total`} />

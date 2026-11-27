@@ -42,7 +42,7 @@ export function InstagramCard() {
       <div className="flex items-start justify-between gap-6 px-6 py-5">
         <div>
           <h3 className="flex items-center gap-2 font-semibold">
-            Instagram (personnel) <span className="rounded-md bg-violet-50 px-1.5 py-0.5 text-[11px] font-semibold text-violet-700">BÊTA</span>
+            Instagram (personnel) <span className="rounded-md bg-blue-50 px-1.5 py-0.5 text-[11px] font-semibold text-blue-700">BÊTA</span>
           </h3>
           <p className="mt-1 text-sm text-zinc-500">
             Connecte ton compte Instagram avec son identifiant : l&apos;IA répond aux messages privés, y compris les demandes de message.
@@ -58,7 +58,7 @@ export function InstagramCard() {
         {connected && s ? (
           <>
           <div className="flex items-center gap-4">
-            <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-amber-400 via-pink-500 to-violet-600 text-lg text-white">
+            <span className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-amber-400 via-pink-500 to-blue-600 text-lg text-white">
               {s.picture ? (
                 // eslint-disable-next-line @next/next/no-img-element -- photo de profil Instagram
                 <img src={s.picture} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />
@@ -252,7 +252,7 @@ function ConnectInstagram({ state, onClose, onChanged }: { state: State | null; 
               <UiIcon name="lock" size={13} className="mr-1 inline-block align-[-3px]" />{method === "password" ? "Le mot de passe sert uniquement à la connexion et n'est jamais enregistré" : "La session n'est jamais affichée ni partagée"} : seule la session Instagram est conservée, sur ton serveur.
             </p>
             {(error || state?.error) && <p className="text-sm text-red-600">{error ?? state?.error}</p>}
-            <button disabled={sending || (method === "password" ? !username.trim() || !password : sessionid.trim().length < 20)} className="w-full rounded-xl bg-gradient-to-r from-amber-500 via-pink-500 to-violet-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+            <button disabled={sending || (method === "password" ? !username.trim() || !password : sessionid.trim().length < 20)} className="w-full rounded-xl bg-gradient-to-r from-amber-500 via-pink-500 to-blue-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
               {sending ? "Connexion…" : "Se connecter"}
             </button>
           </form>

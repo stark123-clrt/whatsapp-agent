@@ -57,11 +57,11 @@ function FollowersChart({ days }: { days: Day[] }) {
         ))}
         <text x={PAD.l} y={H - 4} fontSize={13} fill="#a1a1aa">{dayLabel(days[0].day)}</text>
         <text x={W - PAD.r} y={H - 4} fontSize={13} fill="#a1a1aa" textAnchor="end">Aujourd&apos;hui</text>
-        <path d={path} fill="none" stroke="#7c3aed" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        <path d={path} fill="none" stroke="#2a6cdc" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
         {h && (
           <g>
             <line x1={x(h.i)} x2={x(h.i)} y1={PAD.t} y2={H - PAD.b} stroke="#a1a1aa" strokeWidth={1} strokeDasharray="3 3" />
-            <circle cx={x(h.i)} cy={y(h.v)} r={4.5} fill="#7c3aed" stroke="#fff" strokeWidth={2} />
+            <circle cx={x(h.i)} cy={y(h.v)} r={4.5} fill="#2a6cdc" stroke="#fff" strokeWidth={2} />
           </g>
         )}
       </svg>
@@ -97,7 +97,7 @@ function ActivityBars({ days }: { days: Day[] }) {
           return (
             <g key={d.day} onMouseEnter={() => setHover(i)}>
               <rect x={PAD.l + i * bw} y={PAD.t} width={bw} height={base - PAD.t} fill="transparent" />
-              {v > 0 && <rect x={bx} y={base - h} width={Math.max(2, bw - 2)} height={h} rx={Math.min(4, (bw - 2) / 2)} fill={hover === i ? "#6d28d9" : "#8b5cf6"} />}
+              {v > 0 && <rect x={bx} y={base - h} width={Math.max(2, bw - 2)} height={h} rx={Math.min(4, (bw - 2) / 2)} fill={hover === i ? "#2257b8" : "#2a6cdc"} />}
             </g>
           );
         })}

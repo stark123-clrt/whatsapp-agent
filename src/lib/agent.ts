@@ -17,6 +17,7 @@ import pino from "pino";
 import { generateReply, transcribeAudio, type ChatMessage, type ContentPart } from "./ai";
 import { isOpenNow } from "./agent-settings";
 import { addTask, incAiCount, resetAiCounter, setChatAgent, setDraft, setFollowupStage, setPendingReply, updateChat } from "./db";
+import { noteBroadcastReply } from "./broadcasts";
 import { agentMarketingContext } from "./campaign-context";
 import { dealsFromTags } from "./deals";
 import { channelAgent, noAgentReason, routeAgent } from "./routing";
@@ -468,6 +469,7 @@ export function handleIncoming(sock: WASocket, msg: WAMessage, live: boolean) {
       if (!saveMessage(saved)) return; // déjà enregistré
       routeChat(jid, saved.text ?? "");
       setFollowupStage(jid, 0); // le contact a répondu : les relances repartent de zéro
+      noteBroadcastReply(jid, saved.text ?? ""); // réponse à une diffusion (et « STOP »)
       // Le contact revient après un long silence : nouvelle conversation, le compteur de l'IA repart à zéro.
       const resetHours = agentOf(jid)?.settings.limitResetHours ?? 24;
       const previous = getMessages(jid, 2).at(-2);
@@ -733,6 +735,47 @@ async function sendText(sock: WASocket, jid: string, text: string, sender: Sende
     replyTo: quoted ? replyTo : null,
   });
   return id;
+}
+
+/**
+ * Diffusions : envoie un message (texte, ou photo/vidéo avec le texte en légende) à un contact.
+ * « En train d'écrire… » quelques secondes avant, comme une vraie personne. Renvoie l'identifiant.
+ */
+export async function sendBroadcastMessage(
+  sock: WASocket,
+  jid: string,
+  text: string,
+  media: { file: string; mime: string } | null,
+  sender: "ai" | "human",
+  agentId: number | null,
+): Promise<string> {
+  let sentId = "";
+  await enqueue(jid, async () => {
+    await sock.presenceSubscribe(jid).catch(() => {});
+    await sock.sendPresenceUpdate("composing", jid).catch(() => {});
+    await sleep(randomBetween(1_500, 4_000));
+    await sock.sendPresenceUpdate("paused", jid).catch(() => {});
+    const id = generateMessageIDV2(sock.user?.id);
+    store.appSent.add(id);
+    let type: MessageType = "text";
+    if (media) {
+      const data = await readFile(path.join(MEDIA_DIR, media.file));
+      if (media.mime.startsWith("video/")) {
+        type = "video";
+        await sock.sendMessage(jid, { video: data, caption: text, mimetype: media.mime }, { messageId: id });
+      } else {
+        type = "image";
+        await sock.sendMessage(jid, { image: data, caption: text, mimetype: media.mime }, { messageId: id });
+      }
+    } else {
+      await sock.sendMessage(jid, { text }, { messageId: id });
+    }
+    saveSent({ id, jid, sender, type, text, mediaFile: media?.file ?? null, mime: media?.mime ?? null, ts: Date.now(), status: 2 });
+    if (agentId && sender === "ai") setMessageAgent(id, agentId);
+    sentId = id;
+  });
+  if (!sentId) throw new Error("Envoi impossible");
+  return sentId;
 }
 
 /** Envoi manuel depuis l'interface : l'IA se met en pause dans cette discussion. */

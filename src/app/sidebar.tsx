@@ -14,7 +14,7 @@ const SECTIONS: { title?: string; items: Item[] }[] = [
     items: [
       { label: "Discussions", href: "/", icon: "chat" },
       { label: "Campagnes", href: "/campagnes", icon: "sparkles" },
-      { label: "Diffusions", icon: "megaphone" },
+      { label: "Diffusions", href: "/diffusions", icon: "megaphone" },
       { label: "Rendez-vous", icon: "calendar" },
     ],
   },

@@ -22,4 +22,7 @@ export async function register() {
   // Croissance Instagram : nouveaux abonnés, suivi en retour, message de bienvenue, relevé quotidien.
   const { startGrowthScheduler } = await import("./lib/followers");
   startGrowthScheduler();
+  // Diffusions WhatsApp : envoi au compte-gouttes, programmation, relances.
+  const { startBroadcastScheduler } = await import("./lib/broadcasts");
+  startBroadcastScheduler();
 }
